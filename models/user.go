@@ -17,25 +17,37 @@ type User struct {
 }
 
 //GetUser - gets the user data based on the id string
-func GetUser(id string) User {
-	log.Printf("GetUser id: %v", id)
-	return User{
-		ID:       "abc-123",
-		Name:     "Eric",
-		Email:    "eric@idle.com",
-		Username: "eidle",
-		Password: "password123",
+func GetUser(id string) (User, error) {
+	session, err := GetConnection()
+	if err != nil {
+		return User{}, err
 	}
+	defer session.Close()
+	resp, err := gorethink.Table("users").Get(id).Run(session)
+	if err != nil {
+		return User{}, err
+	}
+	if resp.IsNil() {
+		return User{}, errors.New("no result for that id")
+	}
+	var user User
+	resp.One(&user)
+	return user, nil
 }
 
+//Save - saves the user. creates it if it doesn't exist.  upsert only works if there is an id and that email exists.
 func (user *User) Save() error {
-	//TODO: error handling omitted
-	log.Printf("user.Save: %v\n", user)
-	session, _ := GetConnection()
+	session, err := GetConnection()
+	if err != nil {
+		return err
+	}
 	defer session.Close()
-	resp, _ := gorethink.Table("users").Filter(map[string]interface{}{
+	resp, err := gorethink.Table("users").Filter(map[string]interface{}{
 		"email": user.Email,
 	}).Run(session)
+	if err != nil {
+		return err
+	}
 	defer resp.Close()
 	if resp.IsNil() || user.ID != "" {
 		resp2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)

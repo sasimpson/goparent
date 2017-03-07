@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,23 +9,29 @@ import (
 	"github.com/sasimpson/goparent/models"
 )
 
-type UserGetRequest struct {
+//UserRequest - structure for incoming user request
+type UserRequest struct {
 	UserData models.User `json:"userData"`
 }
 
 func initUsersHandlers(r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
-	u.HandleFunc("/", userGetHandler).Methods("GET")
+	u.HandleFunc("/{id}", userGetHandler).Methods("GET")
 	u.HandleFunc("/", userNewHandler).Methods("POST")
 }
 
 func userGetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "GET no id")
+	vars := mux.Vars(r)
+	user, err := models.GetUser(vars["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+	json.NewEncoder(w).Encode(user)
 }
 
 func userNewHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var userRequest UserGetRequest
+	var userRequest UserRequest
 	err := decoder.Decode(&userRequest)
 	if err != nil {
 		log.Panicln(err)
