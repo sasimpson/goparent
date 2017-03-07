@@ -9,37 +9,32 @@ import (
 
 func initSleepHandlers(r *mux.Router) {
 	s := r.PathPrefix("/sleep").Subrouter()
-	s.HandleFunc("/", SleepGetHandler).Methods("GET")
-	s.HandleFunc("/", SleepNewHandler).Methods("POST")
-	s.HandleFunc("/{id}", SleepViewHandler).Methods("GET")
-	s.HandleFunc("/{id}", SleepEditHandler).Methods("PUT")
-	s.HandleFunc("/{id}", SleepDeleteHandler).Methods("DELETE")
+	s.HandleFunc("/", sleepGetHandler).Methods("GET")
+	s.HandleFunc("/", sleepNewHandler).Methods("POST")
+	s.HandleFunc("/{id}", sleepViewHandler).Methods("GET")
+	s.HandleFunc("/{id}", sleepEditHandler).Methods("PUT")
+	s.HandleFunc("/{id}", sleepDeleteHandler).Methods("DELETE")
 }
 
-//SleepGetHandler -
-func SleepGetHandler(w http.ResponseWriter, r *http.Request) {
+func sleepGetHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "GET no id")
 }
 
-//SleepViewHandler -
-func SleepViewHandler(w http.ResponseWriter, r *http.Request) {
+func sleepViewHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	fmt.Fprintf(w, "GET with id %s", id)
 }
 
-// SleepEditHandler -
-func SleepEditHandler(w http.ResponseWriter, r *http.Request) {
+func sleepEditHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	fmt.Fprintf(w, "PUT with id %s", id)
 }
 
-//SleepNewHandler -
-func SleepNewHandler(w http.ResponseWriter, r *http.Request) {
+func sleepNewHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "POST with data:")
 }
 
-//SleepDeleteHandler -
-func SleepDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func sleepDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	fmt.Fprintf(w, "DELETE with id %s", id)
 }
