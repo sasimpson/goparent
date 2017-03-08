@@ -43,6 +43,5 @@ func userNewHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusConflict)
 	}
-	// user := models.GetUser(userRequest.UserData.ID)
 	json.NewEncoder(w).Encode(userRequest.UserData)
 }

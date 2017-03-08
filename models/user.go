@@ -55,7 +55,6 @@ func (user *User) Save() error {
 			log.Println("error with return from users get in user.Save() 1")
 			return err
 		}
-		log.Printf("resp2: %v", resp2)
 		if resp2.Inserted > 0 {
 			user.ID = resp2.GeneratedKeys[0]
 		}
