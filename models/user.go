@@ -52,7 +52,7 @@ func (user *User) Save() error {
 	if resp.IsNil() || user.ID != "" {
 		resp2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 		if err != nil {
-			log.Println("error with return from users get in user.Save() 1")
+			log.Println("error with insert from users upsert in user.Save()")
 			return err
 		}
 		if resp2.Inserted > 0 {
