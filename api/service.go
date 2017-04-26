@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -19,9 +20,13 @@ func RunService() {
 	initSleepHandlers(a)
 	initWasteHandlers(a)
 
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
 	log.Println("starting service on port 8000")
 	http.Handle("/", r)
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {

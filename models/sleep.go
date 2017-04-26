@@ -35,7 +35,7 @@ func (sleep *Sleep) Save() error {
 	defer session.Close()
 	log.Printf("sleep: %v", sleep.OwnerID)
 	if sleep.OwnerID != "" {
-		resp, err := gorethink.Table("users").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+		resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 		if err != nil {
 			log.Println("error with upsert from sleep upsert in sleep.Save()")
 			return err

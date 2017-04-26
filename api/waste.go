@@ -1,11 +1,21 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/sasimpson/goparent/models"
 )
+
+type WasteRequest struct {
+	WasteData models.Waste `json:"wasteData"`
+}
+type WasteResponse struct {
+	WasteData []models.Waste `json:"wasteData"`
+}
 
 func initWasteHandlers(r *mux.Router) {
 	w := r.PathPrefix("/waste").Subrouter()
@@ -18,7 +28,15 @@ func initWasteHandlers(r *mux.Router) {
 
 //WasteGetHandler -
 func WasteGetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "GET no id")
+	var waste models.Waste
+	wasteData, err := waste.GetAll()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	wasteResponse := WasteResponse{WasteData: wasteData}
+	log.Println("GET Waste")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(wasteResponse.WasteData)
 }
 
 //WasteViewHandler -
@@ -35,7 +53,21 @@ func WasteEditHandler(w http.ResponseWriter, r *http.Request) {
 
 //WasteNewHandler -
 func WasteNewHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "POST with data:")
+	decoder := json.NewDecoder(r.Body)
+	var wasteRequest WasteRequest
+	err := decoder.Decode(&wasteRequest)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	defer r.Body.Close()
+	w.Header().Set("Content-Type", "application/json")
+	err = wasteRequest.WasteData.Save()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusConflict)
+	}
+	json.NewEncoder(w).Encode(wasteRequest.WasteData)
 }
 
 //WasteDeleteHandler -
