@@ -28,13 +28,13 @@ func initWasteHandlers(r *mux.Router) {
 
 //WasteGetHandler -
 func WasteGetHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("GET Waste")
 	var waste models.Waste
 	wasteData, err := waste.GetAll()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	wasteResponse := WasteResponse{WasteData: wasteData}
-	log.Println("GET Waste")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(wasteResponse.WasteData)
 }
@@ -42,7 +42,10 @@ func WasteGetHandler(w http.ResponseWriter, r *http.Request) {
 //WasteViewHandler -
 func WasteViewHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	fmt.Fprintf(w, "GET with id %s", id)
+	var waste models.Waste
+	waste.GetByID(id)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(waste)
 }
 
 // WasteEditHandler -
@@ -53,6 +56,7 @@ func WasteEditHandler(w http.ResponseWriter, r *http.Request) {
 
 //WasteNewHandler -
 func WasteNewHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("POST Waste")
 	decoder := json.NewDecoder(r.Body)
 	var wasteRequest WasteRequest
 	err := decoder.Decode(&wasteRequest)

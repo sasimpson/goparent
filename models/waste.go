@@ -9,10 +9,10 @@ import (
 
 //Waste - structure for holding waste data such as diapers
 type Waste struct {
-	ID        string    `json:"id" gorethink:"id"`
+	ID        string    `json:"id" gorethink:"id,omitempty"`
 	Type      int       `json:"wasteType" gorethink:"wasteType"`
 	Notes     string    `json:"notes" gorethink:"notes"`
-	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp`
+	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
 //WasteType - the type of waste, solid, liquid, solid & liquid
@@ -38,6 +38,7 @@ func (waste *Waste) Save() error {
 		return err
 	}
 	if resp.Inserted > 0 {
+		log.Println(resp.GeneratedKeys)
 		waste.ID = resp.GeneratedKeys[0]
 	}
 	return nil
@@ -49,7 +50,7 @@ func (waste *Waste) GetAll() ([]Waste, error) {
 		return nil, err
 	}
 	defer session.Close()
-	resp, err := gorethink.Table("waste").Run(session)
+	resp, err := gorethink.Table("waste").OrderBy(gorethink.Desc("timestamp")).Run(session)
 	if err != nil {
 		log.Println("error with get in waste.GetAll()")
 		return nil, err
@@ -61,4 +62,21 @@ func (waste *Waste) GetAll() ([]Waste, error) {
 		return nil, err
 	}
 	return rows, nil
+}
+
+func (waste *Waste) GetByID(id string) error {
+	session, err := GetConnection()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+	resp, err := gorethink.Table("waste").Get(id).Run(session)
+	if err != nil {
+		return err
+	}
+	err = resp.One(&waste)
+	if err != nil {
+		return err
+	}
+	return nil
 }
