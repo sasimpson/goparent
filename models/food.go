@@ -1,22 +1,54 @@
 package models
 
-import "time"
+import (
+	"log"
+	"time"
+
+	gorethink "gopkg.in/gorethink/gorethink.v3"
+)
 
 //Feeding - main data structure for storing feeding data
 type Feeding struct {
-	Type      FoodType
-	Amount    FoodAmount
-	TimeStamp time.Time
+	ID        string    `json:"id" gorethink:"id,omitempty"`
+	Type      string    `json:"feedingType" gorethink:"feedingType"`
+	Amount    float32   `json:"feedingAmount" gorethink:"feedingAmount"`
+	Side      string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
+	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
-//FoodType - structure for the types of food ie formula, breast milk, solids, etc.
-type FoodType struct {
-	Name string
+func (feeding *Feeding) Save() error {
+	session, err := GetConnection()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+	resp, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	if err != nil {
+		log.Println("error with upsert from feeding upsert in feeding.Save()")
+		return err
+	}
+	if resp.Inserted > 0 {
+		log.Println(resp.GeneratedKeys)
+		feeding.ID = resp.GeneratedKeys[0]
+	}
+	return nil
 }
 
-//FoodAmount - structure for the amount of food consumed, number and unit.
-type FoodAmount struct {
-	Number float32
-	Unit   string
+func (feeding *Feeding) GetAll() ([]Feeding, error) {
+	session, err := GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+	resp, err := gorethink.Table("feeding").OrderBy(gorethink.Desc("timestamp")).Run(session)
+	if err != nil {
+		return nil, err
+	}
+	var rows []Feeding
+	err = resp.All(&rows)
+	if err != nil {
+		log.Println("error getting all")
+		return nil, err
+	}
+	return rows, nil
 }
-

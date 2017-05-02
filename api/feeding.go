@@ -1,16 +1,27 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/sasimpson/goparent/models"
 )
 
+type FeedingRequest struct {
+	FeedingData models.Feeding `json:"feedingData"`
+}
+
+type FeedingResponse struct {
+	FeedingData []models.Feeding `json:"feedingData"`
+}
+
 func initFeedingHandlers(r *mux.Router) {
-	f := r.PathPrefix("/food").Subrouter()
-	f.HandleFunc("/", FeedingGetHandler).Methods("GET")
-	f.HandleFunc("/", FeedingNewHandler).Methods("POST")
+	f := r.PathPrefix("/feeding").Subrouter()
+	f.HandleFunc("", FeedingGetHandler).Methods("GET")
+	f.HandleFunc("", FeedingNewHandler).Methods("POST")
 	f.HandleFunc("/{id}", FeedingViewHandler).Methods("GET")
 	f.HandleFunc("/{id}", FeedingEditHandler).Methods("PUT")
 	f.HandleFunc("/{id}", FeedingDeleteHandler).Methods("DELETE")
@@ -20,7 +31,15 @@ func initFeedingHandlers(r *mux.Router) {
 
 //FeedingGetHandler -
 func FeedingGetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "GET no id")
+	log.Println("GET feeding")
+	var feeding models.Feeding
+	feedingData, err := feeding.GetAll()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	feedingResponse := FeedingResponse{FeedingData: feedingData}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(feedingResponse.FeedingData)
 }
 
 //FeedingViewHandler -
@@ -37,7 +56,22 @@ func FeedingEditHandler(w http.ResponseWriter, r *http.Request) {
 
 //FeedingNewHandler -
 func FeedingNewHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "POST with data:")
+	log.Println("POST Feeding")
+	decoder := json.NewDecoder(r.Body)
+	var feedingRequest FeedingRequest
+	err := decoder.Decode(&feedingRequest)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	defer r.Body.Close()
+	w.Header().Set("Content-Type", "application/json")
+	err = feedingRequest.FeedingData.Save()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusConflict)
+	}
+	json.NewEncoder(w).Encode(feedingRequest.FeedingData)
 }
 
 //FeedingDeleteHandler -
