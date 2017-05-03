@@ -1,1 +1,2 @@
-rethinkdb_data
+rethinkdb_data*
+runner-build*
