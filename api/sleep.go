@@ -56,6 +56,7 @@ func sleepEditHandler(w http.ResponseWriter, r *http.Request) {
 
 func sleepNewHandler(w http.ResponseWriter, r *http.Request) {
 	//how time should be passed "2017-03-09T18:09:31.409Z"
+	log.Println("PUT sleep")
 	decoder := json.NewDecoder(r.Body)
 	var sleepRequest SleepRequest
 	err := decoder.Decode(&sleepRequest)

@@ -5,15 +5,22 @@ import (
 	"log"
 	"net/http"
 
+	"encoding/json"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+type ServiceInfo struct {
+	Version string `json:"version"`
+}
 
 //RunService - Runs service interfaces for app
 func RunService() {
 	r := mux.NewRouter()
 	a := r.PathPrefix("/api").Subrouter()
 	a.HandleFunc("/", apiHandler)
+	a.HandleFunc("/info", infoHandler)
 
 	initUsersHandlers(a)
 	initFeedingHandlers(a)
@@ -31,4 +38,10 @@ func RunService() {
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "please check docs at: https://github.com/sasimpson/goparent")
+}
+
+func infoHandler(w http.ResponseWriter, r *http.Request) {
+	si := ServiceInfo{Version: "v0.1"}
+	json.NewEncoder(w).Encode(si)
+	return
 }
