@@ -24,8 +24,8 @@ func initSleepHandlers(r *mux.Router) {
 	s.HandleFunc("", sleepGetHandler).Methods("GET")
 	s.HandleFunc("", sleepNewHandler).Methods("POST")
 	s.HandleFunc("/status", sleepToggleStatus).Methods("GET")
-	s.HandleFunc("/start", sleepStartHandler).Methods("GET")
-	s.HandleFunc("/end", sleepEndHandler).Methods("GET")
+	s.HandleFunc("/start", sleepStartHandler).Methods("POST")
+	s.HandleFunc("/end", sleepEndHandler).Methods("POST")
 	s.HandleFunc("/{id}", sleepViewHandler).Methods("GET")
 	s.HandleFunc("/{id}", sleepEditHandler).Methods("PUT")
 	s.HandleFunc("/{id}", sleepDeleteHandler).Methods("DELETE")
@@ -33,8 +33,13 @@ func initSleepHandlers(r *mux.Router) {
 
 func sleepGetHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET sleep")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	var sleep models.Sleep
-	sleepData, err := sleep.GetAll()
+	sleepData, err := sleep.GetAll(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -57,14 +62,20 @@ func sleepEditHandler(w http.ResponseWriter, r *http.Request) {
 func sleepNewHandler(w http.ResponseWriter, r *http.Request) {
 	//how time should be passed "2017-03-09T18:09:31.409Z"
 	log.Println("PUT sleep")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
 	var sleepRequest SleepRequest
-	err := decoder.Decode(&sleepRequest)
+	err = decoder.Decode(&sleepRequest)
 	if err != nil {
 		log.Panicln(err)
 	}
 	defer r.Body.Close()
 	w.Header().Set("Content-Type", "application/json")
+	sleepRequest.SleepData.UserID = user.ID
 	err = sleepRequest.SleepData.Save()
 	if err != nil {
 		log.Println(err)
@@ -81,8 +92,13 @@ func sleepDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 func sleepStartHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET sleep start")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	var sleep models.Sleep
-	err := sleep.Start()
+	err = sleep.Start(&user)
 	if err != nil {
 		log.Println(err.Error())
 		if err == models.ExistingStartErr {
@@ -92,6 +108,7 @@ func sleepStartHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	sleep.UserID = user.ID
 	sleep.Save()
 	fmt.Fprintf(w, "started Sleep")
 	return
@@ -99,8 +116,13 @@ func sleepStartHandler(w http.ResponseWriter, r *http.Request) {
 
 func sleepEndHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET sleep end")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	var sleep models.Sleep
-	err := sleep.End()
+	err = sleep.End(&user)
 	if err != nil {
 		if err == models.NoExistingSessionErr {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -109,14 +131,20 @@ func sleepEndHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	sleep.UserID = user.ID
 	sleep.Save()
 	fmt.Fprintf(w, "ended Sleep")
 }
 
 func sleepToggleStatus(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET sleep toggle status")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	var sleep models.Sleep
-	ok, err := sleep.Status()
+	ok, err := sleep.Status(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

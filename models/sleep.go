@@ -13,13 +13,13 @@ type Sleep struct {
 	ID         string    `json:"id" gorethink:"id,omitempty"`
 	SleepStart time.Time `json:"start" gorethink:"start"`
 	SleepEnd   time.Time `json:"end" gorethink:"end"`
-	OwnerID    string    `json:"user_id" gorethink:"user_id"`
+	UserID     string    `json:"userid" gorethink:"userid"`
 }
 
 var ExistingStartErr = errors.New("already have a start record")
 var NoExistingSessionErr = errors.New("no existing sleep session to end")
 
-func (sleep *Sleep) Status() (bool, error) {
+func (sleep *Sleep) Status(user *User) (bool, error) {
 	session, err := GetConnection()
 	if err != nil {
 		return false, err
@@ -27,7 +27,8 @@ func (sleep *Sleep) Status() (bool, error) {
 	defer session.Close()
 	//check to see if we already have an open sleep session
 	res, err := gorethink.Table("sleep").Filter(map[string]interface{}{
-		"end": time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+		"end":    time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+		"userid": user.ID,
 	}).Run(session)
 	if err != nil {
 		return false, err
@@ -44,8 +45,8 @@ func (sleep *Sleep) Status() (bool, error) {
 }
 
 //Start - record start of sleep
-func (sleep *Sleep) Start() error {
-	ok, err := sleep.Status()
+func (sleep *Sleep) Start(user *User) error {
+	ok, err := sleep.Status(user)
 	if err != nil {
 		return err
 	}
@@ -58,8 +59,8 @@ func (sleep *Sleep) Start() error {
 }
 
 //End - record end of sleep
-func (sleep *Sleep) End() error {
-	ok, err := sleep.Status()
+func (sleep *Sleep) End(user *User) error {
+	ok, err := sleep.Status(user)
 	if err != nil {
 		return err
 	}
@@ -94,13 +95,13 @@ func (sleep *Sleep) Save() error {
 	return nil
 }
 
-func (sleep *Sleep) GetAll() ([]Sleep, error) {
+func (sleep *Sleep) GetAll(user *User) ([]Sleep, error) {
 	session, err := GetConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer session.Close()
-	resp, err := gorethink.Table("sleep").OrderBy(gorethink.Desc("start")).Run(session)
+	resp, err := gorethink.Table("sleep").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("start")).Run(session)
 	if err != nil {
 		return nil, err
 	}
