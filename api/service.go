@@ -15,6 +15,8 @@ type ServiceInfo struct {
 	Version string `json:"version"`
 }
 
+var mySigningKey = []byte("supersecretsquirrl")
+
 //RunService - Runs service interfaces for app
 func RunService() {
 	r := mux.NewRouter()
