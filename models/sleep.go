@@ -101,7 +101,10 @@ func (sleep *Sleep) GetAll(user *User) ([]Sleep, error) {
 		return nil, err
 	}
 	defer session.Close()
-	resp, err := gorethink.Table("sleep").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("start")).Run(session)
+	resp, err := gorethink.Table("sleep").Filter(
+		map[string]interface{}{
+			"userid": user.ID,
+		}).OrderBy(gorethink.Desc("end")).Run(session)
 	if err != nil {
 		return nil, err
 	}
