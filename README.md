@@ -23,3 +23,8 @@ or this:
     go build
     ./main
 
+
+## ToDo:
+
+- [ ] handle multiple kids
+- [ ] add in some statistical analysis of data
