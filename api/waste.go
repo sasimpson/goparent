@@ -68,7 +68,6 @@ func WasteNewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	log.Println("userid:", user.ID)
 	decoder := json.NewDecoder(r.Body)
 	var wasteRequest WasteRequest
 	err = decoder.Decode(&wasteRequest)

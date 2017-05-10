@@ -51,7 +51,6 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateAuthToken(r *http.Request) (models.User, error) {
 	tokenString := r.Header.Get("x-auth-token")
-	log.Println("validateAuthToken:", tokenString)
 	var user models.User
 	_, err := user.ValidateToken(tokenString, mySigningKey)
 	return user, err

@@ -13,6 +13,7 @@ type Feeding struct {
 	Type      string    `json:"feedingType" gorethink:"feedingType"`
 	Amount    float32   `json:"feedingAmount" gorethink:"feedingAmount"`
 	Side      string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
+	UserID    string    `json:"userid" gorethink:"userid"`
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
@@ -28,19 +29,18 @@ func (feeding *Feeding) Save() error {
 		return err
 	}
 	if resp.Inserted > 0 {
-		log.Println(resp.GeneratedKeys)
 		feeding.ID = resp.GeneratedKeys[0]
 	}
 	return nil
 }
 
-func (feeding *Feeding) GetAll() ([]Feeding, error) {
+func (feeding *Feeding) GetAll(user *User) ([]Feeding, error) {
 	session, err := GetConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer session.Close()
-	resp, err := gorethink.Table("feeding").OrderBy(gorethink.Desc("timestamp")).Run(session)
+	resp, err := gorethink.Table("feeding").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("timestamp")).Run(session)
 	if err != nil {
 		return nil, err
 	}

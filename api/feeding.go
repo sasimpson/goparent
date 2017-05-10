@@ -32,8 +32,13 @@ func initFeedingHandlers(r *mux.Router) {
 //FeedingGetHandler -
 func FeedingGetHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET feeding")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	var feeding models.Feeding
-	feedingData, err := feeding.GetAll()
+	feedingData, err := feeding.GetAll(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -57,15 +62,21 @@ func FeedingEditHandler(w http.ResponseWriter, r *http.Request) {
 //FeedingNewHandler -
 func FeedingNewHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("POST Feeding")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
 	var feedingRequest FeedingRequest
-	err := decoder.Decode(&feedingRequest)
+	err = decoder.Decode(&feedingRequest)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	defer r.Body.Close()
 	w.Header().Set("Content-Type", "application/json")
+	feedingRequest.FeedingData.UserID = user.ID
 	err = feedingRequest.FeedingData.Save()
 	if err != nil {
 		log.Println(err)
