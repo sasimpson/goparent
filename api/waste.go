@@ -28,9 +28,15 @@ func initWasteHandlers(r *mux.Router) {
 
 //WasteGetHandler -
 func WasteGetHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("GET Waste")
+	log.Println("GET /api/waste")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	var waste models.Waste
-	wasteData, err := waste.GetAll()
+	wasteData, err := waste.GetAll(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -57,15 +63,22 @@ func WasteEditHandler(w http.ResponseWriter, r *http.Request) {
 //WasteNewHandler -
 func WasteNewHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("POST Waste")
+	user, err := validateAuthToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	log.Println("userid:", user.ID)
 	decoder := json.NewDecoder(r.Body)
 	var wasteRequest WasteRequest
-	err := decoder.Decode(&wasteRequest)
+	err = decoder.Decode(&wasteRequest)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	defer r.Body.Close()
 	w.Header().Set("Content-Type", "application/json")
+	wasteRequest.WasteData.UserID = user.ID
 	err = wasteRequest.WasteData.Save()
 	if err != nil {
 		log.Println(err)

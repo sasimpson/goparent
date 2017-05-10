@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/sasimpson/goparent/models"
 )
 
 type ServiceInfo struct {
@@ -29,7 +30,7 @@ func RunService() {
 	initSleepHandlers(a)
 	initWasteHandlers(a)
 
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type"})
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "x-auth-token"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
@@ -46,4 +47,12 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 	si := ServiceInfo{Version: "v0.1"}
 	json.NewEncoder(w).Encode(si)
 	return
+}
+
+func validateAuthToken(r *http.Request) (models.User, error) {
+	tokenString := r.Header.Get("x-auth-token")
+	log.Println("validateAuthToken:", tokenString)
+	var user models.User
+	_, err := user.ValidateToken(tokenString, mySigningKey)
+	return user, err
 }

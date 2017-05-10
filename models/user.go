@@ -54,9 +54,6 @@ func (user *User) GetUserByLogin(username string, password string) error {
 		return err
 	}
 	defer session.Close()
-	// resp, err := gorethink.Table("users").Filter(func(user gorethink.Term) gorethink.Term {
-	// 	return gorethink.Term.And(user.Field("email").Match(username), user.Field("password").Match(password))
-	// }).Run(session)
 	resp, err := gorethink.Table("users").Filter(map[string]interface{}{
 		"email":    username,
 		"password": password}).Run(session)

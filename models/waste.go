@@ -12,6 +12,7 @@ type Waste struct {
 	ID        string    `json:"id" gorethink:"id,omitempty"`
 	Type      int       `json:"wasteType" gorethink:"wasteType"`
 	Notes     string    `json:"notes" gorethink:"notes"`
+	UserID    string    `json:"userid" gorethink:"userid"`
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
@@ -44,13 +45,13 @@ func (waste *Waste) Save() error {
 	return nil
 }
 
-func (waste *Waste) GetAll() ([]Waste, error) {
+func (waste *Waste) GetAll(user *User) ([]Waste, error) {
 	session, err := GetConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer session.Close()
-	resp, err := gorethink.Table("waste").OrderBy(gorethink.Desc("timestamp")).Run(session)
+	resp, err := gorethink.Table("waste").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("timestamp")).Run(session)
 	if err != nil {
 		log.Println("error with get in waste.GetAll()")
 		return nil, err
