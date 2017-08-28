@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/models"
 )
 
@@ -16,19 +17,17 @@ type ServiceInfo struct {
 	Version string `json:"version"`
 }
 
-var mySigningKey = []byte("supersecretsquirrl")
-
 //RunService - Runs service interfaces for app
-func RunService() {
+func RunService(env *config.Env) {
 	r := mux.NewRouter()
 	a := r.PathPrefix("/api").Subrouter()
 	a.HandleFunc("/", apiHandler)
 	a.HandleFunc("/info", infoHandler)
 
-	initUsersHandlers(a)
-	initFeedingHandlers(a)
-	initSleepHandlers(a)
-	initWasteHandlers(a)
+	initUsersHandlers(env, a)
+	initFeedingHandlers(env, a)
+	initSleepHandlers(env, a)
+	initWasteHandlers(env, a)
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "x-auth-token"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
@@ -49,9 +48,9 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func validateAuthToken(r *http.Request) (models.User, error) {
+func validateAuthToken(env *config.Env, r *http.Request) (models.User, error) {
 	tokenString := r.Header.Get("x-auth-token")
 	var user models.User
-	_, err := user.ValidateToken(tokenString, mySigningKey)
+	_, err := user.ValidateToken(env, tokenString)
 	return user, err
 }

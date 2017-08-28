@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/sasimpson/goparent/config"
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
@@ -17,35 +18,37 @@ type Feeding struct {
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
-func (feeding *Feeding) Save() error {
-	session, err := GetConnection()
+//Save - save the structure to the datastore
+func (feeding *Feeding) Save(env *config.Env) error {
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer session.Close()
-	resp, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	res, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
 		log.Println("error with upsert from feeding upsert in feeding.Save()")
 		return err
 	}
-	if resp.Inserted > 0 {
-		feeding.ID = resp.GeneratedKeys[0]
+	if res.Inserted > 0 {
+		feeding.ID = res.GeneratedKeys[0]
 	}
 	return nil
 }
 
-func (feeding *Feeding) GetAll(user *User) ([]Feeding, error) {
-	session, err := GetConnection()
+//GetAll - get all records for a user from the datastore
+func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
-	defer session.Close()
-	resp, err := gorethink.Table("feeding").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("timestamp")).Run(session)
+	res, err := gorethink.Table("feeding").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("timestamp")).Run(session)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Close()
+
 	var rows []Feeding
-	err = resp.All(&rows)
+	err = res.All(&rows)
 	if err != nil {
 		log.Println("error getting all")
 		return nil, err

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/sasimpson/goparent/config"
 
 	"gopkg.in/gorethink/gorethink.v3"
 )
@@ -30,72 +31,71 @@ type UserClaims struct {
 }
 
 //GetUser - gets the user data based on the id string
-func (user *User) GetUser(id string) error {
-	session, err := GetConnection()
+func (user *User) GetUser(env *config.Env, id string) error {
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer session.Close()
-	resp, err := gorethink.Table("users").Get(id).Run(session)
+	res, err := gorethink.Table("users").Get(id).Run(session)
 	if err != nil {
 		return err
 	}
-	if resp.IsNil() {
+	defer res.Close()
+	if res.IsNil() {
 		return errors.New("no result for that id")
 	}
-	resp.One(&user)
+	res.One(&user)
 	return nil
 }
 
-func (user *User) GetUserByLogin(username string, password string) error {
+func (user *User) GetUserByLogin(env *config.Env, username string, password string) error {
 	//TODO: need to hash the password
-	session, err := GetConnection()
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer session.Close()
-	resp, err := gorethink.Table("users").Filter(map[string]interface{}{
+	res, err := gorethink.Table("users").Filter(map[string]interface{}{
 		"email":    username,
 		"password": password}).Run(session)
 	if err != nil {
 		return err
 	}
-	if resp.IsNil() {
+	defer res.Close()
+	if res.IsNil() {
 		return errors.New("no result for that username password combo")
 	}
-	resp.One(&user)
+	res.One(&user)
 	return nil
 }
 
 //Save - saves the user. creates it if it doesn't exist.  upsert only works if there is an id and that email exists.
-func (user *User) Save() error {
-	session, err := GetConnection()
+func (user *User) Save(env *config.Env) error {
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer session.Close()
-	resp, err := gorethink.Table("users").Filter(map[string]interface{}{
+	res, err := gorethink.Table("users").Filter(map[string]interface{}{
 		"email": user.Email,
 	}).Run(session)
 	if err != nil {
 		return err
 	}
-	defer resp.Close()
-	if resp.IsNil() || user.ID != "" {
-		resp2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	defer res.Close()
+	if res.IsNil() || user.ID != "" {
+		res2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 		if err != nil {
 			log.Println("error with insert from users upsert in user.Save()")
 			return err
 		}
-		if resp2.Inserted > 0 {
-			user.ID = resp2.GeneratedKeys[0]
+		if res2.Inserted > 0 {
+			user.ID = res2.GeneratedKeys[0]
 		}
 		return nil
 	}
 	return errors.New("there needs to be an ID in the user if one with that email exists")
 }
 
-func (user *User) GetToken(mySigningKey []byte) (string, error) {
+func (user *User) GetToken(env *config.Env) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
@@ -105,26 +105,26 @@ func (user *User) GetToken(mySigningKey []byte) (string, error) {
 	claims["Username"] = user.Username
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 
-	tokenString, err := token.SignedString(mySigningKey)
+	tokenString, err := token.SignedString(env.Auth.SigningKey)
 	if err != nil {
 		return "", err
 	}
 	return tokenString, nil
 }
 
-func (user *User) ValidateToken(tokenString string, mySigningKey []byte) (bool, error) {
+func (user *User) ValidateToken(env *config.Env, tokenString string) (bool, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		return mySigningKey, nil
+		return env.Auth.SigningKey, nil
 	})
 	if err != nil {
 		return false, err
 	}
 
 	if claims, ok := token.Claims.(*UserClaims); ok && token.Valid {
-		user.GetUser(claims.ID)
+		user.GetUser(env, claims.ID)
 		return true, nil
 	}
 	return false, errors.New("invalid token")

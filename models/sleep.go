@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/sasimpson/goparent/config"
 	"gopkg.in/gorethink/gorethink.v3"
 )
 
@@ -19,12 +20,11 @@ type Sleep struct {
 var ExistingStartErr = errors.New("already have a start record")
 var NoExistingSessionErr = errors.New("no existing sleep session to end")
 
-func (sleep *Sleep) Status(user *User) (bool, error) {
-	session, err := GetConnection()
+func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return false, err
 	}
-	defer session.Close()
 	//check to see if we already have an open sleep session
 	res, err := gorethink.Table("sleep").Filter(map[string]interface{}{
 		"end":    time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -33,6 +33,7 @@ func (sleep *Sleep) Status(user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	res.Close()
 	err = res.One(&sleep)
 	if err != nil {
 		//if we don't, then set the sleep start as now and return
@@ -45,8 +46,8 @@ func (sleep *Sleep) Status(user *User) (bool, error) {
 }
 
 //Start - record start of sleep
-func (sleep *Sleep) Start(user *User) error {
-	ok, err := sleep.Status(user)
+func (sleep *Sleep) Start(env *config.Env, user *User) error {
+	ok, err := sleep.Status(env, user)
 	if err != nil {
 		return err
 	}
@@ -59,8 +60,8 @@ func (sleep *Sleep) Start(user *User) error {
 }
 
 //End - record end of sleep
-func (sleep *Sleep) End(user *User) error {
-	ok, err := sleep.Status(user)
+func (sleep *Sleep) End(env *config.Env, user *User) error {
+	ok, err := sleep.Status(env, user)
 	if err != nil {
 		return err
 	}
@@ -73,12 +74,11 @@ func (sleep *Sleep) End(user *User) error {
 }
 
 //Save - creates/saves the record.  saves if there is an id filled in.
-func (sleep *Sleep) Save() error {
-	session, err := GetConnection()
+func (sleep *Sleep) Save(env *config.Env) error {
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer session.Close()
 	// log.Printf("sleep: %v", sleep.OwnerID)
 	// if sleep.OwnerID != "" {
 	resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
@@ -95,21 +95,21 @@ func (sleep *Sleep) Save() error {
 	return nil
 }
 
-func (sleep *Sleep) GetAll(user *User) ([]Sleep, error) {
-	session, err := GetConnection()
+func (sleep *Sleep) GetAll(env *config.Env, user *User) ([]Sleep, error) {
+	session, err := env.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
-	defer session.Close()
-	resp, err := gorethink.Table("sleep").Filter(
+	res, err := gorethink.Table("sleep").Filter(
 		map[string]interface{}{
 			"userid": user.ID,
 		}).OrderBy(gorethink.Desc("end")).Run(session)
 	if err != nil {
 		return nil, err
 	}
+	res.Close()
 	var rows []Sleep
-	err = resp.All(&rows)
+	err = res.All(&rows)
 	if err != nil {
 		log.Println("error getting all")
 		return nil, err
