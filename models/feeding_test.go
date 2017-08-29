@@ -10,9 +10,8 @@ import (
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
-var testEnv config.Env
-
 func TestFeedingGetAll(t *testing.T) {
+	var testEnv config.Env
 	mock := r.NewMock()
 	mock.On(
 		r.Table("feeding").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
@@ -48,7 +47,8 @@ func TestFeedingGetAll(t *testing.T) {
 	assert.Len(t, feedings, 0)
 }
 
-func TestSaveError(t *testing.T) {
+func TestFeedingSaveError(t *testing.T) {
+	var testEnv config.Env
 	timestamp := time.Now()
 	mock := r.NewMock()
 	mock.On(
@@ -70,7 +70,9 @@ func TestSaveError(t *testing.T) {
 	assert.EqualError(t, err, "returned error")
 }
 
-func TestSave(t *testing.T) {
+func TestFeedingSave(t *testing.T) {
+	var testEnv config.Env
+
 	testCases := []struct {
 		desc          string
 		recordID      string

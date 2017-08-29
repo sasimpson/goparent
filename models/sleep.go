@@ -79,8 +79,7 @@ func (sleep *Sleep) Save(env *config.Env) error {
 	if err != nil {
 		return err
 	}
-	// log.Printf("sleep: %v", sleep.OwnerID)
-	// if sleep.OwnerID != "" {
+
 	resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
 		log.Println("error with upsert from sleep upsert in sleep.Save()")
@@ -89,9 +88,7 @@ func (sleep *Sleep) Save(env *config.Env) error {
 	if resp.Inserted > 0 {
 		sleep.ID = resp.GeneratedKeys[0]
 	}
-	// }
 
-	// return errors.New("an owner should be included")
 	return nil
 }
 
