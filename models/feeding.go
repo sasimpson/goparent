@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"time"
 
 	"github.com/sasimpson/goparent/config"
@@ -24,11 +23,13 @@ func (feeding *Feeding) Save(env *config.Env) error {
 	if err != nil {
 		return err
 	}
+
 	res, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		log.Println("error with upsert from feeding upsert in feeding.Save()")
+		// log.Println("error with upsert from feeding upsert in feeding.Save()")
 		return err
 	}
+
 	if res.Inserted > 0 {
 		feeding.ID = res.GeneratedKeys[0]
 	}
@@ -50,7 +51,7 @@ func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
 	var rows []Feeding
 	err = res.All(&rows)
 	if err != nil {
-		log.Println("error getting all")
+		// log.Println("error getting all")
 		return nil, err
 	}
 	return rows, nil

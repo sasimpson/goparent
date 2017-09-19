@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"time"
 
 	"github.com/sasimpson/goparent/config"
@@ -33,13 +32,14 @@ func (waste *Waste) Save(env *config.Env) error {
 	if err != nil {
 		return err
 	}
+
 	res, err := gorethink.Table("waste").Insert(waste, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		log.Println("error with upsert from sleep upsert in waste.Save()")
+		// log.Println("error with upsert from sleep upsert in waste.Save()")
 		return err
 	}
+
 	if res.Inserted > 0 {
-		log.Println(res.GeneratedKeys)
 		waste.ID = res.GeneratedKeys[0]
 	}
 	return nil
@@ -52,14 +52,14 @@ func (waste *Waste) GetAll(env *config.Env, user *User) ([]Waste, error) {
 	}
 	res, err := gorethink.Table("waste").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("timestamp")).Run(session)
 	if err != nil {
-		log.Println("error with get in waste.GetAll()")
+		// log.Println("error with get in waste.GetAll()")
 		return nil, err
 	}
 	defer res.Close()
 	var rows []Waste
 	err = res.All(&rows)
 	if err != nil {
-		log.Println("error with getting")
+		// log.Println("error with getting")
 		return nil, err
 	}
 	return rows, nil

@@ -1,3 +1,5 @@
 rethinkdb_data*
 runner-build*
 cover.out
+main.exe
+js*

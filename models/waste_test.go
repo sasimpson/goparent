@@ -32,17 +32,41 @@ func TestWasteGetAll(t *testing.T) {
 	assert.Len(t, wastes, 1)
 }
 
+func TestWasteGetByID(t *testing.T) {
+	var testEnv config.Env
+	mock := r.NewMock()
+	mock.On(
+		r.Table("waste").Get("1"),
+	).Return([]interface{}{
+		map[string]interface{}{
+			"id":        "1",
+			"wasteType": 1,
+			"notes":     "test note",
+			"userid":    "1",
+			"timestamp": time.Now(),
+		},
+	}, nil)
+	testEnv.DB.Session = mock
+	var w Waste
+	err := w.GetByID(&testEnv, "1")
+	mock.AssertExpectations(t)
+	assert.Nil(t, err)
+	assert.Equal(t, "1", w.ID)
+}
+
 func TestWasteSaveError(t *testing.T) {
 	var testEnv config.Env
 	timestamp := time.Now().UTC()
 	mock := r.NewMock()
 	mock.On(
-		r.Table("waste").Insert(map[string]interface{}{
-			"wasteType": 1,
-			"notes":     "Some Notes",
-			"userid":    "1",
-			"timestamp": timestamp,
-		}, r.InsertOpts{Conflict: "replace"}),
+		r.Table("waste").Insert(
+			map[string]interface{}{
+				"wasteType": 1,
+				"notes":     "Some Notes",
+				"userid":    "1",
+				"timestamp": timestamp,
+			}, r.InsertOpts{Conflict: "replace"},
+		).MockAnything(),
 	).Return(nil, errors.New("returned error"))
 	testEnv.DB.Session = mock
 
@@ -84,7 +108,7 @@ func TestWasteSave(t *testing.T) {
 						"notes":     tC.notes,
 						"timestamp": tC.timestamp,
 					},
-				),
+				).MockAnything(),
 			).Return(
 				r.WriteResponse{
 					Inserted:      1,

@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/sasimpson/goparent/config"
@@ -82,7 +81,7 @@ func (sleep *Sleep) Save(env *config.Env) error {
 
 	resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		log.Println("error with upsert from sleep upsert in sleep.Save()")
+		// log.Println("error with upsert from sleep upsert in sleep.Save()")
 		return err
 	}
 	if resp.Inserted > 0 {
@@ -108,7 +107,7 @@ func (sleep *Sleep) GetAll(env *config.Env, user *User) ([]Sleep, error) {
 	var rows []Sleep
 	err = res.All(&rows)
 	if err != nil {
-		log.Println("error getting all")
+		// log.Println("error getting all")
 		return nil, err
 	}
 	return rows, nil
