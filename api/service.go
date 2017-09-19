@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -53,4 +54,17 @@ func validateAuthToken(env *config.Env, r *http.Request) (models.User, error) {
 	var user models.User
 	_, err := user.ValidateToken(env, tokenString)
 	return user, err
+}
+
+func AuthRequired(h http.Handler, env *config.Env) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, err := validateAuthToken(env, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "user", user)
+		r = r.WithContext(ctx)
+		h.ServeHTTP(w, r)
+	})
 }

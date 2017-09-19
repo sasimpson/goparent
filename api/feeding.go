@@ -21,22 +21,20 @@ type FeedingResponse struct {
 
 func initFeedingHandlers(env *config.Env, r *mux.Router) {
 	f := r.PathPrefix("/feeding").Subrouter()
-	f.Handle("", FeedingGetHandler(env)).Methods("GET")
-	f.Handle("", FeedingNewHandler(env)).Methods("POST")
-	f.Handle("/{id}", FeedingViewHandler(env)).Methods("GET")
-	f.Handle("/{id}", FeedingEditHandler(env)).Methods("PUT")
-	f.Handle("/{id}", FeedingDeleteHandler(env)).Methods("DELETE")
+	f.Handle("", AuthRequired(FeedingGetHandler(env), env)).Methods("GET").Name("FeedingGet")
+	f.Handle("", AuthRequired(FeedingNewHandler(env), env)).Methods("POST").Name("FeedingNew")
+	f.Handle("/{id}", AuthRequired(FeedingViewHandler(env), env)).Methods("GET").Name("FeedingView")
+	f.Handle("/{id}", AuthRequired(FeedingEditHandler(env), env)).Methods("PUT").Name("FeedingEdit")
+	f.Handle("/{id}", AuthRequired(FeedingDeleteHandler(env), env)).Methods("DELETE").Name("FeedingDelete")
 }
-
-//-------------------
 
 //FeedingGetHandler -
 func FeedingGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET feeding")
-		user, err := validateAuthToken(env, r)
+		user, err := models.UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		var feeding models.Feeding
@@ -53,6 +51,11 @@ func FeedingGetHandler(env *config.Env) http.Handler {
 //FeedingViewHandler -
 func FeedingViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "GET with id %s", id)
 	})
@@ -61,6 +64,11 @@ func FeedingViewHandler(env *config.Env) http.Handler {
 // FeedingEditHandler -
 func FeedingEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "PUT with id %s", id)
 	})
@@ -70,9 +78,9 @@ func FeedingEditHandler(env *config.Env) http.Handler {
 func FeedingNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST Feeding")
-		user, err := validateAuthToken(env, r)
+		user, err := models.UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		decoder := json.NewDecoder(r.Body)
@@ -97,6 +105,11 @@ func FeedingNewHandler(env *config.Env) http.Handler {
 //FeedingDeleteHandler -
 func FeedingDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "DELETE with id %s", id)
 	})

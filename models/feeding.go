@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"time"
 
 	"github.com/sasimpson/goparent/config"
@@ -21,12 +22,13 @@ type Feeding struct {
 func (feeding *Feeding) Save(env *config.Env) error {
 	session, err := env.DB.GetConnection()
 	if err != nil {
+		log.Println("error getting db connection")
 		return err
 	}
 
 	res, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		// log.Println("error with upsert from feeding upsert in feeding.Save()")
+		log.Println("error with upsert from feeding upsert in feeding.Save()")
 		return err
 	}
 
