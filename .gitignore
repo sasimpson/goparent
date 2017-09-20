@@ -3,3 +3,4 @@ runner-build*
 cover.out
 main.exe
 js*
+debug.test

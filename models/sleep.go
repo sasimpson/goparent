@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/sasimpson/goparent/config"
@@ -30,11 +31,16 @@ func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
 		"userid": user.ID,
 	}).Run(session)
 	if err != nil {
+		log.Println("err after query")
+		if err == gorethink.ErrEmptyResult {
+			return false, nil
+		}
 		return false, err
 	}
 	res.Close()
 	err = res.One(&sleep)
 	if err != nil {
+		log.Println("err after fetch")
 		//if we don't, then set the sleep start as now and return
 		if err == gorethink.ErrEmptyResult {
 			return false, nil

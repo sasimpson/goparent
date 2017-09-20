@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -150,15 +149,39 @@ func TestInitFeedingHandlers(t *testing.T) {
 			path:    "/feeding",
 			methods: []string{"GET"},
 		},
+		{
+			desc:    "feeding new",
+			name:    "FeedingNew",
+			path:    "/feeding",
+			methods: []string{"POST"},
+		},
+		{
+			desc:    "feeding view",
+			name:    "FeedingView",
+			path:    "/feeding/{id}",
+			methods: []string{"GET"},
+		},
+		{
+			desc:    "feeding edit",
+			name:    "FeedingEdit",
+			path:    "/feeding/{id}",
+			methods: []string{"PUT"},
+		},
+		{
+			desc:    "feeding delete",
+			name:    "FeedingDelete",
+			path:    "/feeding/{id}",
+			methods: []string{"DELETE"},
+		},
 	}
 
 	var testEnv config.Env
-	r := mux.NewRouter()
-	initFeedingHandlers(&testEnv, r)
+	routes := mux.NewRouter()
+	initFeedingHandlers(&testEnv, routes)
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			route := r.Get(tC.name)
+			route := routes.Get(tC.name)
 			path, _ := route.GetPathTemplate()
 			methods, _ := route.GetMethods()
 			assert.Equal(t, tC.name, route.GetName())
@@ -166,12 +189,4 @@ func TestInitFeedingHandlers(t *testing.T) {
 			assert.Equal(t, tC.methods, methods)
 		})
 	}
-}
-
-func gorillaWalkFn(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-	name := route.GetName()
-	methods, _ := route.GetMethods()
-	path, _ := route.GetPathTemplate()
-	log.Printf("%s: %s (%v)", name, path, methods)
-	return nil
 }
