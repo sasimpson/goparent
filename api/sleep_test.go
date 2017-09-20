@@ -195,13 +195,13 @@ func TestSleepEndHandler(t *testing.T) {
 	}{
 		{
 			desc:   "false, no sleep active",
-			status: http.StatusOK,
+			status: http.StatusNotFound,
 			ret:    nil,
 			err:    r.ErrEmptyResult,
 		},
 		{
 			desc:   "true, sleep active",
-			status: http.StatusConflict,
+			status: http.StatusOK,
 			ret: map[string]interface{}{
 				"start":  time.Now().AddDate(0, 0, -1),
 				"userid": "1",
@@ -228,7 +228,7 @@ func TestSleepEndHandler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			handler := sleepStartHandler(&testEnv)
+			handler := sleepEndHandler(&testEnv)
 			rr := httptest.NewRecorder()
 
 			ctx := req.Context()
