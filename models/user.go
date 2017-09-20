@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -128,4 +129,13 @@ func (user *User) ValidateToken(env *config.Env, tokenString string) (bool, erro
 		return true, nil
 	}
 	return false, errors.New("invalid token")
+}
+
+//UserFromContext - helper to get the user from the request context
+func UserFromContext(ctx context.Context) (User, error) {
+	user, ok := ctx.Value("user").(User)
+	if !ok {
+		return User{}, errors.New("no user found in context")
+	}
+	return user, nil
 }

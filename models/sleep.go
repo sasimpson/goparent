@@ -30,6 +30,9 @@ func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
 		"userid": user.ID,
 	}).Run(session)
 	if err != nil {
+		if err == gorethink.ErrEmptyResult {
+			return false, nil
+		}
 		return false, err
 	}
 	res.Close()
