@@ -20,20 +20,20 @@ type WasteResponse struct {
 
 func initWasteHandlers(env *config.Env, r *mux.Router) {
 	w := r.PathPrefix("/waste").Subrouter()
-	w.Handle("", WasteGetHandler(env)).Methods("GET")
-	w.Handle("", WasteNewHandler(env)).Methods("POST")
-	w.Handle("/{id}", WasteViewHandler(env)).Methods("GET")
-	w.Handle("/{id}", WasteEditHandler(env)).Methods("PUT")
-	w.Handle("/{id}", WasteDeleteHandler(env)).Methods("DELETE")
+	w.Handle("", AuthRequired(WasteGetHandler(env), env)).Methods("GET").Name("WasteGet")
+	w.Handle("", AuthRequired(WasteNewHandler(env), env)).Methods("POST").Name("WasteNew")
+	w.Handle("/{id}", AuthRequired(WasteViewHandler(env), env)).Methods("GET").Name("WasteView")
+	w.Handle("/{id}", AuthRequired(WasteEditHandler(env), env)).Methods("PUT").Name("WasteEdit")
+	w.Handle("/{id}", AuthRequired(WasteDeleteHandler(env), env)).Methods("DELETE").Name("WasteDelete")
 }
 
 //WasteGetHandler -
 func WasteGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET /api/waste")
-		user, err := validateAuthToken(env, r)
+		user, err := models.UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -51,6 +51,12 @@ func WasteGetHandler(env *config.Env) http.Handler {
 //WasteViewHandler -
 func WasteViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		id := mux.Vars(r)["id"]
 		var waste models.Waste
 		waste.GetByID(env, id)
@@ -62,6 +68,12 @@ func WasteViewHandler(env *config.Env) http.Handler {
 // WasteEditHandler -
 func WasteEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "PUT with id %s", id)
 	})
@@ -71,11 +83,12 @@ func WasteEditHandler(env *config.Env) http.Handler {
 func WasteNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST Waste")
-		user, err := validateAuthToken(env, r)
+		user, err := models.UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		decoder := json.NewDecoder(r.Body)
 		var wasteRequest WasteRequest
 		err = decoder.Decode(&wasteRequest)
@@ -83,6 +96,7 @@ func WasteNewHandler(env *config.Env) http.Handler {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		defer r.Body.Close()
 		w.Header().Set("Content-Type", "application/json")
 		wasteRequest.WasteData.UserID = user.ID
@@ -91,6 +105,7 @@ func WasteNewHandler(env *config.Env) http.Handler {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 		}
+
 		json.NewEncoder(w).Encode(wasteRequest.WasteData)
 	})
 }
@@ -98,6 +113,12 @@ func WasteNewHandler(env *config.Env) http.Handler {
 //WasteDeleteHandler -
 func WasteDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "DELETE with id %s", id)
 	})

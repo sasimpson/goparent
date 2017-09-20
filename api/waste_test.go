@@ -17,31 +17,31 @@ import (
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
-func TestFeedingGetHandler(t *testing.T) {
+func TestWasteGetHandler(t *testing.T) {
 	var testEnv config.Env
 
 	//mock out the db stuff and return call
 	mock := r.NewMock()
 	mock.On(
-		r.Table("feeding").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
+		r.Table("waste").MockAnything(),
 	).Return([]interface{}{
 		map[string]interface{}{
-			"id":            "1",
-			"feedingType":   "bottle",
-			"feedingAmount": 1,
-			"feedingSide":   "",
-			"userid":        "1",
-			"timestamp":     time.Now()},
+			"id":        "1",
+			"wasteType": 1,
+			"notes":     "test note",
+			"userid":    "1",
+			"timestamp": time.Now(),
+		},
 	}, nil)
 	testEnv.DB.Session = mock
 
 	//setup request
-	req, err := http.NewRequest("GET", "/feeding", nil)
+	req, err := http.NewRequest("GET", "/waste", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	handler := FeedingGetHandler(&testEnv)
+	handler := WasteGetHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -51,13 +51,13 @@ func TestFeedingGetHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
-func TestFeedingNewHandler(t *testing.T) {
+func TestWasteNewHandler(t *testing.T) {
 	var testEnv config.Env
 	timestamp := time.Now()
 
 	mock := r.NewMock()
 	mock.On(
-		r.Table("feeding").MockAnything(),
+		r.Table("waste").MockAnything(),
 	).Return(r.WriteResponse{
 		Inserted:      1,
 		Errors:        0,
@@ -65,17 +65,17 @@ func TestFeedingNewHandler(t *testing.T) {
 	}, nil)
 	testEnv.DB.Session = mock
 
-	f := FeedingRequest{FeedingData: models.Feeding{Type: "bottle", Amount: 3.5, Side: "", UserID: "1", TimeStamp: timestamp}}
-	js, err := json.Marshal(&f)
+	w := WasteRequest{WasteData: models.Waste{Type: 1, Notes: "some notes", UserID: "1", TimeStamp: timestamp}}
+	js, err := json.Marshal(&w)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req, err := http.NewRequest("POST", "/feeding", bytes.NewReader(js))
+	req, err := http.NewRequest("POST", "/waste", bytes.NewReader(js))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	handler := FeedingNewHandler(&testEnv)
+	handler := WasteNewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
@@ -84,15 +84,27 @@ func TestFeedingNewHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
-func TestFeedingViewHandler(t *testing.T) {
+func TestWasteViewHandler(t *testing.T) {
 	var testEnv config.Env
 
-	req, err := http.NewRequest("GET", "/feeding/1", nil)
+	mock := r.NewMock()
+	mock.On(
+		r.Table("waste").MockAnything(),
+	).Return(map[string]interface{}{
+		"id":        "1",
+		"type":      1,
+		"notes":     "some notes",
+		"userid":    "1",
+		"timestamp": time.Now(),
+	}, nil)
+	testEnv.DB.Session = mock
+
+	req, err := http.NewRequest("GET", "/waste/1", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	handler := FeedingViewHandler(&testEnv)
+	handler := WasteViewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -102,15 +114,15 @@ func TestFeedingViewHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
-func TestFeedingEditHandler(t *testing.T) {
+func TestWasteEditHandler(t *testing.T) {
 	var testEnv config.Env
 
-	req, err := http.NewRequest("GET", "/feeding/1", nil)
+	req, err := http.NewRequest("GET", "/waste/1", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	handler := FeedingEditHandler(&testEnv)
+	handler := WasteEditHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -120,15 +132,15 @@ func TestFeedingEditHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
-func TestFeedingDeleteHandler(t *testing.T) {
+func TestWasteDeleteHandler(t *testing.T) {
 	var testEnv config.Env
 
-	req, err := http.NewRequest("DELETE", "/feeding/1", nil)
+	req, err := http.NewRequest("DELETE", "/waste/1", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	handler := FeedingDeleteHandler(&testEnv)
+	handler := WasteDeleteHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -138,7 +150,7 @@ func TestFeedingDeleteHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
-func TestInitFeedingHandlers(t *testing.T) {
+func TestInitWasteHandler(t *testing.T) {
 	testCases := []struct {
 		desc    string
 		name    string
@@ -146,40 +158,40 @@ func TestInitFeedingHandlers(t *testing.T) {
 		methods []string
 	}{
 		{
-			desc:    "feeding get",
-			name:    "FeedingGet",
-			path:    "/feeding",
+			desc:    "waste get",
+			name:    "WasteGet",
+			path:    "/waste",
 			methods: []string{"GET"},
 		},
 		{
-			desc:    "feeding new",
-			name:    "FeedingNew",
-			path:    "/feeding",
+			desc:    "waste new",
+			name:    "WasteNew",
+			path:    "/waste",
 			methods: []string{"POST"},
 		},
 		{
-			desc:    "feeding view",
-			name:    "FeedingView",
-			path:    "/feeding/{id}",
+			desc:    "waste view",
+			name:    "WasteView",
+			path:    "/waste/{id}",
 			methods: []string{"GET"},
 		},
 		{
-			desc:    "feeding edit",
-			name:    "FeedingEdit",
-			path:    "/feeding/{id}",
+			desc:    "waste edit",
+			name:    "WasteEdit",
+			path:    "/waste/{id}",
 			methods: []string{"PUT"},
 		},
 		{
-			desc:    "feeding delete",
-			name:    "FeedingDelete",
-			path:    "/feeding/{id}",
+			desc:    "waste delete",
+			name:    "WasteDelete",
+			path:    "/waste/{id}",
 			methods: []string{"DELETE"},
 		},
 	}
 
 	var testEnv config.Env
 	routes := mux.NewRouter()
-	initFeedingHandlers(&testEnv, routes)
+	initWasteHandlers(&testEnv, routes)
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
