@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sasimpson/goparent/config"
@@ -123,4 +124,47 @@ func TestUserSave(t *testing.T) {
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "1", u.ID)
+}
+
+func TestTokens(t *testing.T) {
+	var testEnv config.Env
+	u := User{
+		ID:       "1",
+		Name:     "test user",
+		Email:    "testuser@test.com",
+		Username: "testuser",
+		Password: "testpassword",
+	}
+	testEnv.Auth.SigningKey = []byte("testkey")
+	token, err := u.GetToken(&testEnv)
+	assert.Nil(t, err)
+	if assert.NotNil(t, token) {
+		assert.NotEqual(t, "", token)
+	}
+
+	mock := r.NewMock()
+	mock.On(
+		r.Table("users").Get("1"),
+	).Return([]interface{}{map[string]interface{}{
+		"id":       "1",
+		"name":     "test user",
+		"email":    "testuser@test.com",
+		"username": "testuser",
+		"password": "testpassword",
+	}}, nil)
+	testEnv.DB.Session = mock
+
+	ok, err := u.ValidateToken(&testEnv, token)
+	mock.AssertExpectations(t)
+	assert.Nil(t, err)
+	assert.True(t, ok)
+}
+
+func TestUserFromContext(t *testing.T) {
+	var ctx context.Context
+	ctx = context.WithValue(ctx, "user", User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	user, err := UserFromContext(ctx)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "1", user.ID)
 }

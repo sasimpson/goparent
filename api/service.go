@@ -49,16 +49,14 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func validateAuthToken(env *config.Env, r *http.Request) (models.User, error) {
-	tokenString := r.Header.Get("x-auth-token")
-	var user models.User
-	_, err := user.ValidateToken(env, tokenString)
-	return user, err
-}
-
+//AuthRequired - handler to handle authentication of users tokens.
 func AuthRequired(h http.Handler, env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := validateAuthToken(env, r)
+		//switch this to auth bearer header
+		tokenString := r.Header.Get("x-auth-token")
+		var user models.User
+		_, err := user.ValidateToken(env, tokenString)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
