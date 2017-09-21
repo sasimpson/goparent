@@ -23,10 +23,10 @@ type UserAuthResponse struct {
 
 func initUsersHandlers(env *config.Env, r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
-	u.Handle("/{id}", userGetHandler(env)).Methods("GET")
-	u.Handle("/", userNewHandler(env)).Methods("POST")
-	u.Handle("/login", loginHandler(env)).Methods("POST")
-	u.Handle("/validate", validateUserTokenHandler(env)).Methods("POST")
+	u.Handle("/{id}", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserView")
+	u.Handle("/", userNewHandler(env)).Methods("POST").Name("UserNew")
+	u.Handle("/login", loginHandler(env)).Methods("POST").Name("UserLogin")
+	u.Handle("/validate", validateUserTokenHandler(env)).Methods("POST").Name("UserValidate")
 }
 
 func loginHandler(env *config.Env) http.Handler {
@@ -56,15 +56,26 @@ func loginHandler(env *config.Env) http.Handler {
 
 func userGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// user, err := models.UserFromContext(r.Context())
+		// if err != nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+
 		vars := mux.Vars(r)
+		log.Printf("mux vars: %v", vars)
 		log.Println("GET  /api/user/", vars["id"])
-		var user models.User
-		err := user.GetUser(env, vars["id"])
+		var lookupUser models.User
+		err := lookupUser.GetUser(env, vars["id"])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		json.NewEncoder(w).Encode(user)
+		// if user.ID == lookupUser.ID {
+		json.NewEncoder(w).Encode(lookupUser)
+		return
+		// }
+		// http.Error(w, "not authorized", http.StatusUnauthorized)
 	})
 }
 
