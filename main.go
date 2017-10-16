@@ -7,7 +7,7 @@ import (
 
 func main() {
 	env := config.Env{
-		DB:   config.DBEnv{Host: "192.168.1.36", Port: 28015, Database: "goparent"},
+		DB:   config.DBEnv{Host: "localhost", Port: 28015, Database: "goparent"},
 		Auth: config.Authentication{SigningKey: []byte("supersecretsquirrl")},
 	}
 	api.RunService(&env)

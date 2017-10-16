@@ -8,6 +8,8 @@ import (
 
 	"encoding/json"
 
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent/config"
@@ -30,7 +32,7 @@ func RunService(env *config.Env) {
 	initSleepHandlers(env, a)
 	initWasteHandlers(env, a)
 
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "x-auth-token"})
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
@@ -52,17 +54,26 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 //AuthRequired - handler to handle authentication of users tokens.
 func AuthRequired(h http.Handler, env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//switch this to auth bearer header
-		tokenString := r.Header.Get("x-auth-token")
-		var user models.User
-		_, err := user.ValidateToken(env, tokenString)
+		token, err := request.ParseFromRequestWithClaims(r, request.AuthorizationHeaderExtractor, &models.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			}
+			return env.Auth.SigningKey, nil
+		})
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "user", user)
-		r = r.WithContext(ctx)
-		h.ServeHTTP(w, r)
+		var user models.User
+		if claims, ok := token.Claims.(*models.UserClaims); ok && token.Valid {
+			user.GetUser(env, claims.ID)
+			ctx := context.WithValue(r.Context(), "user", user)
+			r = r.WithContext(ctx)
+			h.ServeHTTP(w, r)
+			return
+		}
+		http.Error(w, "failed", http.StatusInternalServerError)
+		return
 	})
 }

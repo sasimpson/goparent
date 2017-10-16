@@ -22,14 +22,14 @@ type SleepResponse struct {
 
 func initSleepHandlers(env *config.Env, r *mux.Router) {
 	s := r.PathPrefix("/sleep").Subrouter()
-	s.Handle("", sleepGetHandler(env)).Methods("GET").Name("SleepGet")
-	s.Handle("", sleepNewHandler(env)).Methods("POST").Name("SleepNew")
-	s.Handle("/status", sleepToggleStatus(env)).Methods("GET").Name("SleepStatus")
-	s.Handle("/start", sleepStartHandler(env)).Methods("POST").Name("SleepStart")
-	s.Handle("/end", sleepEndHandler(env)).Methods("POST").Name("SleepEnd")
-	s.Handle("/{id}", sleepViewHandler(env)).Methods("GET").Name("SleepView")
-	s.Handle("/{id}", sleepEditHandler(env)).Methods("PUT").Name("SleepEdit")
-	s.Handle("/{id}", sleepDeleteHandler(env)).Methods("DELETE").Name("SleepDelete")
+	s.Handle("", AuthRequired(sleepGetHandler(env), env)).Methods("GET").Name("SleepGet")
+	s.Handle("", AuthRequired(sleepNewHandler(env), env)).Methods("POST").Name("SleepNew")
+	s.Handle("/status", AuthRequired(sleepToggleStatus(env), env)).Methods("GET").Name("SleepStatus")
+	s.Handle("/start", AuthRequired(sleepStartHandler(env), env)).Methods("POST").Name("SleepStart")
+	s.Handle("/end", AuthRequired(sleepEndHandler(env), env)).Methods("POST").Name("SleepEnd")
+	s.Handle("/{id}", AuthRequired(sleepViewHandler(env), env)).Methods("GET").Name("SleepView")
+	s.Handle("/{id}", AuthRequired(sleepEditHandler(env), env)).Methods("PUT").Name("SleepEdit")
+	s.Handle("/{id}", AuthRequired(sleepDeleteHandler(env), env)).Methods("DELETE").Name("SleepDelete")
 }
 
 func sleepGetHandler(env *config.Env) http.Handler {

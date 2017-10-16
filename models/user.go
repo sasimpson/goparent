@@ -9,8 +9,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/sasimpson/goparent/config"
-
-	"gopkg.in/gorethink/gorethink.v3"
+	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
 //User - structure for storing user data

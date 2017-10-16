@@ -26,7 +26,6 @@ func initUsersHandlers(env *config.Env, r *mux.Router) {
 	u.Handle("/{id}", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserView")
 	u.Handle("/", userNewHandler(env)).Methods("POST").Name("UserNew")
 	u.Handle("/login", loginHandler(env)).Methods("POST").Name("UserLogin")
-	u.Handle("/validate", validateUserTokenHandler(env)).Methods("POST").Name("UserValidate")
 }
 
 func loginHandler(env *config.Env) http.Handler {
@@ -34,7 +33,8 @@ func loginHandler(env *config.Env) http.Handler {
 
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		log.Println("POST /api/user/login", username, password)
+
+		log.Println("POST /api/user/login,", username, password)
 		var user models.User
 		err := user.GetUserByLogin(env, username, password)
 		if err != nil {
@@ -97,25 +97,5 @@ func userNewHandler(env *config.Env) http.Handler {
 			return
 		}
 		json.NewEncoder(w).Encode(userRequest.UserData)
-	})
-}
-
-func validateUserTokenHandler(env *config.Env) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST /api/user/validate")
-		tokenString := r.Header.Get("x-auth-token")
-		var user models.User
-		token, err := user.ValidateToken(env, tokenString)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		if token {
-			w.Header().Set("x-auth-token", tokenString)
-			w.WriteHeader(http.StatusAccepted)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
 	})
 }
