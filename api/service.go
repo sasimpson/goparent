@@ -31,10 +31,11 @@ func RunService(env *config.Env) {
 	initFeedingHandlers(env, a)
 	initSleepHandlers(env, a)
 	initWasteHandlers(env, a)
+	initChildrenHandlers(env, a)
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
 
 	log.Println("starting service on port 8000")
 	http.Handle("/", r)

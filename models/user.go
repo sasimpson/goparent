@@ -18,7 +18,7 @@ type User struct {
 	Name     string `json:"name" gorethink:"name"`
 	Email    string `json:"email" gorethink:"email"`
 	Username string `json:"username" gorethink:"username"`
-	Password string `json:"password" gorethink:"password"`
+	Password string `json:"-" gorethink:"password"`
 }
 
 type UserClaims struct {

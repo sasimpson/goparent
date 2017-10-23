@@ -44,7 +44,7 @@ func WasteGetHandler(env *config.Env) http.Handler {
 		}
 		wasteResponse := WasteResponse{WasteData: wasteData}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(wasteResponse.WasteData)
+		json.NewEncoder(w).Encode(wasteResponse)
 	})
 }
 

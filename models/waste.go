@@ -13,6 +13,7 @@ type Waste struct {
 	Type      int       `json:"wasteType" gorethink:"wasteType"`
 	Notes     string    `json:"notes" gorethink:"notes"`
 	UserID    string    `json:"userid" gorethink:"userid"`
+	ChildID   string    `json:"childid" gorethink:"childid"`
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 

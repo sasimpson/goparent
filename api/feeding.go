@@ -41,6 +41,7 @@ func FeedingGetHandler(env *config.Env) http.Handler {
 		feedingData, err := feeding.GetAll(env, &user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		feedingResponse := FeedingResponse{FeedingData: feedingData}
 		w.Header().Set("Content-Type", "application/json")
@@ -57,7 +58,7 @@ func FeedingViewHandler(env *config.Env) http.Handler {
 			return
 		}
 		id := mux.Vars(r)["id"]
-		fmt.Fprintf(w, "GET with id %s", id)
+		fmt.Fprintf(w, "GET feeding with id %s", id)
 	})
 }
 

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
@@ -24,4 +25,16 @@ func (dbenv *DBEnv) GetConnection() (gorethink.QueryExecutor, error) {
 		Database: dbenv.Database,
 	})
 	return session, err
+}
+
+func CreateTables(env *Env) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	gorethink.TableCreate("feeding").Run(session)
+	gorethink.TableCreate("waste").Run(session)
+	gorethink.TableCreate("sleep").Run(session)
+	gorethink.TableCreate("users").Run(session)
+	gorethink.TableCreate("children").Run(session)
 }
