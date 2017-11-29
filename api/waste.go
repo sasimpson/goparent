@@ -37,8 +37,16 @@ func WasteGetHandler(env *config.Env) http.Handler {
 			return
 		}
 
+		queryParams := r.URL.Query()
+		log.Printf("[%v]\n", queryParams)
+
+		var childID string
+		if val, ok := queryParams["child_id"]; ok {
+			childID = val[0]
+		}
+
 		var waste models.Waste
-		wasteData, err := waste.GetAll(env, &user)
+		wasteData, err := waste.GetAll(env, &user, childID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

@@ -45,7 +45,7 @@ func FeedingGetHandler(env *config.Env) http.Handler {
 		}
 		feedingResponse := FeedingResponse{FeedingData: feedingData}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(feedingResponse.FeedingData)
+		json.NewEncoder(w).Encode(feedingResponse)
 	})
 }
 
@@ -99,7 +99,7 @@ func FeedingNewHandler(env *config.Env) http.Handler {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 		}
-		json.NewEncoder(w).Encode(feedingRequest.FeedingData)
+		json.NewEncoder(w).Encode(feedingRequest)
 	})
 }
 

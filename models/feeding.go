@@ -16,6 +16,7 @@ type Feeding struct {
 	Side      string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
 	UserID    string    `json:"userid" gorethink:"userid"`
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
+	ChildID   string    `json:"childID" gorethink:"childid"`
 }
 
 //Save - save the structure to the datastore

@@ -46,12 +46,16 @@ func (waste *Waste) Save(env *config.Env) error {
 	return nil
 }
 
-func (waste *Waste) GetAll(env *config.Env, user *User) ([]Waste, error) {
+func (waste *Waste) GetAll(env *config.Env, user *User, childID string) ([]Waste, error) {
 	session, err := env.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
-	res, err := gorethink.Table("waste").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("timestamp")).Run(session)
+	filterParams := map[string]interface{}{"userid": user.ID}
+	if childID != "" {
+		filterParams["childid"] = childID
+	}
+	res, err := gorethink.Table("waste").Filter(filterParams).OrderBy(gorethink.Desc("timestamp")).Run(session)
 	if err != nil {
 		// log.Println("error with get in waste.GetAll()")
 		return nil, err

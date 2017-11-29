@@ -48,7 +48,7 @@ func sleepGetHandler(env *config.Env) http.Handler {
 		}
 		sleepResponse := SleepResponse{SleepData: sleepData}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(sleepResponse.SleepData)
+		json.NewEncoder(w).Encode(sleepResponse)
 	})
 }
 
@@ -100,7 +100,7 @@ func sleepNewHandler(env *config.Env) http.Handler {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
-		json.NewEncoder(w).Encode(sleepRequest.SleepData)
+		json.NewEncoder(w).Encode(sleepRequest)
 	})
 }
 
