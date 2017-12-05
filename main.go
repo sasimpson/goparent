@@ -6,9 +6,7 @@ import (
 )
 
 func main() {
-	env := config.Env{
-		DB:   config.DBEnv{Host: "localhost", Port: 28015, Database: "goparent"},
-		Auth: config.Authentication{SigningKey: []byte("supersecretsquirrl")},
-	}
-	api.RunService(&env)
+	env := config.InitConfig()
+	config.CreateTables(env)
+	api.RunService(env)
 }

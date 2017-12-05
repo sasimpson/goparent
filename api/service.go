@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"encoding/json"
 
@@ -17,7 +18,8 @@ import (
 )
 
 type ServiceInfo struct {
-	Version string `json:"version"`
+	Version  string `json:"version"`
+	Hostname string `json:"hostname"`
 }
 
 //RunService - Runs service interfaces for app
@@ -37,7 +39,7 @@ func RunService(env *config.Env) {
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
 
-	log.Println("starting service on port 8000")
+	log.Printf("starting service on 8000")
 	http.Handle("/", r)
 	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 }
@@ -47,7 +49,9 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func infoHandler(w http.ResponseWriter, r *http.Request) {
-	si := ServiceInfo{Version: "v0.1"}
+	name, _ := os.Hostname()
+
+	si := ServiceInfo{Version: "v0.1", Hostname: name}
 	json.NewEncoder(w).Encode(si)
 	return
 }

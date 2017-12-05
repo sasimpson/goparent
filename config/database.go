@@ -12,6 +12,8 @@ type DBEnv struct {
 	Host     string
 	Port     int
 	Database string
+	Username string
+	Password string
 	Session  gorethink.QueryExecutor
 }
 
@@ -20,10 +22,14 @@ func (dbenv *DBEnv) GetConnection() (gorethink.QueryExecutor, error) {
 	if dbenv.Session != nil && dbenv.Session.IsConnected() {
 		return dbenv.Session, nil
 	}
-	session, err := gorethink.Connect(gorethink.ConnectOpts{
+	connectOpts := gorethink.ConnectOpts{
 		Address:  fmt.Sprintf("%s:%d", dbenv.Host, dbenv.Port),
 		Database: dbenv.Database,
-	})
+		Username: dbenv.Username,
+		Password: dbenv.Password,
+	}
+
+	session, err := gorethink.Connect(connectOpts)
 	return session, err
 }
 
@@ -32,9 +38,10 @@ func CreateTables(env *Env) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	gorethink.TableCreate("feeding").Run(session)
-	gorethink.TableCreate("waste").Run(session)
-	gorethink.TableCreate("sleep").Run(session)
-	gorethink.TableCreate("users").Run(session)
-	gorethink.TableCreate("children").Run(session)
+	gorethink.DBCreate("goparent").Run(session)
+	gorethink.DB("gorethink").TableCreate("feeding").Run(session)
+	gorethink.DB("gorethink").TableCreate("waste").Run(session)
+	gorethink.DB("gorethink").TableCreate("sleep").Run(session)
+	gorethink.DB("gorethink").TableCreate("users").Run(session)
+	gorethink.DB("gorethink").TableCreate("children").Run(session)
 }
