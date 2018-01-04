@@ -14,6 +14,7 @@ type Sleep struct {
 	SleepStart time.Time `json:"start" gorethink:"start"`
 	SleepEnd   time.Time `json:"end" gorethink:"end"`
 	UserID     string    `json:"userid" gorethink:"userid"`
+	ChildID    string    `json:"childID" gorethink:"childid"`
 }
 
 var ExistingStartErr = errors.New("already have a start record")
