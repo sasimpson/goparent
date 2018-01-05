@@ -45,7 +45,12 @@ func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := gorethink.Table("feeding").Filter(map[string]interface{}{"userid": user.ID}).OrderBy(gorethink.Desc("timestamp")).Run(session)
+	res, err := gorethink.Table("feeding").
+		Filter(map[string]interface{}{
+			"userid": user.ID,
+		}).
+		OrderBy(gorethink.Desc("timestamp")).
+		Run(session)
 	if err != nil {
 		return nil, err
 	}

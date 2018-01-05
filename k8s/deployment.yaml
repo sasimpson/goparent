@@ -49,7 +49,7 @@ items:
           run: goparent
       spec:
         containers:
-        - image: goparent:v0.8
+        - image: goparent:v0.10
           imagePullPolicy: IfNotPresent
           name: goparent
           volumeMounts:

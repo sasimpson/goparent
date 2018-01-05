@@ -38,7 +38,7 @@ func InitConfig() *Env {
 	//parse configs if they exist
 	viper.SetConfigName("goparent")
 	viper.AddConfigPath("/etc/config/")
-	// viper.AddConfigPath("$HOME/.goparent")
+	viper.AddConfigPath("$HOME/.goparent")
 	// viper.AddConfigPath(".")
 
 	err := viper.ReadInConfig()

@@ -79,7 +79,7 @@ func sleepEditHandler(env *config.Env) http.Handler {
 func sleepNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//how time should be passed "2017-03-09T18:09:31.409Z"
-		log.Println("PUT sleep")
+		log.Println("POST sleep")
 		user, err := models.UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
