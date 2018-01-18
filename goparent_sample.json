@@ -4,7 +4,7 @@
         "port": 8000
     },
     "rethinkdb": {
-        "host": "localhost",
+        "host": "goparent_rethinkdb",
         "port": 28015,
         "name": "goparent"
     }
