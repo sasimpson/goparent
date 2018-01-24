@@ -20,8 +20,7 @@ func TestChildrenGetAll(t *testing.T) {
 	}, nil)
 	testEnv.DB.Session = mock
 
-	var c Child
-	children, err := c.GetAll(&testEnv, &User{ID: "1"})
+	children, err := GetAllChildren(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, children, 1)
@@ -31,7 +30,7 @@ func TestChildrenGetAll(t *testing.T) {
 		r.Table("children").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("birthday")),
 	).Return([]interface{}{}, nil)
 	testEnv.DB.Session = mock
-	children, err = c.GetAll(&testEnv, &User{ID: "1"})
+	children, err = GetAllChildren(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, children, 0)
@@ -41,7 +40,7 @@ func TestChildrenGetAll(t *testing.T) {
 		r.Table("children").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("birthday")),
 	).Return([]interface{}{}, errors.New("Test Error"))
 	testEnv.DB.Session = mock
-	children, err = c.GetAll(&testEnv, &User{ID: "1"})
+	children, err = GetAllChildren(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.Len(t, children, 0)

@@ -32,8 +32,8 @@ func (child *Child) Save(env *config.Env) error {
 	return nil
 }
 
-//GetAll - get all records for a user from the datastore
-func (child *Child) GetAll(env *config.Env, user *User) ([]Child, error) {
+//GetAllChildren - get all records for a user from the datastore
+func GetAllChildren(env *config.Env, user *User) ([]Child, error) {
 	session, err := env.DB.GetConnection()
 	if err != nil {
 		return nil, err

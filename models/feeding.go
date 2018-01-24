@@ -45,6 +45,7 @@ func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	res, err := gorethink.Table("feeding").
 		Filter(map[string]interface{}{
 			"userid": user.ID,
@@ -62,5 +63,38 @@ func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
 		// log.Println("error getting all")
 		return nil, err
 	}
+
+	return rows, nil
+}
+
+//FeedingGetStats - get feeding stats for one child for the last 24 hours.
+func FeedingGetStats(env *config.Env, user *User, child *Child) ([]Feeding, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	end := time.Now()
+	start := end.AddDate(0, 0, -1)
+
+	res, err := gorethink.Table("feeding").
+		Filter(map[string]interface{}{
+			"userid":  user.ID,
+			"childid": child.ID,
+		}).
+		Filter(gorethink.Row.Field("timestamp").During(start, end)).
+		OrderBy(gorethink.Desc("timestamp")).
+		Run(session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var rows []Feeding
+	err = res.All(&rows)
+	if err != nil {
+		return nil, err
+	}
+
 	return rows, nil
 }

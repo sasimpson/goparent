@@ -10,16 +10,30 @@ import (
 	"github.com/sasimpson/goparent/models"
 )
 
+//ChildrenResponse - response for children lists
 type ChildrenResponse struct {
 	Children []models.Child `json:"children"`
 }
 
+//ChildRequest - incoming request structure
 type ChildRequest struct {
 	ChildData models.Child `json:"childData"`
 }
 
+//ChildDeletedResponse - response of deleted child
 type ChildDeletedResponse struct {
 	Deleted int `json:"deleted"`
+}
+
+//ChildSummaryResponse - Summary response
+type ChildSummaryResponse struct {
+	ChildData models.Child    `json:"childData"`
+	Stats     ChildStatistics `json:"stats"`
+}
+
+//ChildStatistics - statistics block for child data
+type ChildStatistics struct {
+	FeedingData []models.Feeding `json:"feedingData"`
 }
 
 func initChildrenHandlers(env *config.Env, r *mux.Router) {
@@ -29,20 +43,52 @@ func initChildrenHandlers(env *config.Env, r *mux.Router) {
 	c.Handle("/{id}", AuthRequired(ChildViewHandler(env), env)).Methods("GET").Name("ChildView")
 	c.Handle("/{id}", AuthRequired(ChildEditHandler(env), env)).Methods("PUT").Name("ChildEdit")
 	c.Handle("/{id}", AuthRequired(ChildDeleteHandler(env), env)).Methods("DELETE").Name("ChildDelete")
+	c.Handle("/{id}/summary", AuthRequired(ChildSummary(env), env)).Methods("GET").Name("ChildSummary")
 
 }
 
-func ChildrenGetHandler(env *config.Env) http.Handler {
+//ChildSummary - handler to assemble and reuturn child summary data
+func ChildSummary(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Children GET ")
+		childID := mux.Vars(r)["id"]
+		log.Println("Child Summary: ", childID)
 		user, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		var child models.Child
+		err = child.GetChild(env, &user, childID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		feedings, err := models.FeedingGetStats(env, &user, &child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		var child models.Child
-		allChildren, err := child.GetAll(env, &user)
+		var summary ChildSummaryResponse
+		summary.ChildData = child
+		summary.Stats.FeedingData = feedings
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(summary)
+	})
+}
+
+//ChildrenGetHandler - GET / - gets all children for user
+func ChildrenGetHandler(env *config.Env) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Children GET ")
+		user, err := models.UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		allChildren, err := models.GetAllChildren(env, &user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -54,12 +100,13 @@ func ChildrenGetHandler(env *config.Env) http.Handler {
 	})
 }
 
+//ChildNewHandler - POST / - create a new child for a user
 func ChildNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST Child")
 		user, err := models.UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -85,6 +132,7 @@ func ChildNewHandler(env *config.Env) http.Handler {
 	})
 }
 
+//ChildViewHandler - GET /{id} - gets the data for a child for a user
 func ChildViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
@@ -107,7 +155,7 @@ func ChildViewHandler(env *config.Env) http.Handler {
 	})
 }
 
-// ChildEditHandler -
+// ChildEditHandler - PUT /{id} - edit a child for a user
 func ChildEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("PUT Child")
@@ -145,6 +193,8 @@ func ChildEditHandler(env *config.Env) http.Handler {
 	})
 }
 
+//ChildDeleteHandler - DELETE /{id} - delete a child for a user
+//TODO - need to delete or archive child and child's data.
 func ChildDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := models.UserFromContext(r.Context())
