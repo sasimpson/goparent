@@ -10,11 +10,11 @@ import (
 
 //Sleep - tracks the baby's sleep start and end.
 type Sleep struct {
-	ID         string    `json:"id" gorethink:"id,omitempty"`
-	SleepStart time.Time `json:"start" gorethink:"start"`
-	SleepEnd   time.Time `json:"end" gorethink:"end"`
-	UserID     string    `json:"userid" gorethink:"userid"`
-	ChildID    string    `json:"childID" gorethink:"childid"`
+	ID      string    `json:"id" gorethink:"id,omitempty"`
+	Start   time.Time `json:"start" gorethink:"start"`
+	End     time.Time `json:"end" gorethink:"end"`
+	UserID  string    `json:"userid" gorethink:"userid"`
+	ChildID string    `json:"childID" gorethink:"childid"`
 }
 
 var ExistingStartErr = errors.New("already have a start record")
@@ -49,13 +49,13 @@ func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
 }
 
 //Start - record start of sleep
-func (sleep *Sleep) Start(env *config.Env, user *User) error {
+func (sleep *Sleep) SleepStart(env *config.Env, user *User) error {
 	ok, err := sleep.Status(env, user)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		sleep.SleepStart = time.Now()
+		sleep.Start = time.Now()
 		return nil
 	}
 	return ExistingStartErr
@@ -63,13 +63,13 @@ func (sleep *Sleep) Start(env *config.Env, user *User) error {
 }
 
 //End - record end of sleep
-func (sleep *Sleep) End(env *config.Env, user *User) error {
+func (sleep *Sleep) SleepEnd(env *config.Env, user *User) error {
 	ok, err := sleep.Status(env, user)
 	if err != nil {
 		return err
 	}
 	if ok {
-		sleep.SleepEnd = time.Now()
+		sleep.End = time.Now()
 		return nil
 	}
 	return NoExistingSessionErr

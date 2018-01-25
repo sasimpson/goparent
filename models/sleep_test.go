@@ -96,7 +96,7 @@ func TestSleepStart(t *testing.T) {
 	).Return(nil, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.Start(&testEnv, &User{ID: "1"})
+	err := s.SleepStart(&testEnv, &User{ID: "1"})
 	assert.Nil(t, err)
 }
 
@@ -116,7 +116,7 @@ func TestSleepStartError(t *testing.T) {
 	}, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.Start(&testEnv, &User{ID: "1"})
+	err := s.SleepStart(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, ExistingStartErr.Error())
@@ -138,7 +138,7 @@ func TestSleepEnd(t *testing.T) {
 	}, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.End(&testEnv, &User{ID: "1"})
+	err := s.SleepEnd(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 }
@@ -154,7 +154,7 @@ func TestSleepEndError(t *testing.T) {
 	).Return(nil, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.End(&testEnv, &User{ID: "1"})
+	err := s.SleepEnd(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, NoExistingSessionErr.Error())
@@ -167,7 +167,7 @@ func TestSleepEndError(t *testing.T) {
 		}),
 	).Return(nil, errors.New("raised error"))
 	testEnv.DB.Session = mock
-	err = s.End(&testEnv, &User{ID: "1"})
+	err = s.SleepEnd(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, "raised error")
@@ -213,7 +213,7 @@ func TestSleepSave(t *testing.T) {
 			}, nil)
 
 			testEnv.DB.Session = mock
-			s := Sleep{SleepStart: tC.start, SleepEnd: tC.end, UserID: tC.userid}
+			s := Sleep{Start: tC.start, End: tC.end, UserID: tC.userid}
 			err := s.Save(&testEnv)
 			mock.AssertExpectations(t)
 			assert.Nil(t, err)
@@ -235,7 +235,7 @@ func TestSleepSaveError(t *testing.T) {
 	).Return(nil, errors.New("raised error"))
 
 	testEnv.DB.Session = mock
-	s := Sleep{SleepStart: startTime, SleepEnd: endTime, UserID: "1"}
+	s := Sleep{Start: startTime, End: endTime, UserID: "1"}
 	err := s.Save(&testEnv)
 	mock.AssertExpectations(t)
 	assert.Error(t, err)

@@ -30,7 +30,7 @@ func TestSleepNewHandler(t *testing.T) {
 	}, nil)
 	testEnv.DB.Session = mock
 
-	s := SleepRequest{SleepData: models.Sleep{UserID: "1", SleepStart: time.Now().AddDate(0, 0, -1), SleepEnd: time.Now()}}
+	s := SleepRequest{SleepData: models.Sleep{UserID: "1", Start: time.Now().AddDate(0, 0, -1), End: time.Now()}}
 	js, err := json.Marshal(&s)
 	if err != nil {
 		t.Fatal(err)

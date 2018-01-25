@@ -225,3 +225,21 @@ func ChildDeleteHandler(env *config.Env) http.Handler {
 		json.NewEncoder(w).Encode(deletedResponse)
 	})
 }
+
+// func RandomData(env *config.Env) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		user, err := models.UserFromContext(r.Context())
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
+// 		id := mux.Vars(r)["id"]
+// 		var child models.Child
+// 		err = child.GetChild(env, &user, id)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusNotFound)
+// 			return
+// 		}
+
+// 	})
+// }
