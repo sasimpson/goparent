@@ -27,13 +27,14 @@ type ChildDeletedResponse struct {
 
 //ChildSummaryResponse - Summary response
 type ChildSummaryResponse struct {
-	ChildData models.Child    `json:"childData"`
-	Stats     ChildStatistics `json:"stats"`
+	ChildData models.Child `json:"childData"`
+	Stats     Summary      `json:"stats"`
 }
 
-//ChildStatistics - statistics block for child data
-type ChildStatistics struct {
-	FeedingData []models.Feeding `json:"feedingData"`
+type Summary struct {
+	Feeding models.FeedingSummary `json:"feeding"`
+	Sleep   models.SleepSummary   `json:"sleep"`
+	Waste   models.WasteSummary   `json:"waste"`
 }
 
 func initChildrenHandlers(env *config.Env, r *mux.Router) {
@@ -57,21 +58,35 @@ func ChildSummary(env *config.Env) http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		var summary ChildSummaryResponse
 		var child models.Child
 		err = child.GetChild(env, &user, childID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		feedings, err := models.FeedingGetStats(env, &user, &child)
+		summary.ChildData = child
+
+		feedingSummary, err := models.FeedingGetStats(env, &user, &child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		summary.Stats.Feeding = feedingSummary
 
-		var summary ChildSummaryResponse
-		summary.ChildData = child
-		summary.Stats.FeedingData = feedings
+		sleeps, err := models.SleepGetStats(env, &user, &child)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		summary.Stats.Sleep = sleeps
+
+		wastes, err := models.WasteGetStats(env, &user, &child)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		summary.Stats.Waste = wastes
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(summary)

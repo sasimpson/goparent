@@ -17,6 +17,11 @@ type Waste struct {
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
+type WasteSummary struct {
+	Data  []Waste     `json:"data"`
+	Total map[int]int `json:"total"`
+}
+
 //WasteType - the type of waste, solid, liquid, solid & liquid
 type WasteType struct {
 	Name string `json:"name"`
@@ -36,7 +41,7 @@ func (waste *Waste) Save(env *config.Env) error {
 
 	res, err := gorethink.Table("waste").Insert(waste, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		// log.Println("error with upsert from sleep upsert in waste.Save()")
+		// log.Println("error with upsert from waste upsert in waste.Save()")
 		return err
 	}
 
@@ -85,4 +90,48 @@ func (waste *Waste) GetByID(env *config.Env, id string) error {
 		return err
 	}
 	return nil
+}
+
+//WasteGetStats - get waste stats for one child for the last 24 hours.
+func WasteGetStats(env *config.Env, user *User, child *Child) (WasteSummary, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return WasteSummary{}, err
+	}
+
+	end := time.Now()
+	start := end.AddDate(0, 0, -1)
+
+	res, err := gorethink.Table("waste").
+		Filter(map[string]interface{}{
+			"userid":  user.ID,
+			"childid": child.ID,
+		}).
+		Filter(gorethink.Row.Field("timestamp").During(start, end)).
+		OrderBy(gorethink.Desc("timestamp")).
+		Run(session)
+	if err != nil {
+		return WasteSummary{}, err
+	}
+	defer res.Close()
+
+	var rows []Waste
+	err = res.All(&rows)
+	if err != nil {
+		return WasteSummary{}, err
+	}
+
+	//build summary output
+	summary := WasteSummary{
+		Data:  rows,
+		Total: make(map[int]int),
+	}
+
+	for _, x := range rows {
+		if _, ok := summary.Total[x.Type]; !ok {
+			summary.Total[x.Type] = 0
+		}
+		summary.Total[x.Type]++
+	}
+	return summary, nil
 }

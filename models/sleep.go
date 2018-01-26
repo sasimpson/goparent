@@ -17,6 +17,13 @@ type Sleep struct {
 	ChildID string    `json:"childID" gorethink:"childid"`
 }
 
+type SleepSummary struct {
+	Data  []Sleep `json:"data"`
+	Total int64   `json:"total"`
+	Mean  float64 `json:"mean"`
+	Range int     `json:"range"`
+}
+
 var ExistingStartErr = errors.New("already have a start record")
 var NoExistingSessionErr = errors.New("no existing sleep session to end")
 
@@ -118,4 +125,45 @@ func (sleep *Sleep) GetAll(env *config.Env, user *User) ([]Sleep, error) {
 		return nil, err
 	}
 	return rows, nil
+}
+
+//SleepGetStats - get sleep stats for one child for the last 24 hours.
+func SleepGetStats(env *config.Env, user *User, child *Child) (SleepSummary, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return SleepSummary{}, err
+	}
+
+	end := time.Now()
+	start := end.AddDate(0, 0, -1)
+
+	res, err := gorethink.Table("sleep").
+		Filter(map[string]interface{}{
+			"userid":  user.ID,
+			"childid": child.ID,
+		}).
+		Filter(gorethink.Row.Field("start").During(start, end)).
+		OrderBy(gorethink.Desc("start")).
+		Run(session)
+	if err != nil {
+		return SleepSummary{}, err
+	}
+	defer res.Close()
+
+	var rows []Sleep
+	err = res.All(&rows)
+	if err != nil {
+		return SleepSummary{}, err
+	}
+	//build summary output
+	summary := SleepSummary{
+		Data: rows,
+	}
+
+	for _, x := range rows {
+		summary.Total += x.End.Unix() - x.Start.Unix()
+	}
+	summary.Range = len(rows)
+	summary.Mean = float64(summary.Total) / float64(summary.Range)
+	return summary, nil
 }

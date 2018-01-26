@@ -19,6 +19,14 @@ type Feeding struct {
 	ChildID   string    `json:"childID" gorethink:"childid"`
 }
 
+//FeedingSummary - represents feeding summary data
+type FeedingSummary struct {
+	Data  []Feeding          `json:"data"`
+	Total map[string]float32 `json:"total"`
+	Mean  map[string]float32 `json:"mean"`
+	Range map[string]int     `json:"range"`
+}
+
 //Save - save the structure to the datastore
 func (feeding *Feeding) Save(env *config.Env) error {
 	session, err := env.DB.GetConnection()
@@ -68,10 +76,10 @@ func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
 }
 
 //FeedingGetStats - get feeding stats for one child for the last 24 hours.
-func FeedingGetStats(env *config.Env, user *User, child *Child) ([]Feeding, error) {
+func FeedingGetStats(env *config.Env, user *User, child *Child) (FeedingSummary, error) {
 	session, err := env.DB.GetConnection()
 	if err != nil {
-		return nil, err
+		return FeedingSummary{}, err
 	}
 
 	end := time.Now()
@@ -86,15 +94,32 @@ func FeedingGetStats(env *config.Env, user *User, child *Child) ([]Feeding, erro
 		OrderBy(gorethink.Desc("timestamp")).
 		Run(session)
 	if err != nil {
-		return nil, err
+		return FeedingSummary{}, err
 	}
 	defer res.Close()
 
 	var rows []Feeding
 	err = res.All(&rows)
 	if err != nil {
-		return nil, err
+		return FeedingSummary{}, err
+	}
+	//build summary output
+	summary := FeedingSummary{
+		Data:  rows,
+		Total: make(map[string]float32),
+		Mean:  make(map[string]float32),
+		Range: make(map[string]int),
 	}
 
-	return rows, nil
+	for _, x := range rows {
+		if _, ok := summary.Total[x.Type]; !ok {
+			summary.Total[x.Type] = 0.0
+		}
+		summary.Total[x.Type] += x.Amount
+		summary.Range[x.Type]++
+	}
+	for k := range summary.Total {
+		summary.Mean[k] = summary.Total[k] / float32(summary.Range[k])
+	}
+	return summary, nil
 }
