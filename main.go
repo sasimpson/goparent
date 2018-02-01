@@ -89,7 +89,7 @@ func generateRandomFeeding(env *config.Env, childID *string, userID *string, dat
 	var feedings []models.Feeding
 
 	var feedingType string
-	switch r.Intn(1) {
+	switch r.Intn(2) {
 	case 0:
 		feedingType = "bottle"
 		break
