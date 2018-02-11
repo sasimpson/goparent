@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	createFlag := flag.Bool("createTables", false, "create all the needed tables")
 	genFlag := flag.Bool("generate", false, "generate test data")
 	childID := flag.String("child", "", "child id for test data")
 	userID := flag.String("user", "", "user id for test data")
@@ -20,6 +21,13 @@ func main() {
 	flag.Parse()
 
 	env := config.InitConfig()
+
+	//create tables in the database
+	if *createFlag {
+		log.Println("creating tables")
+		config.CreateTables(env)
+		os.Exit(0)
+	}
 
 	//if generate, just run it and exit
 	if *genFlag {

@@ -33,15 +33,16 @@ func (dbenv *DBEnv) GetConnection() (gorethink.QueryExecutor, error) {
 	return session, err
 }
 
+//CreateTables - this will build out the database.
 func CreateTables(env *Env) {
 	session, err := env.DB.GetConnection()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	gorethink.DBCreate("goparent").Run(session)
-	gorethink.DB("gorethink").TableCreate("feeding").Run(session)
-	gorethink.DB("gorethink").TableCreate("waste").Run(session)
-	gorethink.DB("gorethink").TableCreate("sleep").Run(session)
-	gorethink.DB("gorethink").TableCreate("users").Run(session)
-	gorethink.DB("gorethink").TableCreate("children").Run(session)
+	gorethink.DB("goparent").TableCreate("feeding").Run(session)
+	gorethink.DB("goparent").TableCreate("waste").Run(session)
+	gorethink.DB("goparent").TableCreate("sleep").Run(session)
+	gorethink.DB("goparent").TableCreate("users").Run(session)
+	gorethink.DB("goparent").TableCreate("children").Run(session)
 }
