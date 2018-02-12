@@ -11,9 +11,12 @@ import (
 	"github.com/sasimpson/goparent/models"
 )
 
+//WasteRequest - request structure for waste
 type WasteRequest struct {
 	WasteData models.Waste `json:"wasteData"`
 }
+
+//WasteResponse - response structure for waste
 type WasteResponse struct {
 	WasteData []models.Waste `json:"wasteData"`
 }

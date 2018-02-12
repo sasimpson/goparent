@@ -11,10 +11,12 @@ import (
 	"github.com/sasimpson/goparent/models"
 )
 
+//FeedingRequest - request structure for feedings
 type FeedingRequest struct {
 	FeedingData models.Feeding `json:"feedingData"`
 }
 
+//FeedingResponse - response structure for feedings
 type FeedingResponse struct {
 	FeedingData []models.Feeding `json:"feedingData"`
 }

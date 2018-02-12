@@ -17,6 +17,7 @@ import (
 	"github.com/sasimpson/goparent/models"
 )
 
+//ServiceInfo - return data about the service
 type ServiceInfo struct {
 	Version  string `json:"version"`
 	Hostname string `json:"hostname"`

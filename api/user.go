@@ -15,6 +15,17 @@ type UserRequest struct {
 	UserData models.User `json:"userData"`
 }
 
+//NewUserRequest - this is for submitting password in new user request
+type NewUserRequest struct {
+	UserData struct {
+		ID       string `json:"id,omitempty"`
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+	} `json:"userData"`
+}
+
 //UserAuthResponse - auth response structure
 type UserAuthResponse struct {
 	UserData models.User `json:"userData"`
@@ -83,19 +94,20 @@ func userNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST /api/user")
 		decoder := json.NewDecoder(r.Body)
-		var userRequest UserRequest
-		err := decoder.Decode(&userRequest)
+		var newUserRequest NewUserRequest
+		err := decoder.Decode(&newUserRequest)
+		userData := models.User(newUserRequest.UserData)
 		if err != nil {
 			log.Panicln(err)
 		}
 		defer r.Body.Close()
 		w.Header().Set("Content-Type", "application/json")
-		err = userRequest.UserData.Save(env)
+		err = userData.Save(env)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
-		json.NewEncoder(w).Encode(userRequest.UserData)
+		json.NewEncoder(w).Encode(userData)
 	})
 }

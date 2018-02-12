@@ -12,10 +12,12 @@ import (
 	"github.com/sasimpson/goparent/models"
 )
 
+//SleepRequest - request structure for sleep
 type SleepRequest struct {
 	SleepData models.Sleep `json:"sleepData"`
 }
 
+//SleepResponse - response structure for sleep
 type SleepResponse struct {
 	SleepData []models.Sleep `json:"sleepData"`
 }

@@ -31,6 +31,7 @@ type ChildSummaryResponse struct {
 	Stats     Summary      `json:"stats"`
 }
 
+//Summary - return structure of all summary data
 type Summary struct {
 	Feeding models.FeedingSummary `json:"feeding"`
 	Sleep   models.SleepSummary   `json:"sleep"`
