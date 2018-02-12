@@ -7,6 +7,7 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+//Child - structure for child data
 type Child struct {
 	ID       string    `json:"id" gorethink:"id,omitempty"`
 	Name     string    `json:"name" gorethink:"name"`
@@ -52,6 +53,7 @@ func GetAllChildren(env *config.Env, user *User) ([]Child, error) {
 	return rows, nil
 }
 
+//GetChild - data for a child based on the user (parent) and the child id
 func (child *Child) GetChild(env *config.Env, user *User, childID string) error {
 	session, err := env.DB.GetConnection()
 	if err != nil {
@@ -72,6 +74,7 @@ func (child *Child) GetChild(env *config.Env, user *User, childID string) error 
 	return nil
 }
 
+//DeleteChild - delete a child based on the user and the child
 func (child *Child) DeleteChild(env *config.Env, user *User) (int, error) {
 	session, err := env.DB.GetConnection()
 	if err != nil {

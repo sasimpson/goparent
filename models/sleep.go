@@ -17,6 +17,7 @@ type Sleep struct {
 	ChildID string    `json:"childID" gorethink:"childid"`
 }
 
+//SleepSummary - structure for the sleep summary data
 type SleepSummary struct {
 	Data  []Sleep `json:"data"`
 	Total int64   `json:"total"`
@@ -24,9 +25,13 @@ type SleepSummary struct {
 	Range int     `json:"range"`
 }
 
-var ExistingStartErr = errors.New("already have a start record")
-var NoExistingSessionErr = errors.New("no existing sleep session to end")
+//ErrExistingStart - already have a start for that sleep record
+var ErrExistingStart = errors.New("already have a start record")
 
+//ErrNoExistingSession - don't have a sleep record to end.
+var ErrNoExistingSession = errors.New("no existing sleep session to end")
+
+//Status - return the current status for a sleep session
 func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
 	session, err := env.DB.GetConnection()
 	if err != nil {
@@ -55,7 +60,7 @@ func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
 	return true, nil
 }
 
-//Start - record start of sleep
+//SleepStart - record start of sleep
 func (sleep *Sleep) SleepStart(env *config.Env, user *User) error {
 	ok, err := sleep.Status(env, user)
 	if err != nil {
@@ -65,11 +70,11 @@ func (sleep *Sleep) SleepStart(env *config.Env, user *User) error {
 		sleep.Start = time.Now()
 		return nil
 	}
-	return ExistingStartErr
+	return ErrExistingStart
 
 }
 
-//End - record end of sleep
+//SleepEnd - record end of sleep
 func (sleep *Sleep) SleepEnd(env *config.Env, user *User) error {
 	ok, err := sleep.Status(env, user)
 	if err != nil {
@@ -79,7 +84,7 @@ func (sleep *Sleep) SleepEnd(env *config.Env, user *User) error {
 		sleep.End = time.Now()
 		return nil
 	}
-	return NoExistingSessionErr
+	return ErrNoExistingSession
 
 }
 
@@ -102,6 +107,7 @@ func (sleep *Sleep) Save(env *config.Env) error {
 	return nil
 }
 
+//GetAll - get all sleeps for a user (parent)
 func (sleep *Sleep) GetAll(env *config.Env, user *User) ([]Sleep, error) {
 	session, err := env.DB.GetConnection()
 	if err != nil {

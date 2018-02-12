@@ -34,6 +34,7 @@ items:
     selfLink: /apis/extensions/v1beta1/namespaces/default/deployments/goparent
   spec:
     replicas: 3
+    revisionHistoryLimit: 0
     selector:
       matchLabels:
         run: goparent
@@ -49,7 +50,7 @@ items:
           run: goparent
       spec:
         containers:
-        - image: goparent:v0.10
+        - image: goparent:latest
           imagePullPolicy: IfNotPresent
           name: goparent
           volumeMounts:

@@ -45,7 +45,7 @@ func TestWasteGetHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -78,7 +78,7 @@ func TestWasteNewHandler(t *testing.T) {
 	handler := WasteNewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -108,7 +108,7 @@ func TestWasteViewHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -126,7 +126,7 @@ func TestWasteEditHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -144,7 +144,7 @@ func TestWasteDeleteHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)

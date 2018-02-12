@@ -126,7 +126,7 @@ func sleepStartHandler(env *config.Env) http.Handler {
 		err = sleep.SleepStart(env, &user)
 		if err != nil {
 			log.Println("error", err.Error())
-			if err == models.ExistingStartErr {
+			if err == models.ErrExistingStart {
 				http.Error(w, err.Error(), http.StatusConflict)
 				return
 			}
@@ -151,7 +151,7 @@ func sleepEndHandler(env *config.Env) http.Handler {
 		var sleep models.Sleep
 		err = sleep.SleepEnd(env, &user)
 		if err != nil {
-			if err == models.NoExistingSessionErr {
+			if err == models.ErrNoExistingSession {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			}

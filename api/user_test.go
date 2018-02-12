@@ -102,7 +102,7 @@ func TestUserGetHandler(t *testing.T) {
 	handler := userGetHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)

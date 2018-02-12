@@ -119,7 +119,7 @@ func TestSleepStartError(t *testing.T) {
 	err := s.SleepStart(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
-	assert.EqualError(t, err, ExistingStartErr.Error())
+	assert.EqualError(t, err, ErrExistingStart.Error())
 }
 
 func TestSleepEnd(t *testing.T) {
@@ -157,7 +157,7 @@ func TestSleepEndError(t *testing.T) {
 	err := s.SleepEnd(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
-	assert.EqualError(t, err, NoExistingSessionErr.Error())
+	assert.EqualError(t, err, ErrNoExistingSession.Error())
 
 	mock = r.NewMock()
 	mock.On(

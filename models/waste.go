@@ -17,6 +17,7 @@ type Waste struct {
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
+//WasteSummary - structure for waste summary data
 type WasteSummary struct {
 	Data  []Waste     `json:"data"`
 	Total map[int]int `json:"total"`
@@ -27,12 +28,7 @@ type WasteType struct {
 	Name string `json:"name"`
 }
 
-var (
-	Solid       = WasteType{Name: "Solid"}
-	Liquid      = WasteType{Name: "Liquid"}
-	SolidLiquid = WasteType{Name: "Solid & Liquid"}
-)
-
+//Save - save waste data
 func (waste *Waste) Save(env *config.Env) error {
 	session, err := env.DB.GetConnection()
 	if err != nil {
@@ -51,6 +47,7 @@ func (waste *Waste) Save(env *config.Env) error {
 	return nil
 }
 
+//GetAll - get all waste by user and child id.
 func (waste *Waste) GetAll(env *config.Env, user *User, childID string) ([]Waste, error) {
 	session, err := env.DB.GetConnection()
 	if err != nil {
@@ -75,6 +72,7 @@ func (waste *Waste) GetAll(env *config.Env, user *User, childID string) ([]Waste
 	return rows, nil
 }
 
+//GetByID - get a waste record by id
 func (waste *Waste) GetByID(env *config.Env, id string) error {
 	session, err := env.DB.GetConnection()
 	if err != nil {

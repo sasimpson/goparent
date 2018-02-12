@@ -17,6 +17,10 @@ import (
 	"github.com/sasimpson/goparent/models"
 )
 
+type contextKey string
+
+const userContextKey contextKey = "user"
+
 //ServiceInfo - return data about the service
 type ServiceInfo struct {
 	Version  string `json:"version"`
@@ -74,7 +78,7 @@ func AuthRequired(h http.Handler, env *config.Env) http.Handler {
 		var user models.User
 		if claims, ok := token.Claims.(*models.UserClaims); ok && token.Valid {
 			user.GetUser(env, claims.ID)
-			ctx := context.WithValue(r.Context(), "user", user)
+			ctx := context.WithValue(r.Context(), userContextKey, user)
 			r = r.WithContext(ctx)
 			h.ServeHTTP(w, r)
 			return

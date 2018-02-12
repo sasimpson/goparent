@@ -21,6 +21,7 @@ type User struct {
 	Password string `json:"-" gorethink:"password"`
 }
 
+//UserClaims - structure for inserting claims into a jwt auth token
 type UserClaims struct {
 	ID       string
 	Name     string
@@ -48,6 +49,7 @@ func (user *User) GetUser(env *config.Env, id string) error {
 	return nil
 }
 
+//GetUserByLogin - gets a user by their username and password
 func (user *User) GetUserByLogin(env *config.Env, username string, password string) error {
 	//TODO: need to hash the password
 	session, err := env.DB.GetConnection()
@@ -95,6 +97,7 @@ func (user *User) Save(env *config.Env) error {
 	return errors.New("there needs to be an ID in the user if one with that email exists")
 }
 
+//GetToken - gets the user token
 func (user *User) GetToken(env *config.Env) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
@@ -112,6 +115,7 @@ func (user *User) GetToken(env *config.Env) (string, error) {
 	return tokenString, nil
 }
 
+//ValidateToken - validate token against signing method and populate user.
 func (user *User) ValidateToken(env *config.Env, tokenString string) (bool, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

@@ -43,7 +43,7 @@ func TestSleepNewHandler(t *testing.T) {
 	handler := sleepNewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -73,7 +73,7 @@ func TestSleepGetHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -124,7 +124,7 @@ func TestSleepStatusHandler(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			ctx := req.Context()
-			ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+			ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 			req = req.WithContext(ctx)
 			handler.ServeHTTP(rr, req)
 			assert.Equal(t, tC.status, rr.Code)
@@ -178,7 +178,7 @@ func TestSleepStartHandler(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			ctx := req.Context()
-			ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+			ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 			req = req.WithContext(ctx)
 			handler.ServeHTTP(rr, req)
 			assert.Equal(t, tC.status, rr.Code)
@@ -232,7 +232,7 @@ func TestSleepEndHandler(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			ctx := req.Context()
-			ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+			ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 			req = req.WithContext(ctx)
 			handler.ServeHTTP(rr, req)
 			assert.Equal(t, tC.status, rr.Code)
@@ -252,7 +252,7 @@ func TestSleepViewHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -270,7 +270,7 @@ func TestSleepEditHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
@@ -288,7 +288,7 @@ func TestSleepDeleteHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
-	ctx = context.WithValue(ctx, "user", models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
