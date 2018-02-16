@@ -34,7 +34,7 @@ func initFeedingHandlers(env *config.Env, r *mux.Router) {
 func FeedingGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET feeding")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -54,7 +54,7 @@ func FeedingGetHandler(env *config.Env) http.Handler {
 //FeedingViewHandler -
 func FeedingViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -67,7 +67,7 @@ func FeedingViewHandler(env *config.Env) http.Handler {
 // FeedingEditHandler -
 func FeedingEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -81,7 +81,7 @@ func FeedingEditHandler(env *config.Env) http.Handler {
 func FeedingNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST Feeding")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -108,7 +108,7 @@ func FeedingNewHandler(env *config.Env) http.Handler {
 //FeedingDeleteHandler -
 func FeedingDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -4,3 +4,4 @@ cover.out
 main.exe
 js*
 debug.test
+.vscode/settings.json

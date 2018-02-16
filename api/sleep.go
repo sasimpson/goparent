@@ -37,7 +37,7 @@ func initSleepHandlers(env *config.Env, r *mux.Router) {
 func sleepGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -56,7 +56,7 @@ func sleepGetHandler(env *config.Env) http.Handler {
 
 func sleepViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -68,7 +68,7 @@ func sleepViewHandler(env *config.Env) http.Handler {
 
 func sleepEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -82,7 +82,7 @@ func sleepNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//how time should be passed "2017-03-09T18:09:31.409Z"
 		log.Println("POST sleep")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -116,7 +116,7 @@ func sleepDeleteHandler(env *config.Env) http.Handler {
 func sleepStartHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep start")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -143,7 +143,7 @@ func sleepStartHandler(env *config.Env) http.Handler {
 func sleepEndHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep end")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -167,7 +167,7 @@ func sleepEndHandler(env *config.Env) http.Handler {
 func sleepToggleStatus(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep toggle status")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

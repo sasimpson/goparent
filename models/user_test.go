@@ -1,7 +1,6 @@
 package models
 
 import (
-	"context"
 	"testing"
 
 	"github.com/sasimpson/goparent/config"
@@ -160,13 +159,14 @@ func TestTokens(t *testing.T) {
 	assert.True(t, ok)
 }
 
-func TestUserFromContext(t *testing.T) {
-	type contextKey string
-	var userContextKey contextKey = "user"
-	var ctx context.Context
-	ctx = context.WithValue(ctx, userContextKey, User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-	user, err := UserFromContext(ctx)
+//move to api tests
+// func TestUserFromContext(t *testing.T) {
+// 	type contextKey string
+// 	var userContextKey contextKey = "user"
+// 	var ctx context.Context
+// 	ctx = context.WithValue(ctx, userContextKey, User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+// 	user, err := UserFromContext(ctx)
 
-	assert.Nil(t, err)
-	assert.Equal(t, "1", user.ID)
-}
+// 	assert.Nil(t, err)
+// 	assert.Equal(t, "1", user.ID)
+// }

@@ -34,7 +34,7 @@ func initWasteHandlers(env *config.Env, r *mux.Router) {
 func WasteGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET /api/waste")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -62,7 +62,7 @@ func WasteGetHandler(env *config.Env) http.Handler {
 //WasteViewHandler -
 func WasteViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -79,7 +79,7 @@ func WasteViewHandler(env *config.Env) http.Handler {
 // WasteEditHandler -
 func WasteEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -94,7 +94,7 @@ func WasteEditHandler(env *config.Env) http.Handler {
 func WasteNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST Waste")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -124,7 +124,7 @@ func WasteNewHandler(env *config.Env) http.Handler {
 //WasteDeleteHandler -
 func WasteDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := models.UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

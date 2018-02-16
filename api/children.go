@@ -54,7 +54,7 @@ func ChildSummary(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
 		log.Println("Child Summary: ", childID)
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -98,7 +98,7 @@ func ChildSummary(env *config.Env) http.Handler {
 func ChildrenGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Children GET ")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -120,7 +120,7 @@ func ChildrenGetHandler(env *config.Env) http.Handler {
 func ChildNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("POST Child")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -153,7 +153,7 @@ func ChildViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
 		log.Println("Child View: ", childID)
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -175,7 +175,7 @@ func ChildViewHandler(env *config.Env) http.Handler {
 func ChildEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("PUT Child")
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -213,7 +213,7 @@ func ChildEditHandler(env *config.Env) http.Handler {
 //TODO - need to delete or archive child and child's data.
 func ChildDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := models.UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -244,7 +244,7 @@ func ChildDeleteHandler(env *config.Env) http.Handler {
 
 // func RandomData(env *config.Env) http.Handler {
 // 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		user, err := models.UserFromContext(r.Context())
+// 		user, err := UserFromContext(r.Context())
 // 		if err != nil {
 // 			http.Error(w, err.Error(), http.StatusInternalServerError)
 // 			return

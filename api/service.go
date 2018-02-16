@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,6 +19,10 @@ import (
 )
 
 type contextKey string
+
+func (c contextKey) String() string {
+	return "api context key " + string(c)
+}
 
 const userContextKey contextKey = "user"
 
@@ -86,4 +91,13 @@ func AuthRequired(h http.Handler, env *config.Env) http.Handler {
 		http.Error(w, "failed", http.StatusInternalServerError)
 		return
 	})
+}
+
+//UserFromContext - helper to get the user from the request context
+func UserFromContext(ctx context.Context) (models.User, error) {
+	user, ok := ctx.Value(userContextKey).(models.User)
+	if !ok {
+		return models.User{}, errors.New("no user found in context")
+	}
+	return user, nil
 }
