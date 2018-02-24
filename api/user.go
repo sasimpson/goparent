@@ -105,7 +105,11 @@ func userNewHandler(env *config.Env) http.Handler {
 		err = userData.Save(env)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusConflict)
+			var errMsg ErrService
+			errMsg.ErrMessage.Body = err.Error()
+			errMsg.ErrMessage.Code = http.StatusConflict
+			js, _ := json.Marshal(errMsg)
+			http.Error(w, string(js), http.StatusConflict)
 			return
 		}
 		json.NewEncoder(w).Encode(userData)

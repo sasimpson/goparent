@@ -32,6 +32,14 @@ type ServiceInfo struct {
 	Hostname string `json:"hostname"`
 }
 
+//ErrService - error message format for service calls
+type ErrService struct {
+	ErrMessage struct {
+		Body string `json:"body"`
+		Code int    `json:"code"`
+	} `json:"error"`
+}
+
 //RunService - Runs service interfaces for app
 func RunService(env *config.Env) {
 	r := mux.NewRouter()
