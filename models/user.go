@@ -11,6 +11,8 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+const ErrExistingInvitation string = "existing invitation for that user"
+
 //User - structure for storing user data
 type User struct {
 	ID       string `json:"id" gorethink:"id,omitempty"`
@@ -28,6 +30,14 @@ type UserClaims struct {
 	Username string
 	Password string
 	jwt.StandardClaims
+}
+
+//UserInvitation - structure for storing invitations
+type UserInvitation struct {
+	ID          string    `gorethink:"id,omitempty"`
+	UserID      string    `gorethink:"userid"`
+	InviteEmail string    `gorethink:"inviteEmail"`
+	Timestamp   time.Time `gorethink:"timestamp"`
 }
 
 //GetUser - gets the user data based on the id string
@@ -131,4 +141,37 @@ func (user *User) ValidateToken(env *config.Env, tokenString string) (bool, erro
 		return true, nil
 	}
 	return false, errors.New("invalid token")
+}
+
+//InviteParent - add an invitation for another parent to join in on user's data.
+func (user *User) InviteParent(env *config.Env, inviteEmail string) error {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	res, err := gorethink.Table("invites").Filter(map[string]interface{}{
+		"inviteEmail": inviteEmail,
+	}).Run(session)
+	if err != nil {
+		return err
+	}
+	defer res.Close()
+
+	//if there is already an invite for that user, return error.
+	if !res.IsNil() {
+		return errors.New(ErrExistingInvitation)
+	}
+
+	inviteUser := UserInvitation{
+		UserID:      user.ID,
+		InviteEmail: inviteEmail,
+		Timestamp:   time.Now(),
+	}
+	_, err = gorethink.Table("invites").Insert(inviteUser).Run(session)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

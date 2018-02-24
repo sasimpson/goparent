@@ -37,6 +37,7 @@ func initUsersHandlers(env *config.Env, r *mux.Router) {
 	u.Handle("/{id}", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserView")
 	u.Handle("/", userNewHandler(env)).Methods("POST").Name("UserNew")
 	u.Handle("/login", loginHandler(env)).Methods("POST").Name("UserLogin")
+	u.Handle("/invite", AuthRequired(userInviteHandler(env), env)).Methods("POST").Name("UserInvite")
 }
 
 func loginHandler(env *config.Env) http.Handler {
@@ -113,5 +114,29 @@ func userNewHandler(env *config.Env) http.Handler {
 			return
 		}
 		json.NewEncoder(w).Encode(userData)
+	})
+}
+
+func userInviteHandler(env *config.Env) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("POST /api/user/invite")
+		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		invitedUserEmail := r.FormValue("email")
+
+		err = user.InviteParent(env, invitedUserEmail)
+		if err != nil {
+			if err.Error() == models.ErrExistingInvitation {
+				http.Error(w, err.Error(), http.StatusConflict)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
 	})
 }
