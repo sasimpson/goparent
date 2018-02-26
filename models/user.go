@@ -32,14 +32,6 @@ type UserClaims struct {
 	jwt.StandardClaims
 }
 
-//UserInvitation - structure for storing invitations
-type UserInvitation struct {
-	ID          string    `gorethink:"id,omitempty"`
-	UserID      string    `gorethink:"userid"`
-	InviteEmail string    `gorethink:"inviteEmail"`
-	Timestamp   time.Time `gorethink:"timestamp"`
-}
-
 //GetUser - gets the user data based on the id string
 func (user *User) GetUser(env *config.Env, id string) error {
 	session, err := env.DB.GetConnection()
@@ -143,6 +135,14 @@ func (user *User) ValidateToken(env *config.Env, tokenString string) (bool, erro
 	return false, errors.New("invalid token")
 }
 
+//UserInvitation - structure for storing invitations
+type UserInvitation struct {
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	UserID      string    `json:"userID" gorethink:"userid"`
+	InviteEmail string    `json:"inviteEmail" gorethink:"inviteEmail"`
+	Timestamp   time.Time `json:"timestamp" gorethink:"timestamp"`
+}
+
 //InviteParent - add an invitation for another parent to join in on user's data.
 func (user *User) InviteParent(env *config.Env, inviteEmail string) error {
 	session, err := env.DB.GetConnection()
@@ -174,4 +174,31 @@ func (user *User) InviteParent(env *config.Env, inviteEmail string) error {
 	}
 
 	return nil
+}
+
+//GetInvites - return the current invites a user has sent out.
+func (user *User) GetInvites(env *config.Env) ([]UserInvitation, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := gorethink.Table("invites").
+		Filter(map[string]interface{}{
+			"userid": user.ID,
+		}).
+		OrderBy(gorethink.Desc("timestamp")).
+		Run(session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var rows []UserInvitation
+	err = res.All(&rows)
+	if err != nil {
+		return rows, err
+	}
+
+	return rows, nil
 }
