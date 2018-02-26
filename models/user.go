@@ -202,3 +202,35 @@ func (user *User) GetInvites(env *config.Env) ([]UserInvitation, error) {
 
 	return rows, nil
 }
+
+func (user *User) DeleteInvite(env *config.Env, id string) error {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	res, err := gorethink.Table("invites").
+		Filter(map[string]interface{}{
+			"userid": user.ID,
+			"id":     id,
+		}).
+		Delete().
+		Run(session)
+	if err != nil {
+		return err
+	}
+	defer res.Close()
+
+	var answer gorethink.WriteResponse
+	err = res.One(&answer)
+	if err != nil {
+		return err
+	}
+
+	if answer.Deleted > 0 {
+		return nil
+	}
+
+	log.Printf("delete answer: %#v", answer)
+	return errors.New("no record to delete")
+}

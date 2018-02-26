@@ -44,6 +44,7 @@ func initUsersHandlers(env *config.Env, r *mux.Router) {
 	u.Handle("/login", loginHandler(env)).Methods("POST").Name("UserLogin")
 	u.Handle("/invite", AuthRequired(userListInviteHandler(env), env)).Methods("GET").Name("UserGetInvites")
 	u.Handle("/invite", AuthRequired(userNewInviteHandler(env), env)).Methods("POST").Name("UserNewInvite")
+	u.Handle("/invite/{id}", AuthRequired(userDeleteInviteHandler(env), env)).Methods("DELETE").Name("UserDeleteInvite")
 }
 
 func loginHandler(env *config.Env) http.Handler {
@@ -164,5 +165,24 @@ func userListInviteHandler(env *config.Env) http.Handler {
 		invitesResponse := InvitesResponse{InviteData: invites}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(invitesResponse)
+	})
+}
+
+func userDeleteInviteHandler(env *config.Env) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		id := mux.Vars(r)["id"]
+		err = user.DeleteInvite(env, id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
 	})
 }
