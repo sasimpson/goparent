@@ -15,10 +15,7 @@
 
 [[projects]]
   name = "github.com/dgrijalva/jwt-go"
-  packages = [
-    ".",
-    "request"
-  ]
+  packages = [".","request"]
   revision = "dbeaa9332f19a944acb5736b4456cfcc02140e29"
   version = "v3.1.0"
 
@@ -61,17 +58,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
-  packages = [
-    ".",
-    "hcl/ast",
-    "hcl/parser",
-    "hcl/scanner",
-    "hcl/strconv",
-    "hcl/token",
-    "json/parser",
-    "json/scanner",
-    "json/token"
-  ]
+  packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
   revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
@@ -106,10 +93,7 @@
 
 [[projects]]
   name = "github.com/spf13/afero"
-  packages = [
-    ".",
-    "mem"
-  ]
+  packages = [".","mem"]
   revision = "bb8f1927f2a9d3ab41c9340aa034f6b803f4359c"
   version = "v1.0.2"
 
@@ -146,11 +130,8 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = [
-    "pbkdf2",
-    "ssh/terminal"
-  ]
-  revision = "49796115aa4b964c318aad4f3084fdb41e9aa067"
+  packages = ["pbkdf2","ssh/terminal"]
+  revision = "beaf6a35706e5032ae4c3fcf342c663c069f44d2"
 
 [[projects]]
   branch = "master"
@@ -161,22 +142,12 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = [
-    "unix",
-    "windows"
-  ]
+  packages = ["unix","windows"]
   revision = "f6cff0780e542efa0c8e864dc8fa522808f6a598"
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = [
-    "internal/gen",
-    "internal/triegen",
-    "internal/ucd",
-    "transform",
-    "unicode/cldr",
-    "unicode/norm"
-  ]
+  packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
@@ -188,12 +159,7 @@
 
 [[projects]]
   name = "gopkg.in/gorethink/gorethink.v3"
-  packages = [
-    ".",
-    "encoding",
-    "ql2",
-    "types"
-  ]
+  packages = [".","encoding","ql2","types"]
   revision = "7f5bdfd858bb064d80559b2a32b86669c5de5d3b"
   version = "v3.0.5"
 

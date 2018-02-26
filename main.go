@@ -36,7 +36,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	config.CreateTables(env)
 	api.RunService(env)
 }
 
