@@ -126,6 +126,12 @@ func ChildNewHandler(env *config.Env) http.Handler {
 			return
 		}
 
+		family, err := user.GetFamily(env)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		decoder := json.NewDecoder(r.Body)
 		var childRequest ChildRequest
 		err = decoder.Decode(&childRequest)
@@ -138,6 +144,7 @@ func ChildNewHandler(env *config.Env) http.Handler {
 		defer r.Body.Close()
 		w.Header().Set("Content-Type", "application/json")
 		childRequest.ChildData.ParentID = user.ID
+		childRequest.ChildData.FamilyID = family.ID
 		err = childRequest.ChildData.Save(env)
 		if err != nil {
 			log.Println(err)
@@ -181,6 +188,12 @@ func ChildEditHandler(env *config.Env) http.Handler {
 			return
 		}
 
+		family, err := user.GetFamily(env)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		decoder := json.NewDecoder(r.Body)
 		var childRequest ChildRequest
 		err = decoder.Decode(&childRequest)
@@ -198,7 +211,7 @@ func ChildEditHandler(env *config.Env) http.Handler {
 		}
 
 		//verify both the child we requested to edit, and that the parent is the user id.
-		if (child.ID != childRequest.ChildData.ID) || (childRequest.ChildData.ParentID != user.ID) {
+		if (child.ID != childRequest.ChildData.ID) || (childRequest.ChildData.FamilyID != family.ID) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

@@ -231,6 +231,36 @@ func (user *User) DeleteInvite(env *config.Env, id string) error {
 		return nil
 	}
 
-	log.Printf("delete answer: %#v", answer)
 	return errors.New("no record to delete")
+}
+
+//GetFamily - return the family for a user. used for lookups
+func (user *User) GetFamily(env *config.Env) (Family, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return Family{}, err
+	}
+	/*  rethinkdb query:
+	r.db('goparent').table('family').filter(function(famRow) {
+		return famRow('members').contains("userid")
+	})
+	*/
+	res, err := gorethink.Table("family").
+		Filter(
+			func(row gorethink.Term) gorethink.Term {
+				return row.Field("members").Contains(user.ID)
+			},
+		).
+		Run(session)
+	if err != nil {
+		return Family{}, err
+	}
+	defer res.Close()
+
+	var family Family
+	err = res.One(&family)
+	if err != nil {
+		return Family{}, err
+	}
+	return family, nil
 }

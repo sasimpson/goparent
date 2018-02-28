@@ -48,6 +48,10 @@ func generateRandomData(env *config.Env, childID *string, userID *string, dateSt
 }
 
 func generateRandomDiaper(env *config.Env, childID *string, userID *string, date time.Time) {
+	var user models.User
+	_ = user.GetUser(env, *userID)
+	family, _ := user.GetFamily(env)
+
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = r.Intn(7) + 7
 	log.Printf("number of diaper entries: %d", numberOfEntries)
@@ -60,6 +64,7 @@ func generateRandomDiaper(env *config.Env, childID *string, userID *string, date
 			TimeStamp: randoTime,
 			ChildID:   *childID,
 			UserID:    *userID,
+			FamilyID:  family.ID,
 			Type:      r.Intn(2) + 1,
 		}
 		diaper.Save(env)
@@ -67,6 +72,10 @@ func generateRandomDiaper(env *config.Env, childID *string, userID *string, date
 }
 
 func generateRandomSleep(env *config.Env, childID *string, userID *string, date time.Time) {
+	var user models.User
+	_ = user.GetUser(env, *userID)
+	family, _ := user.GetFamily(env)
+
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = 8
 	log.Printf("number of sleep entries: %d", numberOfEntries)
@@ -78,10 +87,11 @@ func generateRandomSleep(env *config.Env, childID *string, userID *string, date 
 		}
 		randomInterval := (r.Int63n(60) + 60) * 60
 		sleep := models.Sleep{
-			ChildID: *childID,
-			UserID:  *userID,
-			Start:   time.Unix(startDate.Unix()+randomInterval, 0),
-			End:     time.Unix(startDate.Unix()+randomInterval+(5400+r.Int63n(1800)), 0),
+			ChildID:  *childID,
+			UserID:   *userID,
+			FamilyID: family.ID,
+			Start:    time.Unix(startDate.Unix()+randomInterval, 0),
+			End:      time.Unix(startDate.Unix()+randomInterval+(5400+r.Int63n(1800)), 0),
 		}
 		sleep.Save(env)
 		sleeps = append(sleeps, sleep)
@@ -89,6 +99,10 @@ func generateRandomSleep(env *config.Env, childID *string, userID *string, date 
 }
 
 func generateRandomFeeding(env *config.Env, childID *string, userID *string, date time.Time) {
+	var user models.User
+	_ = user.GetUser(env, *userID)
+	family, _ := user.GetFamily(env)
+
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = 6 + r.Intn(4)
 	log.Printf("number of feeding entries: %d", numberOfEntries)
@@ -117,6 +131,7 @@ func generateRandomFeeding(env *config.Env, childID *string, userID *string, dat
 				Side:      "right",
 				Amount:    float32(r.Intn(29) + 1),
 				UserID:    *userID,
+				FamilyID:  family.ID,
 				ChildID:   *childID,
 			}
 			feeding2 := feeding
@@ -131,6 +146,7 @@ func generateRandomFeeding(env *config.Env, childID *string, userID *string, dat
 				Type:      feedingType,
 				Amount:    float32(r.Intn(7) + 1),
 				UserID:    *userID,
+				FamilyID:  family.ID,
 				ChildID:   *childID,
 			}
 			feeding.Save(env)

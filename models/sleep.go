@@ -10,11 +10,12 @@ import (
 
 //Sleep - tracks the baby's sleep start and end.
 type Sleep struct {
-	ID      string    `json:"id" gorethink:"id,omitempty"`
-	Start   time.Time `json:"start" gorethink:"start"`
-	End     time.Time `json:"end" gorethink:"end"`
-	UserID  string    `json:"userid" gorethink:"userid"`
-	ChildID string    `json:"childID" gorethink:"childid"`
+	ID       string    `json:"id" gorethink:"id,omitempty"`
+	Start    time.Time `json:"start" gorethink:"start"`
+	End      time.Time `json:"end" gorethink:"end"`
+	UserID   string    `json:"userid" gorethink:"userID"`
+	FamilyID string    `json:"familyid" gorethink:"familyID"`
+	ChildID  string    `json:"childID" gorethink:"childID"`
 }
 
 //SleepSummary - structure for the sleep summary data
@@ -113,9 +114,14 @@ func (sleep *Sleep) GetAll(env *config.Env, user *User) ([]Sleep, error) {
 	if err != nil {
 		return nil, err
 	}
+	family, err := user.GetFamily(env)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := gorethink.Table("sleep").
 		Filter(map[string]interface{}{
-			"userid": user.ID,
+			"familyID": family.ID,
 		}).
 		OrderBy(gorethink.Desc("end")).
 		Run(session)

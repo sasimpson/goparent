@@ -40,16 +40,8 @@ func WasteGetHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		queryParams := r.URL.Query()
-		log.Printf("[%v]\n", queryParams)
-
-		var childID string
-		if val, ok := queryParams["child_id"]; ok {
-			childID = val[0]
-		}
-
 		var waste models.Waste
-		wasteData, err := waste.GetAll(env, &user, childID)
+		wasteData, err := waste.GetAll(env, &user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -100,6 +92,12 @@ func WasteNewHandler(env *config.Env) http.Handler {
 			return
 		}
 
+		family, err := user.GetFamily(env)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		decoder := json.NewDecoder(r.Body)
 		var wasteRequest WasteRequest
 		err = decoder.Decode(&wasteRequest)
@@ -111,6 +109,7 @@ func WasteNewHandler(env *config.Env) http.Handler {
 		defer r.Body.Close()
 		w.Header().Set("Content-Type", "application/json")
 		wasteRequest.WasteData.UserID = user.ID
+		wasteRequest.WasteData.FamilyID = family.ID
 		err = wasteRequest.WasteData.Save(env)
 		if err != nil {
 			log.Println(err)

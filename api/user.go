@@ -15,6 +15,12 @@ type UserRequest struct {
 	UserData models.User `json:"userData"`
 }
 
+//UserResponse - structure for responding to user info requests
+type UserResponse struct {
+	UserData   models.User   `json:"userData"`
+	FamilyData models.Family `json:"familyData"`
+}
+
 //NewUserRequest - this is for submitting password in new user request
 type NewUserRequest struct {
 	UserData struct {
@@ -41,6 +47,7 @@ func initUsersHandlers(env *config.Env, r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
 	// u.Handle("/{id}", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserView")
 	u.Handle("/", userNewHandler(env)).Methods("POST").Name("UserNew")
+	u.Handle("/", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserGetData")
 	u.Handle("/login", loginHandler(env)).Methods("POST").Name("UserLogin")
 	u.Handle("/invite", AuthRequired(userListInviteHandler(env), env)).Methods("GET").Name("UserGetInvites")
 	u.Handle("/invite", AuthRequired(userNewInviteHandler(env), env)).Methods("POST").Name("UserNewInvite")
@@ -75,26 +82,16 @@ func loginHandler(env *config.Env) http.Handler {
 
 func userGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// user, err := UserFromContext(r.Context())
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-
-		vars := mux.Vars(r)
-		log.Printf("mux vars: %v", vars)
-		log.Println("GET  /api/user/", vars["id"])
-		var lookupUser models.User
-		err := lookupUser.GetUser(env, vars["id"])
+		log.Println("GET  /api/user")
+		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		// if user.ID == lookupUser.ID {
-		json.NewEncoder(w).Encode(lookupUser)
+		family, _ := user.GetFamily(env)
+		userInfo := UserResponse{UserData: user, FamilyData: family}
+		json.NewEncoder(w).Encode(userInfo)
 		return
-		// }
-		// http.Error(w, "not authorized", http.StatusUnauthorized)
 	})
 }
 

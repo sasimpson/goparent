@@ -87,6 +87,13 @@ func sleepNewHandler(env *config.Env) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		family, err := user.GetFamily(env)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		decoder := json.NewDecoder(r.Body)
 		var sleepRequest SleepRequest
 		err = decoder.Decode(&sleepRequest)
@@ -94,8 +101,10 @@ func sleepNewHandler(env *config.Env) http.Handler {
 			log.Panicln(err)
 		}
 		defer r.Body.Close()
+
 		w.Header().Set("Content-Type", "application/json")
 		sleepRequest.SleepData.UserID = user.ID
+		sleepRequest.SleepData.FamilyID = family.ID
 		err = sleepRequest.SleepData.Save(env)
 		if err != nil {
 			log.Println(err)

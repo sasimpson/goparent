@@ -26,7 +26,7 @@ func TestWasteGetAll(t *testing.T) {
 	}, nil)
 	testEnv.DB.Session = mock
 	var w Waste
-	wastes, err := w.GetAll(&testEnv, &User{ID: "1"}, "1")
+	wastes, err := w.GetAll(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, wastes, 1)

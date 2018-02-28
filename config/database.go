@@ -46,4 +46,5 @@ func CreateTables(env *Env) {
 	gorethink.DB("goparent").TableCreate("users").Run(session)
 	gorethink.DB("goparent").TableCreate("children").Run(session)
 	gorethink.DB("goparent").TableCreate("invites").Run(session)
+	gorethink.DB("goparent").TableCreate("family").Run(session)
 }

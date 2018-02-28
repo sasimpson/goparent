@@ -14,9 +14,10 @@ type Feeding struct {
 	Type      string    `json:"feedingType" gorethink:"feedingType"`
 	Amount    float32   `json:"feedingAmount" gorethink:"feedingAmount"`
 	Side      string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
-	UserID    string    `json:"userid" gorethink:"userid"`
+	UserID    string    `json:"userid" gorethink:"userID"`
+	FamilyID  string    `json:"familyid" gorethink:"familyID"`
 	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
-	ChildID   string    `json:"childID" gorethink:"childid"`
+	ChildID   string    `json:"childID" gorethink:"childID"`
 }
 
 //FeedingSummary - represents feeding summary data
@@ -54,9 +55,14 @@ func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
 		return nil, err
 	}
 
+	family, err := user.GetFamily(env)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := gorethink.Table("feeding").
 		Filter(map[string]interface{}{
-			"userid": user.ID,
+			"familyID": family.ID,
 		}).
 		OrderBy(gorethink.Desc("timestamp")).
 		Run(session)
@@ -68,7 +74,6 @@ func (feeding *Feeding) GetAll(env *config.Env, user *User) ([]Feeding, error) {
 	var rows []Feeding
 	err = res.All(&rows)
 	if err != nil {
-		// log.Println("error getting all")
 		return nil, err
 	}
 
@@ -87,7 +92,6 @@ func FeedingGetStats(env *config.Env, user *User, child *Child) (FeedingSummary,
 
 	res, err := gorethink.Table("feeding").
 		Filter(map[string]interface{}{
-			"userid":  user.ID,
 			"childid": child.ID,
 		}).
 		Filter(gorethink.Row.Field("timestamp").During(start, end)).

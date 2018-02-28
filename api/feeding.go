@@ -86,6 +86,13 @@ func FeedingNewHandler(env *config.Env) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		family, err := user.GetFamily(env)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		decoder := json.NewDecoder(r.Body)
 		var feedingRequest FeedingRequest
 		err = decoder.Decode(&feedingRequest)
@@ -96,6 +103,7 @@ func FeedingNewHandler(env *config.Env) http.Handler {
 		defer r.Body.Close()
 		w.Header().Set("Content-Type", "application/json")
 		feedingRequest.FeedingData.UserID = user.ID
+		feedingRequest.FeedingData.FamilyID = family.ID
 		err = feedingRequest.FeedingData.Save(env)
 		if err != nil {
 			log.Println(err)
