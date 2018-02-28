@@ -24,7 +24,10 @@ func (c contextKey) String() string {
 	return "api context key " + string(c)
 }
 
-const userContextKey contextKey = "user"
+const (
+	jsonContentType string     = "application/json"
+	userContextKey  contextKey = "user"
+)
 
 //ServiceInfo - return data about the service
 type ServiceInfo struct {

@@ -23,20 +23,18 @@ type WasteResponse struct {
 
 func initWasteHandlers(env *config.Env, r *mux.Router) {
 	w := r.PathPrefix("/waste").Subrouter()
-	w.Handle("", AuthRequired(WasteGetHandler(env), env)).Methods("GET").Name("WasteGet")
-	w.Handle("", AuthRequired(WasteNewHandler(env), env)).Methods("POST").Name("WasteNew")
-	w.Handle("/{id}", AuthRequired(WasteViewHandler(env), env)).Methods("GET").Name("WasteView")
-	w.Handle("/{id}", AuthRequired(WasteEditHandler(env), env)).Methods("PUT").Name("WasteEdit")
-	w.Handle("/{id}", AuthRequired(WasteDeleteHandler(env), env)).Methods("DELETE").Name("WasteDelete")
+	w.Handle("", AuthRequired(wasteGetHandler(env), env)).Methods("GET").Name("WasteGet")
+	w.Handle("", AuthRequired(wasteNewHandler(env), env)).Methods("POST").Name("WasteNew")
+	w.Handle("/{id}", AuthRequired(wasteViewHandler(env), env)).Methods("GET").Name("WasteView")
+	w.Handle("/{id}", AuthRequired(wasteEditHandler(env), env)).Methods("PUT").Name("WasteEdit")
+	w.Handle("/{id}", AuthRequired(wasteDeleteHandler(env), env)).Methods("DELETE").Name("WasteDelete")
 }
 
-//WasteGetHandler -
-func WasteGetHandler(env *config.Env) http.Handler {
+func wasteGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET /api/waste")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -45,35 +43,34 @@ func WasteGetHandler(env *config.Env) http.Handler {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		wasteResponse := WasteResponse{WasteData: wasteData}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(wasteResponse)
 	})
 }
 
-//WasteViewHandler -
-func WasteViewHandler(env *config.Env) http.Handler {
+func wasteViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		id := mux.Vars(r)["id"]
 		var waste models.Waste
 		waste.GetByID(env, id)
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(waste)
 	})
 }
 
-// WasteEditHandler -
-func WasteEditHandler(env *config.Env) http.Handler {
+func wasteEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -82,13 +79,11 @@ func WasteEditHandler(env *config.Env) http.Handler {
 	})
 }
 
-//WasteNewHandler -
-func WasteNewHandler(env *config.Env) http.Handler {
+func wasteNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST Waste")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -104,28 +99,29 @@ func WasteNewHandler(env *config.Env) http.Handler {
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-
 		defer r.Body.Close()
-		w.Header().Set("Content-Type", "application/json")
+
+		w.Header().Set("Content-Type", jsonContentType)
 		wasteRequest.WasteData.UserID = user.ID
 		wasteRequest.WasteData.FamilyID = family.ID
 		err = wasteRequest.WasteData.Save(env)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
+			return
 		}
 
 		json.NewEncoder(w).Encode(wasteRequest.WasteData)
 	})
 }
 
-//WasteDeleteHandler -
-func WasteDeleteHandler(env *config.Env) http.Handler {
+func wasteDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 

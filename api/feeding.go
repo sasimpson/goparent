@@ -23,67 +23,65 @@ type FeedingResponse struct {
 
 func initFeedingHandlers(env *config.Env, r *mux.Router) {
 	f := r.PathPrefix("/feeding").Subrouter()
-	f.Handle("", AuthRequired(FeedingGetHandler(env), env)).Methods("GET").Name("FeedingGet")
-	f.Handle("", AuthRequired(FeedingNewHandler(env), env)).Methods("POST").Name("FeedingNew")
-	f.Handle("/{id}", AuthRequired(FeedingViewHandler(env), env)).Methods("GET").Name("FeedingView")
-	f.Handle("/{id}", AuthRequired(FeedingEditHandler(env), env)).Methods("PUT").Name("FeedingEdit")
-	f.Handle("/{id}", AuthRequired(FeedingDeleteHandler(env), env)).Methods("DELETE").Name("FeedingDelete")
+	f.Handle("", AuthRequired(feedingGetHandler(env), env)).Methods("GET").Name("FeedingGet")
+	f.Handle("", AuthRequired(feedingNewHandler(env), env)).Methods("POST").Name("FeedingNew")
+	f.Handle("/{id}", AuthRequired(feedingViewHandler(env), env)).Methods("GET").Name("FeedingView")
+	f.Handle("/{id}", AuthRequired(feedingEditHandler(env), env)).Methods("PUT").Name("FeedingEdit")
+	f.Handle("/{id}", AuthRequired(feedingDeleteHandler(env), env)).Methods("DELETE").Name("FeedingDelete")
 }
 
-//FeedingGetHandler -
-func FeedingGetHandler(env *config.Env) http.Handler {
+func feedingGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET feeding")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		var feeding models.Feeding
 		feedingData, err := feeding.GetAll(env, &user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		feedingResponse := FeedingResponse{FeedingData: feedingData}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(feedingResponse)
 	})
 }
 
-//FeedingViewHandler -
-func FeedingViewHandler(env *config.Env) http.Handler {
+func feedingViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "GET feeding with id %s", id)
 	})
 }
 
-// FeedingEditHandler -
-func FeedingEditHandler(env *config.Env) http.Handler {
+func feedingEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "PUT with id %s", id)
 	})
 }
 
-//FeedingNewHandler -
-func FeedingNewHandler(env *config.Env) http.Handler {
+func feedingNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST Feeding")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -101,7 +99,8 @@ func FeedingNewHandler(env *config.Env) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		defer r.Body.Close()
-		w.Header().Set("Content-Type", "application/json")
+
+		w.Header().Set("Content-Type", jsonContentType)
 		feedingRequest.FeedingData.UserID = user.ID
 		feedingRequest.FeedingData.FamilyID = family.ID
 		err = feedingRequest.FeedingData.Save(env)
@@ -113,14 +112,14 @@ func FeedingNewHandler(env *config.Env) http.Handler {
 	})
 }
 
-//FeedingDeleteHandler -
-func FeedingDeleteHandler(env *config.Env) http.Handler {
+func feedingDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "DELETE with id %s", id)
 	})

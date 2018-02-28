@@ -23,6 +23,15 @@ func TestFeedingGetHandler(t *testing.T) {
 	//mock out the db stuff and return call
 	mock := r.NewMock()
 	mock.On(
+		r.Table("family"),
+	).Return(map[string]interface{}{
+		"id":           "1",
+		"admin":        "1",
+		"members":      []string{"1"},
+		"created_at":   time.Now(),
+		"last_updated": time.Now(),
+	}, nil)
+	mock.On(
 		r.Table("feeding").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
 	).Return([]interface{}{
 		map[string]interface{}{
@@ -31,6 +40,7 @@ func TestFeedingGetHandler(t *testing.T) {
 			"feedingAmount": 1,
 			"feedingSide":   "",
 			"userid":        "1",
+			"familyid":      "1",
 			"timestamp":     time.Now()},
 	}, nil)
 	testEnv.DB.Session = mock
@@ -41,7 +51,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingGetHandler(&testEnv)
+	handler := feedingGetHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -75,7 +85,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingNewHandler(&testEnv)
+	handler := feedingNewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
@@ -92,7 +102,7 @@ func TestFeedingViewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingViewHandler(&testEnv)
+	handler := feedingViewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -110,7 +120,7 @@ func TestFeedingEditHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingEditHandler(&testEnv)
+	handler := feedingEditHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -128,7 +138,7 @@ func TestFeedingDeleteHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingDeleteHandler(&testEnv)
+	handler := feedingDeleteHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()

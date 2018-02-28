@@ -41,7 +41,7 @@ func TestWasteGetHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteGetHandler(&testEnv)
+	handler := wasteGetHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -75,7 +75,7 @@ func TestWasteNewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteNewHandler(&testEnv)
+	handler := wasteNewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
@@ -104,7 +104,7 @@ func TestWasteViewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteViewHandler(&testEnv)
+	handler := wasteViewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -122,7 +122,7 @@ func TestWasteEditHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteEditHandler(&testEnv)
+	handler := wasteEditHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -140,7 +140,7 @@ func TestWasteDeleteHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteDeleteHandler(&testEnv)
+	handler := wasteDeleteHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()

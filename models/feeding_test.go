@@ -12,34 +12,103 @@ import (
 
 func TestFeedingGetAll(t *testing.T) {
 	var testEnv config.Env
+	// test return something:
 	mock := r.NewMock()
-	mock.On(
-		r.Table("feeding").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
-	).Return([]interface{}{
-		map[string]interface{}{"id": "1", "feedingType": "bottle", "feedingAmount": 1, "feedingSide": "", "userid": "1", "timestamp": time.Now()},
-	}, nil)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("feeding").Filter(
+				map[string]interface{}{
+					"familyID": "1",
+				}).OrderBy(r.Desc("timestamp")),
+		).
+		Return([]interface{}{
+			map[string]interface{}{
+				"id":            "1",
+				"feedingType":   "bottle",
+				"feedingAmount": 1,
+				"feedingSide":   "",
+				"userid":        "1",
+				"timestamp":     time.Now(),
+			},
+		}, nil)
 	testEnv.DB = config.DBEnv{Session: mock}
-
 	var f Feeding
 	feedings, err := f.GetAll(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, feedings, 1)
 
+	//test return nothing
 	mock = r.NewMock()
-	mock.On(
-		r.Table("feeding").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
-	).Return([]interface{}{}, nil)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("feeding").
+				Filter(
+					map[string]interface{}{
+						"familyID": "1",
+					}).
+				OrderBy(r.Desc("timestamp")),
+		).
+		Return([]interface{}{}, nil)
 	testEnv.DB.Session = mock
 	feedings, err = f.GetAll(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, feedings, 0)
 
+	//test get error
 	mock = r.NewMock()
-	mock.On(
-		r.Table("feeding").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
-	).Return([]interface{}{}, errors.New("Test Error"))
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("feeding").
+				Filter(map[string]interface{}{
+					"familyID": "1",
+				}).
+				OrderBy(r.Desc("timestamp")),
+		).
+		Return([]interface{}{}, errors.New("Test Error"))
 	testEnv.DB.Session = mock
 	feedings, err = f.GetAll(&testEnv, &User{ID: "1"})
 	mock.AssertExpectations(t)
