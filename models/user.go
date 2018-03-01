@@ -84,12 +84,14 @@ func (user *User) Save(env *config.Env) error {
 		return err
 	}
 	defer res.Close()
+
 	if res.IsNil() || user.ID != "" {
 		res2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 		if err != nil {
 			log.Println("error with insert from users upsert in user.Save()")
 			return err
 		}
+
 		if res2.Inserted > 0 {
 			user.ID = res2.GeneratedKeys[0]
 		}

@@ -120,6 +120,7 @@ func TestUserGetHandler(t *testing.T) {
 }
 
 func TestUserNewHandler(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 	mock := r.NewMock()
 	mock.
@@ -148,12 +149,8 @@ func TestUserNewHandler(t *testing.T) {
 		)
 	testEnv.DB.Session = mock
 
-	u := UserRequest{UserData: models.User{Name: "test user", Email: "testuser@test.com", Username: "testuser", Password: "testpassword"}}
-	js, err := json.Marshal(&u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req, err := http.NewRequest("POST", "/user", bytes.NewReader(js))
+	js := bytes.NewBufferString(`{ "userData": {"name": "test user", "email": "testuser@test.com", "username": "testuser", "password": "testpassword"}}`)
+	req, err := http.NewRequest("POST", "/user", js)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,22 +175,16 @@ func TestInitUsersHandlers(t *testing.T) {
 			path:    "/user/",
 			methods: []string{"POST"},
 		},
-		{
-			desc:    "user view",
-			name:    "UserView",
-			path:    "/user/{id}",
-			methods: []string{"GET"},
-		},
+		// {
+		// 	desc:    "user view",
+		// 	name:    "UserView",
+		// 	path:    "/user/{id}",
+		// 	methods: []string{"GET"},
+		// },
 		{
 			desc:    "user login",
 			name:    "UserLogin",
 			path:    "/user/login",
-			methods: []string{"POST"},
-		},
-		{
-			desc:    "user validate",
-			name:    "UserValidate",
-			path:    "/user/validate",
 			methods: []string{"POST"},
 		},
 	}
