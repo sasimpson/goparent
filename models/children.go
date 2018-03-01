@@ -41,7 +41,7 @@ func GetAllChildren(env *config.Env, user *User) ([]Child, error) {
 		return nil, err
 	}
 	children, err := family.GetAllChildren(env)
-	return children, nil
+	return children, err
 }
 
 //GetChild - data for a child based on the user (parent) and the child id

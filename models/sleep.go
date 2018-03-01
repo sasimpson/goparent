@@ -38,10 +38,15 @@ func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	family, err := user.GetFamily(env)
+	if err != nil {
+		return false, err
+	}
 	//check to see if we already have an open sleep session
 	res, err := gorethink.Table("sleep").Filter(map[string]interface{}{
-		"end":    time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
-		"userid": user.ID,
+		"end":      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+		"familyID": family.ID,
 	}).Run(session)
 	if err != nil {
 		if err == gorethink.ErrEmptyResult {
@@ -114,6 +119,7 @@ func (sleep *Sleep) GetAll(env *config.Env, user *User) ([]Sleep, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	family, err := user.GetFamily(env)
 	if err != nil {
 		return nil, err

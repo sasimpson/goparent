@@ -45,6 +45,8 @@ type ErrService struct {
 
 //RunService - Runs service interfaces for app
 func RunService(env *config.Env) {
+	log.SetOutput(os.Stdout)
+
 	r := mux.NewRouter()
 	a := r.PathPrefix("/api").Subrouter()
 	a.HandleFunc("/", apiHandler)

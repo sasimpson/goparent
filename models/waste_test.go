@@ -13,17 +13,37 @@ import (
 func TestWasteGetAll(t *testing.T) {
 	var testEnv config.Env
 	mock := r.NewMock()
-	mock.On(
-		r.Table("waste").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
-	).Return([]interface{}{
-		map[string]interface{}{
-			"id":        "1",
-			"wasteType": 1,
-			"notes":     "test note",
-			"userid":    "1",
-			"timestamp": time.Now(),
-		},
-	}, nil)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("waste").Filter(
+				map[string]interface{}{
+					"familyID": "1",
+				}).
+				OrderBy(r.Desc("timestamp")),
+		).
+		Return([]interface{}{
+			map[string]interface{}{
+				"id":        "1",
+				"wasteType": 1,
+				"notes":     "test note",
+				"userid":    "1",
+				"timestamp": time.Now(),
+			},
+		}, nil)
 	testEnv.DB.Session = mock
 	var w Waste
 	wastes, err := w.GetAll(&testEnv, &User{ID: "1"})
@@ -35,14 +55,17 @@ func TestWasteGetAll(t *testing.T) {
 func TestWasteGetByID(t *testing.T) {
 	var testEnv config.Env
 	mock := r.NewMock()
-	mock.On(
-		r.Table("waste").Get("1"),
-	).Return([]interface{}{
+	mock.
+		On(
+			r.Table("waste").Get("1"),
+		).Return([]interface{}{
 		map[string]interface{}{
 			"id":        "1",
 			"wasteType": 1,
 			"notes":     "test note",
-			"userid":    "1",
+			"userID":    "1",
+			"familyID":  "1",
+			"childID":   "1",
 			"timestamp": time.Now(),
 		},
 	}, nil)
@@ -55,6 +78,7 @@ func TestWasteGetByID(t *testing.T) {
 }
 
 func TestWasteSaveError(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 	timestamp := time.Now().UTC()
 	mock := r.NewMock()
@@ -63,7 +87,9 @@ func TestWasteSaveError(t *testing.T) {
 			map[string]interface{}{
 				"wasteType": 1,
 				"notes":     "Some Notes",
-				"userid":    "1",
+				"userID":    "1",
+				"familyID":  "1",
+				"childID":   "1",
 				"timestamp": timestamp,
 			}, r.InsertOpts{Conflict: "replace"},
 		).MockAnything(),
@@ -78,6 +104,7 @@ func TestWasteSaveError(t *testing.T) {
 }
 
 func TestWasteSave(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 
 	testCases := []struct {
@@ -85,6 +112,8 @@ func TestWasteSave(t *testing.T) {
 		wasteType int
 		notes     string
 		userid    string
+		familyid  string
+		childid   string
 		timestamp time.Time
 		recordID  string
 	}{
@@ -93,6 +122,8 @@ func TestWasteSave(t *testing.T) {
 			wasteType: 1,
 			notes:     "some waste test notes",
 			userid:    "1",
+			familyid:  "1",
+			childid:   "1",
 			timestamp: time.Now().UTC(),
 			recordID:  "1",
 		},
@@ -103,7 +134,9 @@ func TestWasteSave(t *testing.T) {
 			mock.On(
 				r.Table("waste").Insert(
 					map[string]interface{}{
-						"userid":    tC.userid,
+						"userID":    tC.userid,
+						"childID":   tC.childid,
+						"familyID":  tC.familyid,
 						"wasteType": tC.wasteType,
 						"notes":     tC.notes,
 						"timestamp": tC.timestamp,
@@ -122,6 +155,8 @@ func TestWasteSave(t *testing.T) {
 				Type:      tC.wasteType,
 				Notes:     tC.notes,
 				UserID:    tC.userid,
+				FamilyID:  tC.familyid,
+				ChildID:   tC.childid,
 				TimeStamp: tC.timestamp,
 			}
 

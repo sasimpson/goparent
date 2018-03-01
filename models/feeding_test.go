@@ -11,6 +11,7 @@ import (
 )
 
 func TestFeedingGetAll(t *testing.T) {
+	//TODO: consider separating these into individual tests
 	var testEnv config.Env
 	// test return something:
 	mock := r.NewMock()
@@ -123,7 +124,9 @@ func TestFeedingSaveError(t *testing.T) {
 	mock.On(
 		r.Table("feeding").Insert(
 			map[string]interface{}{
-				"userid":        "1",
+				"userID":        "1",
+				"familyID":      "1",
+				"childID":       "1",
 				"timestamp":     timestamp,
 				"feedingType":   "bottle",
 				"feedingAmount": 3.5,
@@ -132,7 +135,14 @@ func TestFeedingSaveError(t *testing.T) {
 	).Return(nil, errors.New("returned error"))
 	testEnv.DB.Session = mock
 
-	f := Feeding{Type: "bottle", Amount: 3.5, Side: "", UserID: "1", TimeStamp: timestamp}
+	f := Feeding{
+		Type:      "bottle",
+		Amount:    3.5,
+		Side:      "",
+		FamilyID:  "1",
+		UserID:    "1",
+		ChildID:   "1",
+		TimeStamp: timestamp}
 	err := f.Save(&testEnv)
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
@@ -146,6 +156,8 @@ func TestFeedingSave(t *testing.T) {
 		desc          string
 		recordID      string
 		userID        string
+		familyID      string
+		childID       string
 		timestamp     time.Time
 		feedingType   string
 		feedingAmount float32
@@ -155,6 +167,8 @@ func TestFeedingSave(t *testing.T) {
 			desc:          "bottle, 3.5floz",
 			recordID:      "1",
 			userID:        "1",
+			familyID:      "1",
+			childID:       "1",
 			timestamp:     time.Now(),
 			feedingType:   "bottle",
 			feedingAmount: 3.5,
@@ -164,6 +178,8 @@ func TestFeedingSave(t *testing.T) {
 			desc:          "breast, left side 20min",
 			recordID:      "2",
 			userID:        "1",
+			familyID:      "1",
+			childID:       "1",
 			timestamp:     time.Now(),
 			feedingType:   "breast",
 			feedingAmount: 20,
@@ -176,7 +192,9 @@ func TestFeedingSave(t *testing.T) {
 			mock.On(
 				r.Table("feeding").Insert(
 					map[string]interface{}{
-						"userid":        tC.userID,
+						"userID":        tC.userID,
+						"familyID":      tC.familyID,
+						"childID":       tC.childID,
 						"timestamp":     tC.timestamp,
 						"feedingType":   tC.feedingType,
 						"feedingAmount": tC.feedingAmount,
@@ -196,6 +214,8 @@ func TestFeedingSave(t *testing.T) {
 				Amount:    tC.feedingAmount,
 				Side:      tC.feedingSide,
 				UserID:    tC.userID,
+				ChildID:   tC.childID,
+				FamilyID:  tC.familyID,
 				TimeStamp: tC.timestamp,
 			}
 			err := f.Save(&testEnv)
