@@ -89,7 +89,7 @@ func ChildSummary(env *config.Env) http.Handler {
 		}
 		summary.Stats.Waste = wastes
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(summary)
 	})
 }
@@ -111,7 +111,7 @@ func ChildrenGetHandler(env *config.Env) http.Handler {
 		}
 
 		childrenResponse := ChildrenResponse{Children: allChildren}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(childrenResponse)
 	})
 }
@@ -142,7 +142,7 @@ func ChildNewHandler(env *config.Env) http.Handler {
 		}
 
 		defer r.Body.Close()
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		childRequest.ChildData.ParentID = user.ID
 		childRequest.ChildData.FamilyID = family.ID
 		err = childRequest.ChildData.Save(env)
@@ -173,7 +173,7 @@ func ChildViewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(child)
 	})
 }
@@ -249,7 +249,7 @@ func ChildDeleteHandler(env *config.Env) http.Handler {
 
 		deletedResponse.Deleted = deleted
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		w.WriteHeader(http.StatusAccepted)
 		json.NewEncoder(w).Encode(deletedResponse)
 	})

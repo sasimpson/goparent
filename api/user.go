@@ -17,8 +17,8 @@ type UserRequest struct {
 
 //UserResponse - structure for responding to user info requests
 type UserResponse struct {
-	UserData   models.User   `json:"userData"`
-	FamilyData models.Family `json:"familyData"`
+	UserData   *models.User   `json:"userData"`
+	FamilyData *models.Family `json:"familyData"`
 }
 
 //NewUserRequest - this is for submitting password in new user request
@@ -60,21 +60,22 @@ func loginHandler(env *config.Env) http.Handler {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		log.Println("POST /api/user/login,", username, password)
 		var user models.User
 		err := user.GetUserByLogin(env, username, password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		token, err := user.GetToken(env)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		var userResp UserAuthResponse
 		userResp.UserData = user
 		userResp.Token = token
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		w.Header().Set("x-auth-token", token)
 		json.NewEncoder(w).Encode(userResp)
 	})
@@ -82,14 +83,17 @@ func loginHandler(env *config.Env) http.Handler {
 
 func userGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET  /api/user")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		family, _ := user.GetFamily(env)
-		userInfo := UserResponse{UserData: user, FamilyData: family}
+		userInfo := UserResponse{
+			UserData:   &user,
+			FamilyData: &family}
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(userInfo)
 		return
 	})
@@ -106,7 +110,8 @@ func userNewHandler(env *config.Env) http.Handler {
 			log.Panicln(err)
 		}
 		defer r.Body.Close()
-		w.Header().Set("Content-Type", "application/json")
+
+		w.Header().Set("Content-Type", jsonContentType)
 		err = userData.Save(env)
 		if err != nil {
 			log.Println(err)
@@ -160,7 +165,7 @@ func userListInviteHandler(env *config.Env) http.Handler {
 		}
 
 		invitesResponse := InvitesResponse{InviteData: invites}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(invitesResponse)
 	})
 }
@@ -179,7 +184,7 @@ func userDeleteInviteHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		w.WriteHeader(http.StatusNoContent)
 	})
 }

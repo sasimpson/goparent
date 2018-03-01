@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent/config"
@@ -81,18 +82,25 @@ func TestInvalidLogin(t *testing.T) {
 }
 
 func TestUserGetHandler(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 	mock := r.NewMock()
-	mock.On(
-		r.Table("users").Get("1"),
-	).Return(
-		map[string]interface{}{
-			"id":       "1",
-			"name":     "test user",
-			"email":    "testuser@test.com",
-			"username": "testuser",
-		}, nil,
-	)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil)
+
 	testEnv.DB.Session = mock
 	req, err := http.NewRequest("GET", "/user/1", nil)
 	if err != nil {
@@ -106,32 +114,38 @@ func TestUserGetHandler(t *testing.T) {
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
+	var testResult UserResponse
+	err = json.NewDecoder(rr.Body).Decode(&testResult)
+	assert.Equal(t, "1", testResult.UserData.ID)
 }
 
 func TestUserNewHandler(t *testing.T) {
 	var testEnv config.Env
 	mock := r.NewMock()
-	mock.On(
-		r.Table("users").Filter(map[string]interface{}{
-			"email": "testuser@test.com",
-		}),
-	).On(
-		r.Table("users").Insert(
-			map[string]interface{}{
-				"name":     "test user",
-				"email":    "testuser@test.com",
-				"username": "testuser",
-				"password": "testpassword",
-			},
-			r.InsertOpts{Conflict: "replace"},
-		),
-	).Return(
-		r.WriteResponse{
-			Inserted:      1,
-			Errors:        0,
-			GeneratedKeys: []string{"1"},
-		}, nil,
-	)
+	mock.
+		On(
+			r.Table("users").Filter(map[string]interface{}{
+				"email": "testuser@test.com",
+			}),
+		).
+		On(
+			r.Table("users").Insert(
+				map[string]interface{}{
+					"name":     "test user",
+					"email":    "testuser@test.com",
+					"username": "testuser",
+					"password": "testpassword",
+				},
+				r.InsertOpts{Conflict: "replace"},
+			),
+		).
+		Return(
+			r.WriteResponse{
+				Inserted:      1,
+				Errors:        0,
+				GeneratedKeys: []string{"1"},
+			}, nil,
+		)
 	testEnv.DB.Session = mock
 
 	u := UserRequest{UserData: models.User{Name: "test user", Email: "testuser@test.com", Username: "testuser", Password: "testpassword"}}
