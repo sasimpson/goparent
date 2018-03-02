@@ -172,6 +172,47 @@ func TestChildrenSaveError(t *testing.T) {
 	assert.EqualError(t, err, "returned error")
 }
 
+func TestDeleteChild(t *testing.T) {
+	var testEnv config.Env
+	mock := r.NewMock()
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("children").Filter(
+				map[string]interface{}{
+					"familyID": "1",
+					"id":       "1",
+				},
+			).Delete(),
+		).
+		Return(
+			r.WriteResponse{
+				Deleted: 1,
+			}, nil,
+		)
+	testEnv.DB.Session = mock
+
+	c := Child{ID: "1", Name: "joey", ParentID: "1", FamilyID: "1", Birthday: time.Now()}
+	resp, err := c.DeleteChild(&testEnv, &User{ID: "1"})
+	mock.AssertExpectations(t)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, resp)
+
+}
+
 func TestChildrenSave(t *testing.T) {
 	var testEnv config.Env
 
