@@ -140,7 +140,7 @@ func (user *User) ValidateToken(env *config.Env, tokenString string) (bool, erro
 //UserInvitation - structure for storing invitations
 type UserInvitation struct {
 	ID          string    `json:"id" gorethink:"id,omitempty"`
-	UserID      string    `json:"userID" gorethink:"userid"`
+	UserID      string    `json:"userID" gorethink:"userID"`
 	InviteEmail string    `json:"inviteEmail" gorethink:"inviteEmail"`
 	Timestamp   time.Time `json:"timestamp" gorethink:"timestamp"`
 }
@@ -187,7 +187,7 @@ func (user *User) GetInvites(env *config.Env) ([]UserInvitation, error) {
 
 	res, err := gorethink.Table("invites").
 		Filter(map[string]interface{}{
-			"userid": user.ID,
+			"userID": user.ID,
 		}).
 		OrderBy(gorethink.Desc("timestamp")).
 		Run(session)
@@ -213,7 +213,7 @@ func (user *User) DeleteInvite(env *config.Env, id string) error {
 
 	res, err := gorethink.Table("invites").
 		Filter(map[string]interface{}{
-			"userid": user.ID,
+			"userID": user.ID,
 			"id":     id,
 		}).
 		Delete().

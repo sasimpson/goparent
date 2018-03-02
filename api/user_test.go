@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -162,6 +163,50 @@ func TestUserNewHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
+func TestNewInviteHandler(t *testing.T) {
+	var testEnv config.Env
+	mock := r.NewMock()
+	mock.
+		On(
+			r.Table("invites").MockAnything(),
+		).
+		Return(nil, nil).
+		On(
+			r.Table("invites").Insert(
+				map[string]interface{}{
+					"userID":      "1",
+					"inviteEmail": "inviteuser@test.com",
+					"timestamp":   time.Now(),
+				},
+				r.InsertOpts{Conflict: "replace"},
+			),
+		).
+		Return(
+			r.WriteResponse{
+				Inserted:      1,
+				Errors:        0,
+				GeneratedKeys: []string{"1"},
+			}, nil,
+		)
+	testEnv.DB.Session = mock
+
+	form := url.Values{}
+	form.Add("email", "inviteuser@test.com")
+	req, _ := http.NewRequest("POST", "/user/invite", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	req.Form = form
+
+	handler := userNewInviteHandler(&testEnv)
+	rr := httptest.NewRecorder()
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	req = req.WithContext(ctx)
+
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusCreated, rr.Code)
+
+}
 func TestInitUsersHandlers(t *testing.T) {
 	testCases := []struct {
 		desc    string

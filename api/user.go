@@ -128,14 +128,22 @@ func userNewHandler(env *config.Env) http.Handler {
 
 func userNewInviteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST /api/user/invite")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		err = r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		invitedUserEmail := r.PostFormValue("email")
+		if invitedUserEmail == "" || len(invitedUserEmail) <= 0 {
+			http.Error(w, "no invite email submitted", http.StatusBadRequest)
+			return
+		}
 
 		err = user.InviteParent(env, invitedUserEmail)
 		if err != nil {
