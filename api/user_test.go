@@ -207,7 +207,90 @@ func TestNewInviteHandler(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, rr.Code)
 
 }
+
+func TestListInviteHandler(t *testing.T) {
+	var testEnv config.Env
+	mock := r.NewMock()
+	mock.
+		On(
+			r.Table("users").Get("1"),
+		).
+		Return([]map[string]interface{}{
+			{"id": "1",
+				"name":     "test user",
+				"email":    "testuser@test.com",
+				"username": "testuser",
+				"password": "testpassword"},
+		}, nil).
+		On(
+			r.Table("invites").Filter(map[string]interface{}{
+				"userID": "1",
+			}).OrderBy(r.Desc("timestamp")),
+		).
+		Return([]map[string]interface{}{
+			{"id": "1", "userID": "1", "inviteEmail": "testinvite1@test.com", "timestamp": time.Now()},
+			{"id": "2", "userID": "1", "inviteEmail": "testinvite2@test.com", "timestamp": time.Now()},
+		}, nil)
+	testEnv.DB.Session = mock
+
+	req, _ := http.NewRequest("GET", "/invite", nil)
+	req.Header.Add("Content-Type", jsonContentType)
+
+	handler := userListInviteHandler(&testEnv)
+	rr := httptest.NewRecorder()
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	req = req.WithContext(ctx)
+
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestDeleteInviteHandler(t *testing.T) {
+	var testEnv config.Env
+	mock := r.NewMock()
+	mock.
+		On(
+			r.Table("users").Get("1"),
+		).
+		Return([]map[string]interface{}{
+			{
+				"id":       "1",
+				"name":     "test user",
+				"email":    "testuser@test.com",
+				"username": "testuser",
+				"password": "testpassword"},
+		}, nil).
+		On(
+			r.Table("invites").Filter(map[string]interface{}{
+				"userID": "1",
+				"id":     "1",
+			}).Delete(),
+		).
+		Return(
+			r.WriteResponse{
+				Deleted: 1,
+			}, nil)
+	testEnv.DB.Session = mock
+
+	req, err := http.NewRequest("DELETE", "/user/invite/1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//this is needed because apparently gorilla mux doesn't do ^ and we have to set it ahead of time to work.
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+
+	handler := userDeleteInviteHandler(&testEnv)
+	rr := httptest.NewRecorder()
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+	req = req.WithContext(ctx)
+
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusNoContent, rr.Code)
+}
 func TestInitUsersHandlers(t *testing.T) {
+	//TODO: update with new handler routes
 	testCases := []struct {
 		desc    string
 		name    string
@@ -220,12 +303,6 @@ func TestInitUsersHandlers(t *testing.T) {
 			path:    "/user/",
 			methods: []string{"POST"},
 		},
-		// {
-		// 	desc:    "user view",
-		// 	name:    "UserView",
-		// 	path:    "/user/{id}",
-		// 	methods: []string{"GET"},
-		// },
 		{
 			desc:    "user login",
 			name:    "UserLogin",
