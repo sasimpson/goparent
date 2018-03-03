@@ -233,7 +233,7 @@ func TestListInviteHandler(t *testing.T) {
 		}, nil)
 	testEnv.DB.Session = mock
 
-	req, _ := http.NewRequest("GET", "/invite", nil)
+	req, _ := http.NewRequest("GET", "/user/invite", nil)
 	req.Header.Add("Content-Type", jsonContentType)
 
 	handler := userListInviteHandler(&testEnv)
