@@ -24,11 +24,12 @@ type UserResponse struct {
 //NewUserRequest - this is for submitting password in new user request
 type NewUserRequest struct {
 	UserData struct {
-		ID       string `json:"id,omitempty"`
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		ID            string `json:"id,omitempty"`
+		Name          string `json:"name"`
+		Email         string `json:"email"`
+		Username      string `json:"username"`
+		Password      string `json:"password"`
+		CurrentFamily string `json:"currentFamily"`
 	} `json:"userData"`
 }
 
@@ -40,7 +41,8 @@ type UserAuthResponse struct {
 
 //InvitesResponse - response structure for invites
 type InvitesResponse struct {
-	InviteData []models.UserInvitation `json:"inviteData"`
+	SentInviteData    []models.UserInvitation `json:"sentInviteData"`
+	PendingInviteData []models.UserInvitation `json:"pendingInviteData`
 }
 
 func initUsersHandlers(env *config.Env, r *mux.Router) {
@@ -166,15 +168,42 @@ func userListInviteHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		invites, err := user.GetSentInvites(env)
+		sentInvites, err := user.GetSentInvites(env)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		invitesResponse := InvitesResponse{InviteData: invites}
+		pendingInvites, err := user.GetInvites(env)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		invitesResponse := InvitesResponse{SentInviteData: sentInvites, PendingInviteData: pendingInvites}
 		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(invitesResponse)
+	})
+}
+
+func userAcceptInviteHandler(env *config.Env) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		id := mux.Vars(r)["id"]
+		err = user.AcceptInvite(env, id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("Content-Type", jsonContentType)
+		return
 	})
 }
 
