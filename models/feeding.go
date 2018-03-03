@@ -38,7 +38,6 @@ func (feeding *Feeding) Save(env *config.Env) error {
 
 	res, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		log.Println("error with upsert from feeding upsert in feeding.Save()")
 		return err
 	}
 

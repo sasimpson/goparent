@@ -38,7 +38,6 @@ func (waste *Waste) Save(env *config.Env) error {
 
 	res, err := gorethink.Table("waste").Insert(waste, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		// log.Println("error with upsert from waste upsert in waste.Save()")
 		return err
 	}
 

@@ -17,11 +17,7 @@ func TestChildrenGetAll(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -46,7 +42,7 @@ func TestChildrenGetAll(t *testing.T) {
 		}, nil)
 	testEnv.DB.Session = mock
 
-	children, err := GetAllChildren(&testEnv, &User{ID: "1"})
+	children, err := GetAllChildren(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, children, 1)
@@ -55,11 +51,7 @@ func TestChildrenGetAll(t *testing.T) {
 	mock = r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -77,7 +69,7 @@ func TestChildrenGetAll(t *testing.T) {
 		).
 		Return([]interface{}{}, nil)
 	testEnv.DB.Session = mock
-	children, err = GetAllChildren(&testEnv, &User{ID: "1"})
+	children, err = GetAllChildren(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, children, 0)
@@ -86,11 +78,7 @@ func TestChildrenGetAll(t *testing.T) {
 	mock = r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -108,7 +96,7 @@ func TestChildrenGetAll(t *testing.T) {
 		).
 		Return(nil, errors.New("Test Error"))
 	testEnv.DB.Session = mock
-	children, err = GetAllChildren(&testEnv, &User{ID: "1"})
+	children, err = GetAllChildren(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.Len(t, children, 0)
@@ -119,11 +107,7 @@ func TestChildrenGetOne(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -141,7 +125,7 @@ func TestChildrenGetOne(t *testing.T) {
 	testEnv.DB.Session = mock
 
 	var child Child
-	err := child.GetChild(&testEnv, &User{ID: "1"}, "1")
+	err := child.GetChild(&testEnv, &User{ID: "1", CurrentFamily: "1"}, "1")
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "1", child.ID)
@@ -177,11 +161,7 @@ func TestDeleteChild(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -206,12 +186,13 @@ func TestDeleteChild(t *testing.T) {
 	testEnv.DB.Session = mock
 
 	c := Child{ID: "1", Name: "joey", ParentID: "1", FamilyID: "1", Birthday: time.Now()}
-	resp, err := c.DeleteChild(&testEnv, &User{ID: "1"})
+	resp, err := c.DeleteChild(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, resp)
-
 }
+
+//TODO: test no family errors
 
 func TestChildrenSave(t *testing.T) {
 	var testEnv config.Env

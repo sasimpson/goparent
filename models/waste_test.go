@@ -15,11 +15,7 @@ func TestWasteGetAll(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -46,7 +42,7 @@ func TestWasteGetAll(t *testing.T) {
 		}, nil)
 	testEnv.DB.Session = mock
 	var w Waste
-	wastes, err := w.GetAll(&testEnv, &User{ID: "1"})
+	wastes, err := w.GetAll(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, wastes, 1)

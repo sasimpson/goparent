@@ -16,11 +16,7 @@ func TestSleepStatusFalse(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -37,7 +33,7 @@ func TestSleepStatusFalse(t *testing.T) {
 		).Return(nil, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	status, err := s.Status(&testEnv, &User{ID: "1"})
+	status, err := s.Status(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Equal(t, false, status)
 	assert.Nil(t, err)
@@ -48,11 +44,7 @@ func TestSleepStatusTrue(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -75,7 +67,7 @@ func TestSleepStatusTrue(t *testing.T) {
 		}, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	status, err := s.Status(&testEnv, &User{ID: "1"})
+	status, err := s.Status(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Equal(t, true, status)
 	assert.Nil(t, err)
@@ -86,11 +78,7 @@ func TestSleepStatusError(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -108,7 +96,7 @@ func TestSleepStatusError(t *testing.T) {
 		Return(map[string]interface{}{}, errors.New("raised error"))
 	testEnv.DB.Session = mock
 	var s Sleep
-	status, err := s.Status(&testEnv, &User{ID: "1"})
+	status, err := s.Status(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, "raised error")
@@ -120,11 +108,7 @@ func TestSleepStatusEmpty(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -141,7 +125,7 @@ func TestSleepStatusEmpty(t *testing.T) {
 		).Return(nil, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	status, err := s.Status(&testEnv, &User{ID: "1"})
+	status, err := s.Status(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Equal(t, false, status)
@@ -152,11 +136,7 @@ func TestSleepStart(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -174,7 +154,7 @@ func TestSleepStart(t *testing.T) {
 		Return(nil, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.SleepStart(&testEnv, &User{ID: "1"})
+	err := s.SleepStart(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	assert.Nil(t, err)
 }
 
@@ -183,11 +163,7 @@ func TestSleepStartError(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -210,7 +186,7 @@ func TestSleepStartError(t *testing.T) {
 		}, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.SleepStart(&testEnv, &User{ID: "1"})
+	err := s.SleepStart(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, ErrExistingStart.Error())
@@ -221,11 +197,7 @@ func TestSleepEnd(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -250,7 +222,7 @@ func TestSleepEnd(t *testing.T) {
 		}, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.SleepEnd(&testEnv, &User{ID: "1"})
+	err := s.SleepEnd(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 }
@@ -260,11 +232,7 @@ func TestSleepEndError(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -282,7 +250,7 @@ func TestSleepEndError(t *testing.T) {
 		Return(nil, nil)
 	testEnv.DB.Session = mock
 	var s Sleep
-	err := s.SleepEnd(&testEnv, &User{ID: "1"})
+	err := s.SleepEnd(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, ErrNoExistingSession.Error())
@@ -290,11 +258,7 @@ func TestSleepEndError(t *testing.T) {
 	mock = r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -311,7 +275,7 @@ func TestSleepEndError(t *testing.T) {
 		).
 		Return(nil, errors.New("raised error"))
 	testEnv.DB.Session = mock
-	err = s.SleepEnd(&testEnv, &User{ID: "1"})
+	err = s.SleepEnd(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, "raised error")
@@ -402,11 +366,7 @@ func TestSleepGetAll(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -432,7 +392,7 @@ func TestSleepGetAll(t *testing.T) {
 
 	testEnv.DB.Session = mock
 	var s Sleep
-	sleeps, err := s.GetAll(&testEnv, &User{ID: "1"})
+	sleeps, err := s.GetAll(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, sleeps, 1)
@@ -443,11 +403,7 @@ func TestSleepGetAllError(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -465,7 +421,7 @@ func TestSleepGetAllError(t *testing.T) {
 
 	testEnv.DB.Session = mock
 	var s Sleep
-	sleeps, err := s.GetAll(&testEnv, &User{ID: "1"})
+	sleeps, err := s.GetAll(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.EqualError(t, err, "raised error")

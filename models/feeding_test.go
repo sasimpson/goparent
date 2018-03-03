@@ -17,11 +17,7 @@ func TestFeedingGetAll(t *testing.T) {
 	mock := r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -48,7 +44,7 @@ func TestFeedingGetAll(t *testing.T) {
 		}, nil)
 	testEnv.DB = config.DBEnv{Session: mock}
 	var f Feeding
-	feedings, err := f.GetAll(&testEnv, &User{ID: "1"})
+	feedings, err := f.GetAll(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, feedings, 1)
@@ -57,11 +53,7 @@ func TestFeedingGetAll(t *testing.T) {
 	mock = r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -80,7 +72,7 @@ func TestFeedingGetAll(t *testing.T) {
 		).
 		Return([]interface{}{}, nil)
 	testEnv.DB.Session = mock
-	feedings, err = f.GetAll(&testEnv, &User{ID: "1"})
+	feedings, err = f.GetAll(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Len(t, feedings, 0)
@@ -89,11 +81,7 @@ func TestFeedingGetAll(t *testing.T) {
 	mock = r.NewMock()
 	mock.
 		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
+			r.Table("family").Get("1"),
 		).
 		Return(map[string]interface{}{
 			"id":           "1",
@@ -111,7 +99,7 @@ func TestFeedingGetAll(t *testing.T) {
 		).
 		Return([]interface{}{}, errors.New("Test Error"))
 	testEnv.DB.Session = mock
-	feedings, err = f.GetAll(&testEnv, &User{ID: "1"})
+	feedings, err = f.GetAll(&testEnv, &User{ID: "1", CurrentFamily: "1"})
 	mock.AssertExpectations(t)
 	assert.Error(t, err)
 	assert.Len(t, feedings, 0)

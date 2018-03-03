@@ -103,7 +103,6 @@ func (sleep *Sleep) Save(env *config.Env) error {
 
 	resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		// log.Println("error with upsert from sleep upsert in sleep.Save()")
 		return err
 	}
 	if resp.Inserted > 0 {

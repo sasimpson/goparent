@@ -49,7 +49,7 @@ func initUsersHandlers(env *config.Env, r *mux.Router) {
 	u.Handle("/", userNewHandler(env)).Methods("POST").Name("UserNew")
 	u.Handle("/", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserGetData")
 	u.Handle("/login", loginHandler(env)).Methods("POST").Name("UserLogin")
-	u.Handle("/invite", AuthRequired(userListInviteHandler(env), env)).Methods("GET").Name("UserGetInvites")
+	u.Handle("/invite", AuthRequired(userListInviteHandler(env), env)).Methods("GET").Name("UserGetSentInvites")
 	u.Handle("/invite", AuthRequired(userNewInviteHandler(env), env)).Methods("POST").Name("UserNewInvite")
 	u.Handle("/invite/{id}", AuthRequired(userDeleteInviteHandler(env), env)).Methods("DELETE").Name("UserDeleteInvite")
 }
@@ -166,7 +166,7 @@ func userListInviteHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		invites, err := user.GetInvites(env)
+		invites, err := user.GetSentInvites(env)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

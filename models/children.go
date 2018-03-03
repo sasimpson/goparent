@@ -95,32 +95,3 @@ func (child *Child) DeleteChild(env *config.Env, user *User) (int, error) {
 	}
 	return res.Deleted, nil
 }
-
-//Family - structure to associate groups of parents with children
-type Family struct {
-	ID          string    `json:"id" gorethink:"id,omitempty"`
-	Admin       string    `json:"admin" gorethink:"admin"`
-	Members     []string  `json:"members" gorethink:"members"`
-	CreatedAt   time.Time `json:"created_at" gorethink:"created_at"`
-	LastUpdated time.Time `json:"last_updated" gorethink:"last_updated"`
-}
-
-//GetAllChildren - returns all the children for a family
-func (family *Family) GetAllChildren(env *config.Env) ([]Child, error) {
-	session, err := env.DB.GetConnection()
-	if err != nil {
-		return nil, err
-	}
-	res, err := gorethink.Table("children").Filter(map[string]interface{}{"familyID": family.ID}).OrderBy(gorethink.Desc("birthday")).Run(session)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Close()
-
-	var rows []Child
-	err = res.All(&rows)
-	if err != nil {
-		return nil, err
-	}
-	return rows, nil
-}
