@@ -53,7 +53,6 @@ func initChildrenHandlers(env *config.Env, r *mux.Router) {
 func childSummary(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
-		log.Println("Child Summary: ", childID)
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -97,7 +96,6 @@ func childSummary(env *config.Env) http.Handler {
 //ChildrenGetHandler - GET / - gets all children for user
 func childrenGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Children GET ")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -119,7 +117,6 @@ func childrenGetHandler(env *config.Env) http.Handler {
 //ChildNewHandler - POST / - create a new child for a user
 func childNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST Child")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -159,7 +156,6 @@ func childNewHandler(env *config.Env) http.Handler {
 func childViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
-		log.Println("Child View: ", childID)
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -181,7 +177,6 @@ func childViewHandler(env *config.Env) http.Handler {
 // ChildEditHandler - PUT /{id} - edit a child for a user
 func childEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("PUT Child")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

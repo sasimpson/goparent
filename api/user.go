@@ -42,7 +42,7 @@ type UserAuthResponse struct {
 //InvitesResponse - response structure for invites
 type InvitesResponse struct {
 	SentInviteData    []models.UserInvitation `json:"sentInviteData"`
-	PendingInviteData []models.UserInvitation `json:"pendingInviteData`
+	PendingInviteData []models.UserInvitation `json:"pendingInviteData"`
 }
 
 func initUsersHandlers(env *config.Env, r *mux.Router) {
