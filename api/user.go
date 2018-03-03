@@ -54,6 +54,7 @@ func initUsersHandlers(env *config.Env, r *mux.Router) {
 	u.Handle("/invite", AuthRequired(userListInviteHandler(env), env)).Methods("GET").Name("UserGetSentInvites")
 	u.Handle("/invite", AuthRequired(userNewInviteHandler(env), env)).Methods("POST").Name("UserNewInvite")
 	u.Handle("/invite/{id}", AuthRequired(userDeleteInviteHandler(env), env)).Methods("DELETE").Name("UserDeleteInvite")
+	u.Handle("/invite/accept/{id}", AuthRequired(userAcceptInviteHandler(env), env)).Methods("POST").Name("UserAcceptInvite")
 }
 
 func loginHandler(env *config.Env) http.Handler {
