@@ -104,7 +104,6 @@ func userGetHandler(env *config.Env) http.Handler {
 
 func userNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST /api/user")
 		decoder := json.NewDecoder(r.Body)
 		var newUserRequest NewUserRequest
 		err := decoder.Decode(&newUserRequest)
@@ -117,7 +116,6 @@ func userNewHandler(env *config.Env) http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		err = userData.Save(env)
 		if err != nil {
-			log.Println(err)
 			var errMsg ErrService
 			errMsg.ErrMessage.Body = err.Error()
 			errMsg.ErrMessage.Code = http.StatusConflict
@@ -191,6 +189,7 @@ func userAcceptInviteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
+			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -198,6 +197,7 @@ func userAcceptInviteHandler(env *config.Env) http.Handler {
 		id := mux.Vars(r)["id"]
 		err = user.AcceptInvite(env, id)
 		if err != nil {
+			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

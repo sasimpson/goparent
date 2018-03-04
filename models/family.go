@@ -58,6 +58,27 @@ func (family *Family) GetFamily(env *config.Env, id string) error {
 	return nil
 }
 
+func (family *Family) GetAdminFamily(env *config.Env, id string) error {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	res, err := gorethink.Table("family").Filter(map[string]interface{}{
+		"admin": id,
+	}).Run(session)
+	if err != nil {
+		return err
+	}
+
+	err = res.One(family)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //GetAllChildren - returns all the children for a family
 func (family *Family) GetAllChildren(env *config.Env) ([]Child, error) {
 	session, err := env.DB.GetConnection()

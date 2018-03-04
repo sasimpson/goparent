@@ -86,8 +86,28 @@ func (user *User) Save(env *config.Env) error {
 	}
 	defer res.Close()
 
-	isNil := res.IsNil()
-	if isNil || user.ID != "" {
+	var family Family
+	if user.CurrentFamily == "" && user.ID != "" {
+		err = family.GetAdminFamily(env, user.ID)
+		if err != nil {
+			if err == gorethink.ErrEmptyResult {
+				family = Family{Admin: user.ID, Members: []string{user.ID}}
+				family.Save(env)
+			} else {
+				return err
+			}
+
+		}
+		user.CurrentFamily = family.ID
+	}
+
+	if user.CurrentFamily == "" && user.ID == "" {
+		family = Family{Admin: user.ID, Members: []string{user.ID}}
+		family.Save(env)
+		user.CurrentFamily = family.ID
+	}
+
+	if res.IsNil() || user.ID != "" {
 		res2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 		if err != nil {
 			return err
@@ -95,6 +115,9 @@ func (user *User) Save(env *config.Env) error {
 
 		if res2.Inserted > 0 {
 			user.ID = res2.GeneratedKeys[0]
+			family.Admin = user.ID
+			family.Members = []string{user.ID}
+			family.Save(env)
 		}
 		return nil
 	}
