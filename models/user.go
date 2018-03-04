@@ -3,7 +3,6 @@ package models
 import (
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -11,13 +10,17 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+//ErrExistingInvitation - the user already has an invitation
+const ErrExistingInvitation string = "existing invitation for that user"
+
 //User - structure for storing user data
 type User struct {
-	ID       string `json:"id" gorethink:"id,omitempty"`
-	Name     string `json:"name" gorethink:"name"`
-	Email    string `json:"email" gorethink:"email"`
-	Username string `json:"username" gorethink:"username"`
-	Password string `json:"-" gorethink:"password"`
+	ID            string `json:"id" gorethink:"id,omitempty"`
+	Name          string `json:"name" gorethink:"name"`
+	Email         string `json:"email" gorethink:"email"`
+	Username      string `json:"username" gorethink:"username"`
+	Password      string `json:"-" gorethink:"password"`
+	CurrentFamily string `json:"currentFamily" gorethink:"currentFamily"`
 }
 
 //UserClaims - structure for inserting claims into a jwt auth token
@@ -82,14 +85,39 @@ func (user *User) Save(env *config.Env) error {
 		return err
 	}
 	defer res.Close()
+
+	var family Family
+	if user.CurrentFamily == "" && user.ID != "" {
+		err = family.GetAdminFamily(env, user.ID)
+		if err != nil {
+			if err == gorethink.ErrEmptyResult {
+				family = Family{Admin: user.ID, Members: []string{user.ID}}
+				family.Save(env)
+			} else {
+				return err
+			}
+
+		}
+		user.CurrentFamily = family.ID
+	}
+
+	if user.CurrentFamily == "" && user.ID == "" {
+		family = Family{Admin: user.ID, Members: []string{user.ID}}
+		family.Save(env)
+		user.CurrentFamily = family.ID
+	}
+
 	if res.IsNil() || user.ID != "" {
 		res2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 		if err != nil {
-			log.Println("error with insert from users upsert in user.Save()")
 			return err
 		}
+
 		if res2.Inserted > 0 {
 			user.ID = res2.GeneratedKeys[0]
+			family.Admin = user.ID
+			family.Members = []string{user.ID}
+			family.Save(env)
 		}
 		return nil
 	}
@@ -131,4 +159,231 @@ func (user *User) ValidateToken(env *config.Env, tokenString string) (bool, erro
 		return true, nil
 	}
 	return false, errors.New("invalid token")
+}
+
+//UserInvitation - structure for storing invitations
+type UserInvitation struct {
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	UserID      string    `json:"userID" gorethink:"userID"`
+	InviteEmail string    `json:"inviteEmail" gorethink:"inviteEmail"`
+	Timestamp   time.Time `json:"timestamp" gorethink:"timestamp"`
+}
+
+//InviteParent - add an invitation for another parent to join in on user's data.
+func (user *User) InviteParent(env *config.Env, inviteEmail string) error {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	res, err := gorethink.Table("invites").Filter(map[string]interface{}{
+		"inviteEmail": inviteEmail,
+	}).Run(session)
+	if err != nil {
+		return err
+	}
+	defer res.Close()
+
+	//if there is already an invite for that user, return error.
+	if !res.IsNil() {
+		return errors.New(ErrExistingInvitation)
+	}
+
+	inviteUser := UserInvitation{
+		UserID:      user.ID,
+		InviteEmail: inviteEmail,
+		Timestamp:   time.Now(),
+	}
+	_, err = gorethink.Table("invites").Insert(inviteUser).Run(session)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//GetSentInvites - return the current invites a user has sent out.
+func (user *User) GetSentInvites(env *config.Env) ([]UserInvitation, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := gorethink.Table("invites").
+		Filter(map[string]interface{}{
+			"userID": user.ID,
+		}).
+		OrderBy(gorethink.Desc("timestamp")).
+		Run(session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var rows []UserInvitation
+	err = res.All(&rows)
+	if err != nil {
+		return rows, err
+	}
+
+	return rows, nil
+}
+
+//GetInvites - return the invites that have been issued to a user based on the email.
+func (user *User) GetInvites(env *config.Env) ([]UserInvitation, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := gorethink.Table("invites").
+		Filter(map[string]interface{}{
+			"inviteEmail": user.Email,
+		}).
+		OrderBy(gorethink.Desc("timestamp")).
+		Run(session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var rows []UserInvitation
+	err = res.All(&rows)
+	if err != nil {
+		return rows, err
+	}
+
+	return rows, nil
+}
+
+//AcceptInvite - user can accept an invite, this will set their
+// CurrentFamily and add them as a member to that family.
+func (user *User) AcceptInvite(env *config.Env, id string) error {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	//get invite by id and invited user (current):
+	res, err := gorethink.Table("invites").
+		Filter(map[string]interface{}{
+			"id":          id,
+			"inviteEmail": user.Email,
+		}).
+		OrderBy(gorethink.Desc("timestamp")).
+		Run(session)
+	if err != nil {
+		return err
+	}
+	defer res.Close()
+
+	var invite UserInvitation
+	err = res.One(&invite)
+	if err != nil {
+		return err
+	}
+
+	//get the user and family that is doing the inviting
+	var invitingUser User
+	err = invitingUser.GetUser(env, invite.UserID)
+	if err != nil {
+		return err
+	}
+
+	//NOTE: this would need to be set in the invite if we allowed family switching
+	family, err := invitingUser.GetFamily(env)
+	if err != nil {
+		return err
+	}
+
+	//add the user to the family of the inviting user
+	err = family.AddMember(env, user)
+	if err != nil {
+		return err
+	}
+
+	//remove invite from system
+	err = invitingUser.DeleteInvite(env, invite.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//DeleteInvite - a user can delete invites they have sent.
+func (user *User) DeleteInvite(env *config.Env, id string) error {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	res, err := gorethink.Table("invites").
+		Filter(map[string]interface{}{
+			"userID": user.ID,
+			"id":     id,
+		}).
+		Delete().
+		Run(session)
+	if err != nil {
+		return err
+	}
+	defer res.Close()
+
+	var answer gorethink.WriteResponse
+	err = res.One(&answer)
+	if err != nil {
+		return err
+	}
+
+	if answer.Deleted > 0 {
+		return nil
+	}
+
+	return errors.New("no record to delete")
+}
+
+//GetFamily - return the family for a user. used for lookups
+func (user *User) GetFamily(env *config.Env) (Family, error) {
+	if user.CurrentFamily == "" {
+		return Family{}, errors.New("user has no current family")
+	}
+
+	var family Family
+	err := family.GetFamily(env, user.CurrentFamily)
+	if err != nil {
+		return Family{}, err
+	}
+	return family, nil
+}
+
+//GetAllFamily - return the family for a user. used for lookups
+func (user *User) GetAllFamily(env *config.Env) ([]Family, error) {
+	session, err := env.DB.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	/*  rethinkdb query:
+	r.db('goparent').table('family').filter(function(famRow) {
+		return famRow('members').contains("userid")
+	})
+	*/
+	res, err := gorethink.Table("family").
+		Filter(
+			func(row gorethink.Term) gorethink.Term {
+				return row.Field("members").Contains(user.ID)
+			},
+		).
+		Run(session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var family []Family
+	err = res.All(&family)
+	if err != nil {
+		return nil, err
+	}
+	return family, nil
 }

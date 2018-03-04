@@ -29,11 +29,12 @@ func TestGetUser(t *testing.T) {
 	mock.On(
 		r.Table("users").Get("1"),
 	).Return([]interface{}{map[string]interface{}{
-		"id":       "1",
-		"name":     "test user",
-		"email":    "testuser@test.com",
-		"username": "testuser",
-		"password": "testpassword",
+		"id":            "1",
+		"name":          "test user",
+		"email":         "testuser@test.com",
+		"username":      "testuser",
+		"password":      "testpassword",
+		"currentFamily": "1",
 	}}, nil)
 
 	testEnv.DB = config.DBEnv{Session: mock}
@@ -53,11 +54,12 @@ func TestGetUserByLogin(t *testing.T) {
 			"password": "testpassword",
 		}),
 	).Return([]interface{}{map[string]interface{}{
-		"id":       "1",
-		"name":     "test user",
-		"email":    "testuser@test.com",
-		"username": "testuser",
-		"password": "testpassword",
+		"id":            "1",
+		"name":          "test user",
+		"email":         "testuser@test.com",
+		"username":      "testuser",
+		"password":      "testpassword",
+		"currentFamily": "1",
 	}}, nil)
 
 	testEnv.DB = config.DBEnv{Session: mock}
@@ -98,10 +100,11 @@ func TestUserSave(t *testing.T) {
 	).On(
 		r.Table("users").Insert(
 			map[string]interface{}{
-				"name":     "test user",
-				"email":    "testuser@test.com",
-				"username": "testuser",
-				"password": "testpassword",
+				"name":          "test user",
+				"email":         "testuser@test.com",
+				"username":      "testuser",
+				"password":      "testpassword",
+				"currentFamily": "1",
 			}, r.InsertOpts{Conflict: "replace"},
 		),
 	).Return(
@@ -114,10 +117,11 @@ func TestUserSave(t *testing.T) {
 	testEnv.DB = config.DBEnv{Session: mock}
 
 	u := User{
-		Name:     "test user",
-		Email:    "testuser@test.com",
-		Username: "testuser",
-		Password: "testpassword",
+		Name:          "test user",
+		Email:         "testuser@test.com",
+		Username:      "testuser",
+		Password:      "testpassword",
+		CurrentFamily: "1",
 	}
 	err := u.Save(&testEnv)
 	mock.AssertExpectations(t)
@@ -128,11 +132,12 @@ func TestUserSave(t *testing.T) {
 func TestTokens(t *testing.T) {
 	var testEnv config.Env
 	u := User{
-		ID:       "1",
-		Name:     "test user",
-		Email:    "testuser@test.com",
-		Username: "testuser",
-		Password: "testpassword",
+		ID:            "1",
+		Name:          "test user",
+		Email:         "testuser@test.com",
+		Username:      "testuser",
+		Password:      "testpassword",
+		CurrentFamily: "1",
 	}
 	testEnv.Auth.SigningKey = []byte("testkey")
 	token, err := u.GetToken(&testEnv)

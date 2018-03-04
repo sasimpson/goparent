@@ -40,20 +40,19 @@ type Summary struct {
 
 func initChildrenHandlers(env *config.Env, r *mux.Router) {
 	c := r.PathPrefix("/children").Subrouter()
-	c.Handle("", AuthRequired(ChildrenGetHandler(env), env)).Methods("GET").Name("ChildrenGet")
-	c.Handle("", AuthRequired(ChildNewHandler(env), env)).Methods("POST").Name("ChildNew")
-	c.Handle("/{id}", AuthRequired(ChildViewHandler(env), env)).Methods("GET").Name("ChildView")
-	c.Handle("/{id}", AuthRequired(ChildEditHandler(env), env)).Methods("PUT").Name("ChildEdit")
-	c.Handle("/{id}", AuthRequired(ChildDeleteHandler(env), env)).Methods("DELETE").Name("ChildDelete")
-	c.Handle("/{id}/summary", AuthRequired(ChildSummary(env), env)).Methods("GET").Name("ChildSummary")
+	c.Handle("", AuthRequired(childrenGetHandler(env), env)).Methods("GET").Name("ChildrenGet")
+	c.Handle("", AuthRequired(childNewHandler(env), env)).Methods("POST").Name("ChildNew")
+	c.Handle("/{id}", AuthRequired(childViewHandler(env), env)).Methods("GET").Name("ChildView")
+	c.Handle("/{id}", AuthRequired(childEditHandler(env), env)).Methods("PUT").Name("ChildEdit")
+	c.Handle("/{id}", AuthRequired(childDeleteHandler(env), env)).Methods("DELETE").Name("ChildDelete")
+	c.Handle("/{id}/summary", AuthRequired(childSummary(env), env)).Methods("GET").Name("ChildSummary")
 
 }
 
 //ChildSummary - handler to assemble and reuturn child summary data
-func ChildSummary(env *config.Env) http.Handler {
+func childSummary(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
-		log.Println("Child Summary: ", childID)
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -89,15 +88,14 @@ func ChildSummary(env *config.Env) http.Handler {
 		}
 		summary.Stats.Waste = wastes
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(summary)
 	})
 }
 
 //ChildrenGetHandler - GET / - gets all children for user
-func ChildrenGetHandler(env *config.Env) http.Handler {
+func childrenGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Children GET ")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -111,18 +109,23 @@ func ChildrenGetHandler(env *config.Env) http.Handler {
 		}
 
 		childrenResponse := ChildrenResponse{Children: allChildren}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(childrenResponse)
 	})
 }
 
 //ChildNewHandler - POST / - create a new child for a user
-func ChildNewHandler(env *config.Env) http.Handler {
+func childNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST Child")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		family, err := user.GetFamily(env)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -136,8 +139,9 @@ func ChildNewHandler(env *config.Env) http.Handler {
 		}
 
 		defer r.Body.Close()
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		childRequest.ChildData.ParentID = user.ID
+		childRequest.ChildData.FamilyID = family.ID
 		err = childRequest.ChildData.Save(env)
 		if err != nil {
 			log.Println(err)
@@ -149,10 +153,9 @@ func ChildNewHandler(env *config.Env) http.Handler {
 }
 
 //ChildViewHandler - GET /{id} - gets the data for a child for a user
-func ChildViewHandler(env *config.Env) http.Handler {
+func childViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
-		log.Println("Child View: ", childID)
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -166,16 +169,21 @@ func ChildViewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(child)
 	})
 }
 
 // ChildEditHandler - PUT /{id} - edit a child for a user
-func ChildEditHandler(env *config.Env) http.Handler {
+func childEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("PUT Child")
 		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		family, err := user.GetFamily(env)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -198,7 +206,7 @@ func ChildEditHandler(env *config.Env) http.Handler {
 		}
 
 		//verify both the child we requested to edit, and that the parent is the user id.
-		if (child.ID != childRequest.ChildData.ID) || (childRequest.ChildData.ParentID != user.ID) {
+		if (child.ID != childRequest.ChildData.ID) || (childRequest.ChildData.FamilyID != family.ID) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -211,7 +219,7 @@ func ChildEditHandler(env *config.Env) http.Handler {
 
 //ChildDeleteHandler - DELETE /{id} - delete a child for a user
 //TODO - need to delete or archive child and child's data.
-func ChildDeleteHandler(env *config.Env) http.Handler {
+func childDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -236,7 +244,7 @@ func ChildDeleteHandler(env *config.Env) http.Handler {
 
 		deletedResponse.Deleted = deleted
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		w.WriteHeader(http.StatusAccepted)
 		json.NewEncoder(w).Encode(deletedResponse)
 	})

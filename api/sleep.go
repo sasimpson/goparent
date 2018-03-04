@@ -36,20 +36,21 @@ func initSleepHandlers(env *config.Env, r *mux.Router) {
 
 func sleepGetHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET sleep")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		var sleep models.Sleep
 		sleepData, err := sleep.GetAll(env, &user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		sleepResponse := SleepResponse{SleepData: sleepData}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(sleepResponse)
 	})
 }
@@ -58,9 +59,10 @@ func sleepViewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "GET with id %s", id)
 	})
@@ -70,9 +72,10 @@ func sleepEditHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "PUT with id %s", id)
 	})
@@ -81,33 +84,50 @@ func sleepEditHandler(env *config.Env) http.Handler {
 func sleepNewHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//how time should be passed "2017-03-09T18:09:31.409Z"
-		log.Println("POST sleep")
 		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		family, err := user.GetFamily(env)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		decoder := json.NewDecoder(r.Body)
 		var sleepRequest SleepRequest
 		err = decoder.Decode(&sleepRequest)
 		if err != nil {
 			log.Panicln(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		defer r.Body.Close()
-		w.Header().Set("Content-Type", "application/json")
+
+		w.Header().Set("Content-Type", jsonContentType)
 		sleepRequest.SleepData.UserID = user.ID
+		sleepRequest.SleepData.FamilyID = family.ID
 		err = sleepRequest.SleepData.Save(env)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
+
 		json.NewEncoder(w).Encode(sleepRequest)
 	})
 }
 
 func sleepDeleteHandler(env *config.Env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
 		id := mux.Vars(r)["id"]
 		fmt.Fprintf(w, "DELETE with id %s", id)
 	})
@@ -119,7 +139,7 @@ func sleepStartHandler(env *config.Env) http.Handler {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		var sleep models.Sleep
@@ -145,7 +165,7 @@ func sleepEndHandler(env *config.Env) http.Handler {
 		log.Println("GET sleep end")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		var sleep models.Sleep
@@ -169,7 +189,7 @@ func sleepToggleStatus(env *config.Env) http.Handler {
 		log.Println("GET sleep toggle status")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		var sleep models.Sleep

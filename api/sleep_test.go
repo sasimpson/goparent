@@ -21,16 +21,32 @@ func TestSleepNewHandler(t *testing.T) {
 	var testEnv config.Env
 
 	mock := r.NewMock()
-	mock.On(
-		r.Table("sleep").MockAnything(),
-	).Return(r.WriteResponse{
-		Inserted:      1,
-		Errors:        0,
-		GeneratedKeys: []string{"1"},
-	}, nil)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("sleep").MockAnything(),
+		).
+		Return(r.WriteResponse{
+			Inserted:      1,
+			Errors:        0,
+			GeneratedKeys: []string{"1"},
+		}, nil)
 	testEnv.DB.Session = mock
 
-	s := SleepRequest{SleepData: models.Sleep{UserID: "1", Start: time.Now().AddDate(0, 0, -1), End: time.Now()}}
+	s := SleepRequest{SleepData: models.Sleep{UserID: "1", ChildID: "1", Start: time.Now().AddDate(0, 0, -1), End: time.Now()}}
 	js, err := json.Marshal(&s)
 	if err != nil {
 		t.Fatal(err)
@@ -50,18 +66,37 @@ func TestSleepNewHandler(t *testing.T) {
 }
 
 func TestSleepGetHandler(t *testing.T) {
+	//TODO: test returned values
 	var testEnv config.Env
 
 	mock := r.NewMock()
-	mock.On(
-		r.Table("sleep").MockAnything(),
-	).Return(
-		map[string]interface{}{
-			"start":  time.Now().AddDate(0, 0, -1),
-			"end":    time.Now(),
-			"userid": "1",
-		}, nil,
-	)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("sleep").MockAnything(),
+		).
+		Return(
+			map[string]interface{}{
+				"start":    time.Now().AddDate(0, 0, -1),
+				"end":      time.Now(),
+				"userID":   "1",
+				"familyID": "1",
+				"childID":  "1",
+			}, nil,
+		)
 	testEnv.DB.Session = mock
 
 	req, err := http.NewRequest("GET", "/sleep", nil)
@@ -80,6 +115,7 @@ func TestSleepGetHandler(t *testing.T) {
 }
 
 func TestSleepStatusHandler(t *testing.T) {
+	//TODO: verify returned values
 	testCases := []struct {
 		desc   string
 		status int
@@ -96,9 +132,11 @@ func TestSleepStatusHandler(t *testing.T) {
 			desc:   "true",
 			status: http.StatusOK,
 			ret: map[string]interface{}{
-				"start":  time.Now().AddDate(0, 0, -1),
-				"userid": "1",
-				"id":     "1",
+				"start":    time.Now().AddDate(0, 0, -1),
+				"userID":   "1",
+				"childID":  "1",
+				"familyID": "1",
+				"id":       "1",
 			},
 			err: nil,
 		},
@@ -108,11 +146,27 @@ func TestSleepStatusHandler(t *testing.T) {
 			var testEnv config.Env
 
 			mock := r.NewMock()
-			mock.On(
-				r.Table("sleep").MockAnything(),
-			).Return(
-				tC.ret, tC.err,
-			)
+			mock.
+				On(
+					r.Table("family").Filter(
+						func(row r.Term) r.Term {
+							return row.Field("members").Contains("1")
+						},
+					),
+				).
+				Return(map[string]interface{}{
+					"id":           "1",
+					"admin":        "1",
+					"members":      []string{"1"},
+					"created_at":   time.Now(),
+					"last_updated": time.Now(),
+				}, nil).
+				On(
+					r.Table("sleep").MockAnything(),
+				).
+				Return(
+					tC.ret, tC.err,
+				)
 			testEnv.DB.Session = mock
 
 			req, err := http.NewRequest("GET", "/sleep/status", nil)
@@ -133,6 +187,7 @@ func TestSleepStatusHandler(t *testing.T) {
 }
 
 func TestSleepStartHandler(t *testing.T) {
+	//TODO: verify returned values
 	testCases := []struct {
 		desc   string
 		status int
@@ -149,9 +204,11 @@ func TestSleepStartHandler(t *testing.T) {
 			desc:   "true, sleep active",
 			status: http.StatusConflict,
 			ret: map[string]interface{}{
-				"start":  time.Now().AddDate(0, 0, -1),
-				"userid": "1",
-				"id":     "1",
+				"start":    time.Now().AddDate(0, 0, -1),
+				"userID":   "1",
+				"familyID": "1",
+				"childID":  "1",
+				"id":       "1",
 			},
 			err: nil,
 		},
@@ -162,11 +219,27 @@ func TestSleepStartHandler(t *testing.T) {
 			var testEnv config.Env
 
 			mock := r.NewMock()
-			mock.On(
-				r.Table("sleep").MockAnything(),
-			).Return(
-				tC.ret, tC.err,
-			)
+			mock.
+				On(
+					r.Table("family").Filter(
+						func(row r.Term) r.Term {
+							return row.Field("members").Contains("1")
+						},
+					),
+				).
+				Return(map[string]interface{}{
+					"id":           "1",
+					"admin":        "1",
+					"members":      []string{"1"},
+					"created_at":   time.Now(),
+					"last_updated": time.Now(),
+				}, nil).
+				On(
+					r.Table("sleep").MockAnything(),
+				).
+				Return(
+					tC.ret, tC.err,
+				)
 			testEnv.DB.Session = mock
 
 			req, err := http.NewRequest("GET", "/sleep/start", nil)
@@ -187,6 +260,7 @@ func TestSleepStartHandler(t *testing.T) {
 }
 
 func TestSleepEndHandler(t *testing.T) {
+	//TODO: verify returned values
 	testCases := []struct {
 		desc   string
 		status int
@@ -216,11 +290,27 @@ func TestSleepEndHandler(t *testing.T) {
 			var testEnv config.Env
 
 			mock := r.NewMock()
-			mock.On(
-				r.Table("sleep").MockAnything(),
-			).Return(
-				tC.ret, tC.err,
-			)
+			mock.
+				On(
+					r.Table("family").Filter(
+						func(row r.Term) r.Term {
+							return row.Field("members").Contains("1")
+						},
+					),
+				).
+				Return(map[string]interface{}{
+					"id":           "1",
+					"admin":        "1",
+					"members":      []string{"1"},
+					"created_at":   time.Now(),
+					"last_updated": time.Now(),
+				}, nil).
+				On(
+					r.Table("sleep").MockAnything(),
+				).
+				Return(
+					tC.ret, tC.err,
+				)
 			testEnv.DB.Session = mock
 
 			req, err := http.NewRequest("GET", "/sleep/end", nil)

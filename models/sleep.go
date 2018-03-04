@@ -10,11 +10,12 @@ import (
 
 //Sleep - tracks the baby's sleep start and end.
 type Sleep struct {
-	ID      string    `json:"id" gorethink:"id,omitempty"`
-	Start   time.Time `json:"start" gorethink:"start"`
-	End     time.Time `json:"end" gorethink:"end"`
-	UserID  string    `json:"userid" gorethink:"userid"`
-	ChildID string    `json:"childID" gorethink:"childid"`
+	ID       string    `json:"id" gorethink:"id,omitempty"`
+	Start    time.Time `json:"start" gorethink:"start"`
+	End      time.Time `json:"end" gorethink:"end"`
+	UserID   string    `json:"userid" gorethink:"userID"`
+	FamilyID string    `json:"familyid" gorethink:"familyID"`
+	ChildID  string    `json:"childID" gorethink:"childID"`
 }
 
 //SleepSummary - structure for the sleep summary data
@@ -37,10 +38,15 @@ func (sleep *Sleep) Status(env *config.Env, user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	family, err := user.GetFamily(env)
+	if err != nil {
+		return false, err
+	}
 	//check to see if we already have an open sleep session
 	res, err := gorethink.Table("sleep").Filter(map[string]interface{}{
-		"end":    time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
-		"userid": user.ID,
+		"end":      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+		"familyID": family.ID,
 	}).Run(session)
 	if err != nil {
 		if err == gorethink.ErrEmptyResult {
@@ -97,7 +103,6 @@ func (sleep *Sleep) Save(env *config.Env) error {
 
 	resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 	if err != nil {
-		// log.Println("error with upsert from sleep upsert in sleep.Save()")
 		return err
 	}
 	if resp.Inserted > 0 {
@@ -113,9 +118,15 @@ func (sleep *Sleep) GetAll(env *config.Env, user *User) ([]Sleep, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	family, err := user.GetFamily(env)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := gorethink.Table("sleep").
 		Filter(map[string]interface{}{
-			"userid": user.ID,
+			"familyID": family.ID,
 		}).
 		OrderBy(gorethink.Desc("end")).
 		Run(session)

@@ -18,6 +18,7 @@ import (
 )
 
 func TestWasteGetHandler(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 
 	//mock out the db stuff and return call
@@ -29,7 +30,7 @@ func TestWasteGetHandler(t *testing.T) {
 			"id":        "1",
 			"wasteType": 1,
 			"notes":     "test note",
-			"userid":    "1",
+			"userID":    "1",
 			"timestamp": time.Now(),
 		},
 	}, nil)
@@ -41,7 +42,7 @@ func TestWasteGetHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteGetHandler(&testEnv)
+	handler := wasteGetHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -52,20 +53,36 @@ func TestWasteGetHandler(t *testing.T) {
 }
 
 func TestWasteNewHandler(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 	timestamp := time.Now()
 
 	mock := r.NewMock()
-	mock.On(
-		r.Table("waste").MockAnything(),
-	).Return(r.WriteResponse{
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("waste").MockAnything(),
+		).Return(r.WriteResponse{
 		Inserted:      1,
 		Errors:        0,
 		GeneratedKeys: []string{"1"},
 	}, nil)
 	testEnv.DB.Session = mock
 
-	w := WasteRequest{WasteData: models.Waste{Type: 1, Notes: "some notes", UserID: "1", TimeStamp: timestamp}}
+	w := WasteRequest{WasteData: models.Waste{Type: 1, Notes: "some notes", UserID: "1", ChildID: "1", TimeStamp: timestamp}}
 	js, err := json.Marshal(&w)
 	if err != nil {
 		t.Fatal(err)
@@ -75,7 +92,7 @@ func TestWasteNewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteNewHandler(&testEnv)
+	handler := wasteNewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
@@ -85,6 +102,7 @@ func TestWasteNewHandler(t *testing.T) {
 }
 
 func TestWasteViewHandler(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 
 	mock := r.NewMock()
@@ -104,7 +122,7 @@ func TestWasteViewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteViewHandler(&testEnv)
+	handler := wasteViewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -115,6 +133,7 @@ func TestWasteViewHandler(t *testing.T) {
 }
 
 func TestWasteEditHandler(t *testing.T) {
+	//TODO: verify output
 	var testEnv config.Env
 
 	req, err := http.NewRequest("GET", "/waste/1", nil)
@@ -122,7 +141,7 @@ func TestWasteEditHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteEditHandler(&testEnv)
+	handler := wasteEditHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -140,7 +159,7 @@ func TestWasteDeleteHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := WasteDeleteHandler(&testEnv)
+	handler := wasteDeleteHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()

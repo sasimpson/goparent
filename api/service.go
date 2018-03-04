@@ -24,7 +24,10 @@ func (c contextKey) String() string {
 	return "api context key " + string(c)
 }
 
-const userContextKey contextKey = "user"
+const (
+	jsonContentType string     = "application/json"
+	userContextKey  contextKey = "user"
+)
 
 //ServiceInfo - return data about the service
 type ServiceInfo struct {
@@ -32,8 +35,18 @@ type ServiceInfo struct {
 	Hostname string `json:"hostname"`
 }
 
+//ErrService - error message format for service calls
+type ErrService struct {
+	ErrMessage struct {
+		Body string `json:"body"`
+		Code int    `json:"code"`
+	} `json:"error"`
+}
+
 //RunService - Runs service interfaces for app
 func RunService(env *config.Env) {
+	log.SetOutput(os.Stdout)
+
 	r := mux.NewRouter()
 	a := r.PathPrefix("/api").Subrouter()
 	a.HandleFunc("/", apiHandler)

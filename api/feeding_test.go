@@ -22,17 +22,34 @@ func TestFeedingGetHandler(t *testing.T) {
 
 	//mock out the db stuff and return call
 	mock := r.NewMock()
-	mock.On(
-		r.Table("feeding").Filter(map[string]interface{}{"userid": "1"}).OrderBy(r.Desc("timestamp")),
-	).Return([]interface{}{
-		map[string]interface{}{
-			"id":            "1",
-			"feedingType":   "bottle",
-			"feedingAmount": 1,
-			"feedingSide":   "",
-			"userid":        "1",
-			"timestamp":     time.Now()},
-	}, nil)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("feeding").Filter(map[string]interface{}{"familyID": "1"}).OrderBy(r.Desc("timestamp")),
+		).
+		Return([]interface{}{
+			map[string]interface{}{
+				"id":            "1",
+				"feedingType":   "bottle",
+				"feedingAmount": 1,
+				"feedingSide":   "",
+				"userid":        "1",
+				"familyid":      "1",
+				"timestamp":     time.Now()},
+		}, nil)
 	testEnv.DB.Session = mock
 
 	//setup request
@@ -41,7 +58,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingGetHandler(&testEnv)
+	handler := feedingGetHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -56,16 +73,40 @@ func TestFeedingNewHandler(t *testing.T) {
 	timestamp := time.Now()
 
 	mock := r.NewMock()
-	mock.On(
-		r.Table("feeding").MockAnything(),
-	).Return(r.WriteResponse{
-		Inserted:      1,
-		Errors:        0,
-		GeneratedKeys: []string{"1"},
-	}, nil)
+	mock.
+		On(
+			r.Table("family").Filter(
+				func(row r.Term) r.Term {
+					return row.Field("members").Contains("1")
+				},
+			),
+		).
+		Return(map[string]interface{}{
+			"id":           "1",
+			"admin":        "1",
+			"members":      []string{"1"},
+			"created_at":   time.Now(),
+			"last_updated": time.Now(),
+		}, nil).
+		On(
+			r.Table("feeding").MockAnything(),
+		).
+		Return(r.WriteResponse{
+			Inserted:      1,
+			Errors:        0,
+			GeneratedKeys: []string{"1"},
+		}, nil)
 	testEnv.DB.Session = mock
 
-	f := FeedingRequest{FeedingData: models.Feeding{Type: "bottle", Amount: 3.5, Side: "", UserID: "1", TimeStamp: timestamp}}
+	f := FeedingRequest{
+		FeedingData: models.Feeding{
+			Type:      "bottle",
+			Amount:    3.5,
+			Side:      "",
+			UserID:    "1",
+			ChildID:   "1",
+			FamilyID:  "1",
+			TimeStamp: timestamp}}
 	js, err := json.Marshal(&f)
 	if err != nil {
 		t.Fatal(err)
@@ -75,12 +116,13 @@ func TestFeedingNewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingNewHandler(&testEnv)
+	handler := feedingNewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
+	t.Log(rr.Body)
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
@@ -92,7 +134,7 @@ func TestFeedingViewHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingViewHandler(&testEnv)
+	handler := feedingViewHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -110,7 +152,7 @@ func TestFeedingEditHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingEditHandler(&testEnv)
+	handler := feedingEditHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
@@ -128,7 +170,7 @@ func TestFeedingDeleteHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := FeedingDeleteHandler(&testEnv)
+	handler := feedingDeleteHandler(&testEnv)
 	rr := httptest.NewRecorder()
 
 	ctx := req.Context()
