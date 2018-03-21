@@ -108,7 +108,7 @@ func feedingNewHandler(env *config.Env) http.Handler {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 		}
-		json.NewEncoder(w).Encode(feedingRequest.FeedingData)
+		json.NewEncoder(w).Encode(feedingRequest)
 	})
 }
 

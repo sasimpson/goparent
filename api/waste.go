@@ -113,7 +113,7 @@ func wasteNewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		json.NewEncoder(w).Encode(wasteRequest.WasteData)
+		json.NewEncoder(w).Encode(wasteRequest)
 	})
 }
 
