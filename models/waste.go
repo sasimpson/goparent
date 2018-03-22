@@ -107,8 +107,7 @@ func WasteGetStats(env *config.Env, user *User, child *Child) (WasteSummary, err
 
 	res, err := gorethink.Table("waste").
 		Filter(map[string]interface{}{
-			"userid":  user.ID,
-			"childid": child.ID,
+			"childID": child.ID,
 		}).
 		Filter(gorethink.Row.Field("timestamp").During(start, end)).
 		OrderBy(gorethink.Desc("timestamp")).

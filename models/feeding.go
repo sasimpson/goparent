@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"time"
 
 	"github.com/sasimpson/goparent/config"
@@ -32,7 +31,6 @@ type FeedingSummary struct {
 func (feeding *Feeding) Save(env *config.Env) error {
 	session, err := env.DB.GetConnection()
 	if err != nil {
-		log.Println("error getting db connection")
 		return err
 	}
 
@@ -91,9 +89,11 @@ func FeedingGetStats(env *config.Env, user *User, child *Child) (FeedingSummary,
 
 	res, err := gorethink.Table("feeding").
 		Filter(map[string]interface{}{
-			"childid": child.ID,
+			"childID": child.ID,
 		}).
-		Filter(gorethink.Row.Field("timestamp").During(start, end)).
+		Filter(
+			gorethink.Row.Field("timestamp").During(start, end),
+		).
 		OrderBy(gorethink.Desc("timestamp")).
 		Run(session)
 	if err != nil {

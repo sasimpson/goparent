@@ -156,8 +156,7 @@ func SleepGetStats(env *config.Env, user *User, child *Child) (SleepSummary, err
 
 	res, err := gorethink.Table("sleep").
 		Filter(map[string]interface{}{
-			"userid":  user.ID,
-			"childid": child.ID,
+			"childID": child.ID,
 		}).
 		Filter(gorethink.Row.Field("start").During(start, end)).
 		OrderBy(gorethink.Desc("start")).
