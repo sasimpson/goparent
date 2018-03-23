@@ -1,15 +1,18 @@
-FROM golang:alpine
+FROM golang:alpine as builder
 
 WORKDIR /go/src/github.com/sasimpson/goparent
 
-COPY . .
-COPY goparent_sample.json /etc/config/goparent.json
-
 RUN apk add git curl --no-cache
 RUN curl -s https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
+COPY . .
 RUN dep ensure
-RUN go install -v ./...
+RUN go build -o goparent-service ./cmd/goparent-service/main.go
 
-ENTRYPOINT [ "/go/bin/goparent-service" ]
+FROM alpine:latest
 
+COPY --from=builder /go/src/github.com/sasimpson/goparent/goparent-service .
+COPY goparent_sample.json /etc/config/goparent.json
+
+ENTRYPOINT [ "./goparent-service" ]
 EXPOSE 8000
