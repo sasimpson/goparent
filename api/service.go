@@ -16,7 +16,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/models"
 	"github.com/sasimpson/goparent/rethinkdb"
 )
 
@@ -105,7 +104,7 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 //AuthRequired - handler to handle authentication of users tokens.
 func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := request.ParseFromRequestWithClaims(r, request.AuthorizationHeaderExtractor, &models.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := request.ParseFromRequestWithClaims(r, request.AuthorizationHeaderExtractor, &goparent.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
@@ -116,7 +115,7 @@ func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if claims, ok := token.Claims.(*models.UserClaims); ok && token.Valid {
+		if claims, ok := token.Claims.(*goparent.UserClaims); ok && token.Valid {
 			user, err := sh.UserService.User(claims.ID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
