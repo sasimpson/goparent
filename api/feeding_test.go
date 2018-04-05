@@ -220,8 +220,9 @@ func TestInitFeedingHandlers(t *testing.T) {
 	}
 
 	var testEnv config.Env
+	h := Handler{Env: testEnv}
 	routes := mux.NewRouter()
-	initFeedingHandlers(&testEnv, routes)
+	h.initFeedingHandlers(routes)
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {

@@ -9,14 +9,15 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/models"
 	"github.com/stretchr/testify/assert"
-
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
 func Test_initChildrenHandlers(t *testing.T) {
+	t.Skip()
 	type args struct {
 		env *config.Env
 		r   *mux.Router
@@ -25,7 +26,7 @@ func Test_initChildrenHandlers(t *testing.T) {
 		name string
 		args args
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		initChildrenHandlers(tt.args.env, tt.args.r)
@@ -41,7 +42,7 @@ func TestChildSummary(t *testing.T) {
 		args args
 		want http.Handler
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		if got := childSummary(tt.args.env); !reflect.DeepEqual(got, tt.want) {
@@ -153,7 +154,7 @@ func TestChildNewHandler(t *testing.T) {
 		args args
 		want http.Handler
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		if got := childNewHandler(tt.args.env); !reflect.DeepEqual(got, tt.want) {
@@ -171,7 +172,7 @@ func TestChildViewHandler(t *testing.T) {
 		args args
 		want http.Handler
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		if got := childViewHandler(tt.args.env); !reflect.DeepEqual(got, tt.want) {
@@ -189,7 +190,7 @@ func TestChildEditHandler(t *testing.T) {
 		args args
 		want http.Handler
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		if got := childEditHandler(tt.args.env); !reflect.DeepEqual(got, tt.want) {
@@ -207,11 +208,271 @@ func TestChildDeleteHandler(t *testing.T) {
 		args args
 		want http.Handler
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		if got := childDeleteHandler(tt.args.env); !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("%q. ChildDeleteHandler() = %v, want %v", tt.name, got, tt.want)
 		}
+	}
+}
+
+func TestHandler_initChildrenHandlers(t *testing.T) {
+	type fields struct {
+		UserService           goparent.UserService
+		UserInvitationService goparent.UserInvitationService
+		FamilyService         goparent.FamilyService
+		ChildService          goparent.ChildService
+		FeedingService        goparent.FeedingService
+		SleepService          goparent.SleepService
+		WasteService          goparent.WasteService
+		Env                   *config.Env
+	}
+	type args struct {
+		r *mux.Router
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				UserService:           tt.fields.UserService,
+				UserInvitationService: tt.fields.UserInvitationService,
+				FamilyService:         tt.fields.FamilyService,
+				ChildService:          tt.fields.ChildService,
+				FeedingService:        tt.fields.FeedingService,
+				SleepService:          tt.fields.SleepService,
+				WasteService:          tt.fields.WasteService,
+				Env:                   tt.fields.Env,
+			}
+			h.initChildrenHandlers(tt.args.r)
+		})
+	}
+}
+
+func TestHandler_childSummary(t *testing.T) {
+	type fields struct {
+		UserService           goparent.UserService
+		UserInvitationService goparent.UserInvitationService
+		FamilyService         goparent.FamilyService
+		ChildService          goparent.ChildService
+		FeedingService        goparent.FeedingService
+		SleepService          goparent.SleepService
+		WasteService          goparent.WasteService
+		Env                   *config.Env
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   http.Handler
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				UserService:           tt.fields.UserService,
+				UserInvitationService: tt.fields.UserInvitationService,
+				FamilyService:         tt.fields.FamilyService,
+				ChildService:          tt.fields.ChildService,
+				FeedingService:        tt.fields.FeedingService,
+				SleepService:          tt.fields.SleepService,
+				WasteService:          tt.fields.WasteService,
+				Env:                   tt.fields.Env,
+			}
+			if got := h.childSummary(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Handler.childSummary() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandler_childrenGetHandler(t *testing.T) {
+	type fields struct {
+		UserService           goparent.UserService
+		UserInvitationService goparent.UserInvitationService
+		FamilyService         goparent.FamilyService
+		ChildService          goparent.ChildService
+		FeedingService        goparent.FeedingService
+		SleepService          goparent.SleepService
+		WasteService          goparent.WasteService
+		Env                   *config.Env
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   http.Handler
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				UserService:           tt.fields.UserService,
+				UserInvitationService: tt.fields.UserInvitationService,
+				FamilyService:         tt.fields.FamilyService,
+				ChildService:          tt.fields.ChildService,
+				FeedingService:        tt.fields.FeedingService,
+				SleepService:          tt.fields.SleepService,
+				WasteService:          tt.fields.WasteService,
+				Env:                   tt.fields.Env,
+			}
+			if got := h.childrenGetHandler(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Handler.childrenGetHandler() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandler_childNewHandler(t *testing.T) {
+	type fields struct {
+		UserService           goparent.UserService
+		UserInvitationService goparent.UserInvitationService
+		FamilyService         goparent.FamilyService
+		ChildService          goparent.ChildService
+		FeedingService        goparent.FeedingService
+		SleepService          goparent.SleepService
+		WasteService          goparent.WasteService
+		Env                   *config.Env
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   http.Handler
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				UserService:           tt.fields.UserService,
+				UserInvitationService: tt.fields.UserInvitationService,
+				FamilyService:         tt.fields.FamilyService,
+				ChildService:          tt.fields.ChildService,
+				FeedingService:        tt.fields.FeedingService,
+				SleepService:          tt.fields.SleepService,
+				WasteService:          tt.fields.WasteService,
+				Env:                   tt.fields.Env,
+			}
+			if got := h.childNewHandler(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Handler.childNewHandler() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandler_childViewHandler(t *testing.T) {
+	type fields struct {
+		UserService           goparent.UserService
+		UserInvitationService goparent.UserInvitationService
+		FamilyService         goparent.FamilyService
+		ChildService          goparent.ChildService
+		FeedingService        goparent.FeedingService
+		SleepService          goparent.SleepService
+		WasteService          goparent.WasteService
+		Env                   *config.Env
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   http.Handler
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				UserService:           tt.fields.UserService,
+				UserInvitationService: tt.fields.UserInvitationService,
+				FamilyService:         tt.fields.FamilyService,
+				ChildService:          tt.fields.ChildService,
+				FeedingService:        tt.fields.FeedingService,
+				SleepService:          tt.fields.SleepService,
+				WasteService:          tt.fields.WasteService,
+				Env:                   tt.fields.Env,
+			}
+			if got := h.childViewHandler(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Handler.childViewHandler() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandler_childEditHandler(t *testing.T) {
+	type fields struct {
+		UserService           goparent.UserService
+		UserInvitationService goparent.UserInvitationService
+		FamilyService         goparent.FamilyService
+		ChildService          goparent.ChildService
+		FeedingService        goparent.FeedingService
+		SleepService          goparent.SleepService
+		WasteService          goparent.WasteService
+		Env                   *config.Env
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   http.Handler
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				UserService:           tt.fields.UserService,
+				UserInvitationService: tt.fields.UserInvitationService,
+				FamilyService:         tt.fields.FamilyService,
+				ChildService:          tt.fields.ChildService,
+				FeedingService:        tt.fields.FeedingService,
+				SleepService:          tt.fields.SleepService,
+				WasteService:          tt.fields.WasteService,
+				Env:                   tt.fields.Env,
+			}
+			if got := h.childEditHandler(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Handler.childEditHandler() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandler_childDeleteHandler(t *testing.T) {
+	type fields struct {
+		UserService           goparent.UserService
+		UserInvitationService goparent.UserInvitationService
+		FamilyService         goparent.FamilyService
+		ChildService          goparent.ChildService
+		FeedingService        goparent.FeedingService
+		SleepService          goparent.SleepService
+		WasteService          goparent.WasteService
+		Env                   *config.Env
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   http.Handler
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				UserService:           tt.fields.UserService,
+				UserInvitationService: tt.fields.UserInvitationService,
+				FamilyService:         tt.fields.FamilyService,
+				ChildService:          tt.fields.ChildService,
+				FeedingService:        tt.fields.FeedingService,
+				SleepService:          tt.fields.SleepService,
+				WasteService:          tt.fields.WasteService,
+				Env:                   tt.fields.Env,
+			}
+			if got := h.childDeleteHandler(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Handler.childDeleteHandler() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

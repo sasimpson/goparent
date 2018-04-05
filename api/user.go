@@ -6,19 +6,19 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/models"
+	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/rethinkdb"
 )
 
 //UserRequest - structure for incoming user request
 type UserRequest struct {
-	UserData models.User `json:"userData"`
+	UserData *goparent.User `json:"userData"`
 }
 
 //UserResponse - structure for responding to user info requests
 type UserResponse struct {
-	UserData   *models.User   `json:"userData"`
-	FamilyData *models.Family `json:"familyData"`
+	UserData   *goparent.User   `json:"userData"`
+	FamilyData *goparent.Family `json:"familyData"`
 }
 
 //NewUserRequest - this is for submitting password in new user request
@@ -35,42 +35,41 @@ type NewUserRequest struct {
 
 //UserAuthResponse - auth response structure
 type UserAuthResponse struct {
-	UserData models.User `json:"userData"`
-	Token    string      `json:"token"`
+	UserData *goparent.User `json:"userData"`
+	Token    string         `json:"token"`
 }
 
 //InvitesResponse - response structure for invites
 type InvitesResponse struct {
-	SentInviteData    []models.UserInvitation `json:"sentInviteData"`
-	PendingInviteData []models.UserInvitation `json:"pendingInviteData"`
+	SentInviteData    []*goparent.UserInvitation `json:"sentInviteData"`
+	PendingInviteData []*goparent.UserInvitation `json:"pendingInviteData"`
 }
 
-func initUsersHandlers(env *config.Env, r *mux.Router) {
+func (h *Handler) initUsersHandlers(r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
 	// u.Handle("/{id}", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserView")
-	u.Handle("/", userNewHandler(env)).Methods("POST").Name("UserNew")
-	u.Handle("/", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserGetData")
-	u.Handle("/login", loginHandler(env)).Methods("POST").Name("UserLogin")
-	u.Handle("/invite", AuthRequired(userListInviteHandler(env), env)).Methods("GET").Name("UserGetSentInvites")
-	u.Handle("/invite", AuthRequired(userNewInviteHandler(env), env)).Methods("POST").Name("UserNewInvite")
-	u.Handle("/invite/{id}", AuthRequired(userDeleteInviteHandler(env), env)).Methods("DELETE").Name("UserDeleteInvite")
-	u.Handle("/invite/accept/{id}", AuthRequired(userAcceptInviteHandler(env), env)).Methods("POST").Name("UserAcceptInvite")
+	u.Handle("/", h.userNewHandler()).Methods("POST").Name("UserNew")
+	u.Handle("/", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserGetData")
+	u.Handle("/login", h.loginHandler()).Methods("POST").Name("UserLogin")
+	u.Handle("/invite", h.AuthRequired(h.userListInviteHandler())).Methods("GET").Name("UserGetSentInvites")
+	u.Handle("/invite", h.AuthRequired(h.userNewInviteHandler())).Methods("POST").Name("UserNewInvite")
+	u.Handle("/invite/{id}", h.AuthRequired(h.userDeleteInviteHandler())).Methods("DELETE").Name("UserDeleteInvite")
+	u.Handle("/invite/accept/{id}", h.AuthRequired(h.userAcceptInviteHandler())).Methods("POST").Name("UserAcceptInvite")
 }
 
-func loginHandler(env *config.Env) http.Handler {
+func (h *Handler) loginHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		var user models.User
-		err := user.GetUserByLogin(env, username, password)
+		user, err := h.UserService.UserByLogin(username, password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		token, err := user.GetToken(env)
+		token, err := h.UserService.GetToken(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -84,7 +83,7 @@ func loginHandler(env *config.Env) http.Handler {
 	})
 }
 
-func userGetHandler(env *config.Env) http.Handler {
+func (h *Handler) userGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -92,29 +91,34 @@ func userGetHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		family, _ := user.GetFamily(env)
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		userInfo := UserResponse{
-			UserData:   &user,
-			FamilyData: &family}
+			UserData:   user,
+			FamilyData: family}
 		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(userInfo)
 		return
 	})
 }
 
-func userNewHandler(env *config.Env) http.Handler {
+func (h *Handler) userNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var newUserRequest NewUserRequest
 		err := decoder.Decode(&newUserRequest)
-		userData := models.User(newUserRequest.UserData)
+		userData := goparent.User(newUserRequest.UserData)
 		if err != nil {
 			log.Panicln(err)
 		}
 		defer r.Body.Close()
 
 		w.Header().Set("Content-Type", jsonContentType)
-		err = userData.Save(env)
+		err = h.UserService.Save(&userData)
 		if err != nil {
 			var errMsg ErrService
 			errMsg.ErrMessage.Body = err.Error()
@@ -127,7 +131,7 @@ func userNewHandler(env *config.Env) http.Handler {
 	})
 }
 
-func userNewInviteHandler(env *config.Env) http.Handler {
+func (h *Handler) userNewInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -146,9 +150,9 @@ func userNewInviteHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		err = user.InviteParent(env, invitedUserEmail)
+		err = h.UserInvitationService.InviteParent(user, invitedUserEmail)
 		if err != nil {
-			if err.Error() == models.ErrExistingInvitation {
+			if err.Error() == rethinkdb.ErrExistingInvitation {
 				http.Error(w, err.Error(), http.StatusConflict)
 				return
 			}
@@ -159,7 +163,7 @@ func userNewInviteHandler(env *config.Env) http.Handler {
 	})
 }
 
-func userListInviteHandler(env *config.Env) http.Handler {
+func (h *Handler) userListInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -167,13 +171,13 @@ func userListInviteHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		sentInvites, err := user.GetSentInvites(env)
+		sentInvites, err := h.UserInvitationService.SentInvites(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		pendingInvites, err := user.GetInvites(env)
+		pendingInvites, err := h.UserInvitationService.Invites(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -185,7 +189,7 @@ func userListInviteHandler(env *config.Env) http.Handler {
 	})
 }
 
-func userAcceptInviteHandler(env *config.Env) http.Handler {
+func (h *Handler) userAcceptInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -195,7 +199,7 @@ func userAcceptInviteHandler(env *config.Env) http.Handler {
 		}
 
 		id := mux.Vars(r)["id"]
-		err = user.AcceptInvite(env, id)
+		err = h.UserInvitationService.Accept(user, id)
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -208,15 +212,16 @@ func userAcceptInviteHandler(env *config.Env) http.Handler {
 	})
 }
 
-func userDeleteInviteHandler(env *config.Env) http.Handler {
+func (h *Handler) userDeleteInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		id := mux.Vars(r)["id"]
-		err = user.DeleteInvite(env, id)
+		invite, err := h.UserInvitationService.Invite(id)
+		err = h.UserInvitationService.Delete(invite)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

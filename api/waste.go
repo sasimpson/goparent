@@ -2,35 +2,33 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/models"
+	"github.com/sasimpson/goparent"
 )
 
 //WasteRequest - request structure for waste
 type WasteRequest struct {
-	WasteData models.Waste `json:"wasteData"`
+	WasteData goparent.Waste `json:"wasteData"`
 }
 
 //WasteResponse - response structure for waste
 type WasteResponse struct {
-	WasteData []models.Waste `json:"wasteData"`
+	WasteData []*goparent.Waste `json:"wasteData"`
 }
 
-func initWasteHandlers(env *config.Env, r *mux.Router) {
+func (h *Handler) initWasteHandlers(r *mux.Router) {
 	w := r.PathPrefix("/waste").Subrouter()
-	w.Handle("", AuthRequired(wasteGetHandler(env), env)).Methods("GET").Name("WasteGet")
-	w.Handle("", AuthRequired(wasteNewHandler(env), env)).Methods("POST").Name("WasteNew")
-	w.Handle("/{id}", AuthRequired(wasteViewHandler(env), env)).Methods("GET").Name("WasteView")
-	w.Handle("/{id}", AuthRequired(wasteEditHandler(env), env)).Methods("PUT").Name("WasteEdit")
-	w.Handle("/{id}", AuthRequired(wasteDeleteHandler(env), env)).Methods("DELETE").Name("WasteDelete")
+	w.Handle("", h.AuthRequired(h.wasteGetHandler())).Methods("GET").Name("WasteGet")
+	w.Handle("", h.AuthRequired(h.wasteNewHandler())).Methods("POST").Name("WasteNew")
+	w.Handle("/{id}", h.AuthRequired(h.wasteViewHandler())).Methods("GET").Name("WasteView")
+	w.Handle("/{id}", h.AuthRequired(h.wasteEditHandler())).Methods("PUT").Name("WasteEdit")
+	w.Handle("/{id}", h.AuthRequired(h.wasteDeleteHandler())).Methods("DELETE").Name("WasteDelete")
 }
 
-func wasteGetHandler(env *config.Env) http.Handler {
+func (h *Handler) wasteGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -38,8 +36,13 @@ func wasteGetHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		var waste models.Waste
-		wasteData, err := waste.GetAll(env, &user)
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		wasteData, err := h.WasteService.Waste(family)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -50,7 +53,7 @@ func wasteGetHandler(env *config.Env) http.Handler {
 	})
 }
 
-func wasteViewHandler(env *config.Env) http.Handler {
+func (h *Handler) wasteViewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
@@ -58,15 +61,12 @@ func wasteViewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		id := mux.Vars(r)["id"]
-		var waste models.Waste
-		waste.GetByID(env, id)
-		w.Header().Set("Content-Type", jsonContentType)
-		json.NewEncoder(w).Encode(waste)
+		http.Error(w, "not implemented", http.StatusNotImplemented)
+
 	})
 }
 
-func wasteEditHandler(env *config.Env) http.Handler {
+func (h *Handler) wasteEditHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
@@ -74,12 +74,11 @@ func wasteEditHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		id := mux.Vars(r)["id"]
-		fmt.Fprintf(w, "PUT with id %s", id)
+		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
 
-func wasteNewHandler(env *config.Env) http.Handler {
+func (h *Handler) wasteNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -87,7 +86,7 @@ func wasteNewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		family, err := user.GetFamily(env)
+		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -106,7 +105,7 @@ func wasteNewHandler(env *config.Env) http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		wasteRequest.WasteData.UserID = user.ID
 		wasteRequest.WasteData.FamilyID = family.ID
-		err = wasteRequest.WasteData.Save(env)
+		err = h.WasteService.Save(&wasteRequest.WasteData)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -117,7 +116,7 @@ func wasteNewHandler(env *config.Env) http.Handler {
 	})
 }
 
-func wasteDeleteHandler(env *config.Env) http.Handler {
+func (h *Handler) wasteDeleteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
@@ -125,7 +124,6 @@ func wasteDeleteHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		id := mux.Vars(r)["id"]
-		fmt.Fprintf(w, "DELETE with id %s", id)
+		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
