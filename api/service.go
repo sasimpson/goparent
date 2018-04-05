@@ -30,6 +30,9 @@ const (
 	userContextKey  contextKey = "user"
 )
 
+//Handler - this is the handler struct that contains all of the interfaces for
+// the api.  the implementation can be changed by inserting different implementations
+// of the interface
 type Handler struct {
 	UserService           goparent.UserService
 	UserInvitationService goparent.UserInvitationService
