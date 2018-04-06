@@ -35,21 +35,18 @@ func (h *Handler) feedingGetHandler() http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		log.Printf("user: %#v", user)
 
 		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("family: %#v", family)
 
 		feedingData, err := h.FeedingService.Feeding(family)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("feedingData: %#v", feedingData)
 
 		feedingResponse := FeedingResponse{FeedingData: feedingData}
 		log.Printf("feedingResponse %#v", feedingResponse)
@@ -100,7 +97,6 @@ func (h *Handler) feedingNewHandler() http.Handler {
 		var feedingRequest FeedingRequest
 		err = decoder.Decode(&feedingRequest)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		defer r.Body.Close()

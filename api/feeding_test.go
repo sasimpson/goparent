@@ -99,7 +99,7 @@ func TestFeedingGetHandler(t *testing.T) {
 			responseCode: http.StatusInternalServerError,
 		},
 		{
-			desc:           "returns feeding error",
+			desc:           "returns auth error",
 			env:            &config.Env{},
 			userService:    &mock.MockUserService{},
 			familyService:  &mock.MockFamilyService{},
@@ -192,6 +192,15 @@ func TestFeedingNewHandler(t *testing.T) {
 		{
 			desc: "returns no family error",
 			env:  &config.Env{},
+			feedingRequest: FeedingRequest{
+				FeedingData: goparent.Feeding{
+					Type:      "bottle",
+					Amount:    3.5,
+					Side:      "",
+					UserID:    "1",
+					ChildID:   "1",
+					FamilyID:  "1",
+					TimeStamp: timestamp}},
 			userService: &mock.MockUserService{
 				GetErr: errors.New("user has no current family"),
 			},
@@ -204,6 +213,15 @@ func TestFeedingNewHandler(t *testing.T) {
 		{
 			desc: "returns feeding error",
 			env:  &config.Env{},
+			feedingRequest: FeedingRequest{
+				FeedingData: goparent.Feeding{
+					Type:      "bottle",
+					Amount:    3.5,
+					Side:      "",
+					UserID:    "1",
+					ChildID:   "1",
+					FamilyID:  "1",
+					TimeStamp: timestamp}},
 			userService: &mock.MockUserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -222,14 +240,41 @@ func TestFeedingNewHandler(t *testing.T) {
 			responseCode: http.StatusConflict,
 		},
 		{
-			desc:           "returns auth error",
-			env:            &config.Env{},
+			desc: "returns auth error",
+			env:  &config.Env{},
+			feedingRequest: FeedingRequest{
+				FeedingData: goparent.Feeding{
+					Type:      "bottle",
+					Amount:    3.5,
+					Side:      "",
+					UserID:    "1",
+					ChildID:   "1",
+					FamilyID:  "1",
+					TimeStamp: timestamp}},
 			userService:    &mock.MockUserService{},
 			familyService:  &mock.MockFamilyService{},
 			feedingService: &mock.MockFeedingService{},
 			contextUser:    &goparent.User{},
 			contextError:   true,
 			responseCode:   http.StatusUnauthorized,
+		},
+		{
+			desc: "decode input error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			familyService:  &mock.MockFamilyService{},
+			feedingService: &mock.MockFeedingService{},
+			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError:   false,
+			responseCode:   http.StatusInternalServerError,
 		},
 	}
 	for _, tC := range testCases {
@@ -244,6 +289,9 @@ func TestFeedingNewHandler(t *testing.T) {
 			js, err := json.Marshal(&tC.feedingRequest)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if (tC.feedingRequest == FeedingRequest{}) {
+				js = []byte("this is a test")
 			}
 			req, err := http.NewRequest("POST", "/feeding", bytes.NewReader(js))
 			if err != nil {
@@ -291,9 +339,16 @@ func TestFeedingViewHandler(t *testing.T) {
 	}
 
 	handler := mockHandler.feedingViewHandler()
-	rr := httptest.NewRecorder()
 
+	rr := httptest.NewRecorder()
 	ctx := req.Context()
+	ctx = context.WithValue(ctx, userContextKey, "")
+	req = req.WithContext(ctx)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+
+	rr = httptest.NewRecorder()
+	ctx = req.Context()
 	ctx = context.WithValue(ctx, userContextKey, &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
@@ -323,8 +378,14 @@ func TestFeedingEditHandler(t *testing.T) {
 
 	handler := mockHandler.feedingEditHandler()
 	rr := httptest.NewRecorder()
-
 	ctx := req.Context()
+	ctx = context.WithValue(ctx, userContextKey, "")
+	req = req.WithContext(ctx)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+
+	rr = httptest.NewRecorder()
+	ctx = req.Context()
 	ctx = context.WithValue(ctx, userContextKey, &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)
@@ -354,8 +415,14 @@ func TestFeedingDeleteHandler(t *testing.T) {
 
 	handler := mockHandler.feedingDeleteHandler()
 	rr := httptest.NewRecorder()
-
 	ctx := req.Context()
+	ctx = context.WithValue(ctx, userContextKey, "")
+	req = req.WithContext(ctx)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+
+	rr = httptest.NewRecorder()
+	ctx = req.Context()
 	ctx = context.WithValue(ctx, userContextKey, &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 	req = req.WithContext(ctx)
 	handler.ServeHTTP(rr, req)

@@ -1,8 +1,6 @@
 package mock
 
 import (
-	"log"
-
 	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/config"
 )
@@ -24,7 +22,6 @@ func (mfs *MockFeedingService) Feeding(family *goparent.Family) ([]*goparent.Fee
 	if mfs.GetErr != nil {
 		return nil, mfs.GetErr
 	}
-	log.Println("mock feeding returning ", mfs.Feedings)
 	return mfs.Feedings, nil
 }
 
