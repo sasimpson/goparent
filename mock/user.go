@@ -8,6 +8,7 @@ import (
 type MockUserService struct {
 	Env    *config.Env
 	Family *goparent.Family
+	GetErr error
 }
 
 func (mus *MockUserService) User(string) (*goparent.User, error) {
@@ -31,6 +32,9 @@ func (mus *MockUserService) ValidateToken(string) (*goparent.User, bool, error) 
 }
 
 func (mus *MockUserService) GetFamily(*goparent.User) (*goparent.Family, error) {
+	if mus.GetErr != nil {
+		return nil, mus.GetErr
+	}
 	return mus.Family, nil
 }
 

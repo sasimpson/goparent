@@ -35,20 +35,24 @@ func (h *Handler) feedingGetHandler() http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		log.Printf("user: %#v", user)
 
 		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		log.Printf("family: %#v", family)
 
 		feedingData, err := h.FeedingService.Feeding(family)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		log.Printf("feedingData: %#v", feedingData)
 
 		feedingResponse := FeedingResponse{FeedingData: feedingData}
+		log.Printf("feedingResponse %#v", feedingResponse)
 		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(feedingResponse)
 	})

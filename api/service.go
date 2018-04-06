@@ -70,6 +70,7 @@ func RunService(env *config.Env) {
 		FeedingService:        &rethinkdb.FeedingService{Env: env},
 		SleepService:          &rethinkdb.SleepService{Env: env},
 		WasteService:          &rethinkdb.WasteService{Env: env},
+		Env:                   env,
 	}
 
 	r := mux.NewRouter()
@@ -136,9 +137,9 @@ func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 
 //UserFromContext - helper to get the user from the request context
 func UserFromContext(ctx context.Context) (*goparent.User, error) {
-	user, ok := ctx.Value(userContextKey).(goparent.User)
+	user, ok := ctx.Value(userContextKey).(*goparent.User)
 	if !ok {
 		return nil, errors.New("no user found in context")
 	}
-	return &user, nil
+	return user, nil
 }

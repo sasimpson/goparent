@@ -59,10 +59,8 @@ func (h *Handler) initUsersHandlers(r *mux.Router) {
 
 func (h *Handler) loginHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-
 		user, err := h.UserService.UserByLogin(username, password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
