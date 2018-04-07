@@ -45,6 +45,7 @@ func TestGetFeedings(t *testing.T) {
 		},
 		{
 			desc: "return 0 feeding",
+			env:  &config.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("feeding").Filter(
 					map[string]interface{}{
@@ -58,6 +59,7 @@ func TestGetFeedings(t *testing.T) {
 		},
 		{
 			desc: "return 0 feeding",
+			env:  &config.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("feeding").Filter(
 					map[string]interface{}{
@@ -89,139 +91,91 @@ func TestGetFeedings(t *testing.T) {
 	}
 }
 
-func Test(t *testing.T) {
+func TestFeedingSave(t *testing.T) {
+	timestamp := time.Now()
 	testCases := []struct {
-		desc      string
-		env       *config.Env
-		timestamp time.Time
+		desc        string
+		env         *config.Env
+		id          string
+		query       *r.MockQuery
+		timestamp   time.Time
+		data        goparent.Feeding
+		returnError error
 	}{
 		{
-			desc:      "",
+			desc:      "save data",
 			env:       &config.Env{},
-			timestamp: time.Now(),
-		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			fs := FeedingService{Env: tC.env}
-			feeding := goparent.Feeding{
+			id:        "1",
+			timestamp: timestamp.Add(time.Hour),
+			query: (&r.Mock{}).On(
+				r.Table("feeding").Insert(
+					map[string]interface{}{
+						"userID":        "1",
+						"familyID":      "1",
+						"childID":       "1",
+						"timestamp":     timestamp.Add(time.Hour),
+						"feedingType":   "bottle",
+						"feedingAmount": 3.5,
+					}, r.InsertOpts{Conflict: "replace"},
+				),
+			).Return(
+				r.WriteResponse{
+					Inserted:      1,
+					Errors:        0,
+					GeneratedKeys: []string{"1"},
+				}, nil),
+			data: goparent.Feeding{
 				Type:      "bottle",
 				Amount:    3.5,
 				Side:      "",
 				FamilyID:  "1",
 				UserID:    "1",
 				ChildID:   "1",
-				TimeStamp: tC.timestamp}
-			fs.Save(&feeding)
+				TimeStamp: timestamp.Add(time.Hour),
+			},
+		},
+		{
+			desc:      "save data",
+			env:       &config.Env{},
+			timestamp: timestamp.Add(time.Hour),
+			query: (&r.Mock{}).On(
+				r.Table("feeding").Insert(
+					map[string]interface{}{
+						"userID":        "1",
+						"familyID":      "1",
+						"childID":       "1",
+						"timestamp":     timestamp.Add(time.Hour),
+						"feedingType":   "bottle",
+						"feedingAmount": 3.5,
+					}, r.InsertOpts{Conflict: "replace"},
+				),
+			).Return(nil, errors.New("returned error")),
+			data: goparent.Feeding{
+				Type:      "bottle",
+				Amount:    3.5,
+				Side:      "",
+				FamilyID:  "1",
+				UserID:    "1",
+				ChildID:   "1",
+				TimeStamp: timestamp.Add(time.Hour),
+			},
+			returnError: errors.New("returned error"),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			fs := FeedingService{Env: tC.env}
+			err := fs.Save(&tC.data)
+			if tC.returnError != nil {
+				assert.Error(t, err, tC.returnError)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tC.id, tC.data.ID)
+			}
+
 		})
 	}
 }
-
-// func TestFeedingSaveError(t *testing.T) {
-// 	var testEnv config.Env
-// 	timestamp := time.Now()
-// 	mock := r.NewMock()
-// 	mock.On(
-// 		r.Table("feeding").Insert(
-// 			map[string]interface{}{
-// 				"userID":        "1",
-// 				"familyID":      "1",
-// 				"childID":       "1",
-// 				"timestamp":     timestamp,
-// 				"feedingType":   "bottle",
-// 				"feedingAmount": 3.5,
-// 			}, r.InsertOpts{Conflict: "replace"},
-// 		),
-// 	).Return(nil, errors.New("returned error"))
-// 	testEnv.DB.Session = mock
-
-// 	f := Feeding{
-// 		Type:      "bottle",
-// 		Amount:    3.5,
-// 		Side:      "",
-// 		FamilyID:  "1",
-// 		UserID:    "1",
-// 		ChildID:   "1",
-// 		TimeStamp: timestamp}
-// 	err := f.Save(&testEnv)
-// 	mock.AssertExpectations(t)
-// 	assert.Error(t, err)
-// 	assert.EqualError(t, err, "returned error")
-// }
-
-// func TestFeedingSave(t *testing.T) {
-// 	var testEnv config.Env
-
-// 	testCases := []struct {
-// 		desc          string
-// 		recordID      string
-// 		userID        string
-// 		familyID      string
-// 		childID       string
-// 		timestamp     time.Time
-// 		feedingType   string
-// 		feedingAmount float32
-// 		feedingSide   string
-// 	}{
-// 		{
-// 			desc:          "bottle, 3.5floz",
-// 			recordID:      "1",
-// 			userID:        "1",
-// 			familyID:      "1",
-// 			childID:       "1",
-// 			timestamp:     time.Now(),
-// 			feedingType:   "bottle",
-// 			feedingAmount: 3.5,
-// 			feedingSide:   "",
-// 		},
-// 		{
-// 			desc:          "breast, left side 20min",
-// 			recordID:      "2",
-// 			userID:        "1",
-// 			familyID:      "1",
-// 			childID:       "1",
-// 			timestamp:     time.Now(),
-// 			feedingType:   "breast",
-// 			feedingAmount: 20,
-// 			feedingSide:   "left",
-// 		},
-// 	}
-// 	for _, tC := range testCases {
-// 		t.Run(tC.desc, func(t *testing.T) {
-// 			mock := r.NewMock()
-// 			mock.On(
-// 				r.Table("feeding").Insert(
-// 					map[string]interface{}{
-// 						"userID":        tC.userID,
-// 						"familyID":      tC.familyID,
-// 						"childID":       tC.childID,
-// 						"timestamp":     tC.timestamp,
-// 						"feedingType":   tC.feedingType,
-// 						"feedingAmount": tC.feedingAmount,
-// 						"feedingSide":   tC.feedingSide,
-// 					}, r.InsertOpts{Conflict: "replace"},
-// 				).MockAnything(),
-// 			).Return(
-// 				r.WriteResponse{
-// 					Inserted:      1,
-// 					Errors:        0,
-// 					GeneratedKeys: []string{tC.recordID},
-// 				}, nil)
-// 			testEnv.DB.Session = mock
-
-// 			f := Feeding{
-// 				Type:      tC.feedingType,
-// 				Amount:    tC.feedingAmount,
-// 				Side:      tC.feedingSide,
-// 				UserID:    tC.userID,
-// 				ChildID:   tC.childID,
-// 				FamilyID:  tC.familyID,
-// 				TimeStamp: tC.timestamp,
-// 			}
-// 			err := f.Save(&testEnv)
-// 			mock.AssertExpectations(t)
-// 			assert.Nil(t, err)
-// 			assert.Equal(t, tC.recordID, f.ID)
-// 		})
-// 	}
-// }
