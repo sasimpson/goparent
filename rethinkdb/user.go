@@ -11,9 +11,6 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
-//ErrExistingInvitation - the user already has an invitation
-const ErrExistingInvitation string = "existing invitation for that user"
-
 type UserService struct {
 	Env *config.Env
 }

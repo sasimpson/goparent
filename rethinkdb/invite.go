@@ -9,12 +9,15 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+//ErrExistingInvitation - the user already has an invitation
+const ErrExistingInvitation string = "existing invitation for that user"
+
 type UserInviteService struct {
 	Env *config.Env
 }
 
 //InviteParent - add an invitation for another parent to join in on user's data.
-func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail string) error {
+func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail string, timestamp time.Time) error {
 	session, err := uis.Env.DB.GetConnection()
 	if err != nil {
 		return err
@@ -36,7 +39,7 @@ func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail stri
 	inviteUser := goparent.UserInvitation{
 		UserID:      user.ID,
 		InviteEmail: inviteEmail,
-		Timestamp:   time.Now(),
+		Timestamp:   timestamp,
 	}
 	_, err = gorethink.Table("invites").Insert(inviteUser).Run(session)
 	if err != nil {

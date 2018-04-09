@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
@@ -148,7 +149,7 @@ func (h *Handler) userNewInviteHandler() http.Handler {
 			return
 		}
 
-		err = h.UserInvitationService.InviteParent(user, invitedUserEmail)
+		err = h.UserInvitationService.InviteParent(user, invitedUserEmail, time.Now())
 		if err != nil {
 			if err.Error() == rethinkdb.ErrExistingInvitation {
 				http.Error(w, err.Error(), http.StatusConflict)

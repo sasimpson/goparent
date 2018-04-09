@@ -44,7 +44,7 @@ type UserInvitation struct {
 }
 
 type UserInvitationService interface {
-	InviteParent(*User, string) error
+	InviteParent(*User, string, time.Time) error
 	SentInvites(*User) ([]*UserInvitation, error)
 	Invite(string) (*UserInvitation, error)
 	Invites(*User) ([]*UserInvitation, error)
