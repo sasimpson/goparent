@@ -70,7 +70,7 @@ func (uis *UserInviteService) SentInvites(user *goparent.User) ([]*goparent.User
 	var rows []*goparent.UserInvitation
 	err = res.All(&rows)
 	if err != nil {
-		return rows, err
+		return nil, err
 	}
 
 	return rows, nil

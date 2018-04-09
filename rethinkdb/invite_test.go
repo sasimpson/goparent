@@ -118,3 +118,219 @@ func TestInviteParent(t *testing.T) {
 		})
 	}
 }
+
+func TestSentInvites(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		user         *goparent.User
+		query        *r.MockQuery
+		returnLength int
+		returnError  error
+	}{
+		{
+			desc: "nothing returned",
+			env:  &config.Env{},
+			user: &goparent.User{ID: "1"},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"userID": "1",
+				}).OrderBy(r.Desc("timestamp")),
+			).Return(nil, nil),
+			returnLength: 1,
+		},
+		{
+			desc: "nothing returned",
+			env:  &config.Env{},
+			user: &goparent.User{ID: "1"},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"userID": "1",
+				}).OrderBy(r.Desc("timestamp")),
+			).Return(nil, errors.New("test error")),
+			returnLength: 0,
+			returnError:  errors.New("test error"),
+		},
+		{
+			desc: "two invites returned",
+			env:  &config.Env{},
+			user: &goparent.User{ID: "1"},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"userID": "1",
+				}).OrderBy(r.Desc("timestamp")),
+			).Return([]map[string]interface{}{
+				map[string]interface{}{
+					"id":          "1",
+					"inviteEmail": "invitedUser@test.com",
+					"userID":      "1",
+					"timestamp":   time.Now(),
+				},
+				map[string]interface{}{
+					"id":          "2",
+					"inviteEmail": "invitedUser2@test.com",
+					"userID":      "1",
+					"timestamp":   time.Now(),
+				},
+			}, nil),
+			returnLength: 2,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			uis := UserInviteService{Env: tC.env}
+			invites, err := uis.SentInvites(tC.user)
+			if tC.returnError != nil {
+				assert.Error(t, tC.returnError, err)
+			} else {
+				assert.Nil(t, err)
+			}
+			assert.Equal(t, tC.returnLength, len(invites))
+		})
+	}
+}
+
+func TestInvite(t *testing.T) {
+	timestamp := time.Now()
+	testCases := []struct {
+		desc        string
+		env         *config.Env
+		query       *r.MockQuery
+		id          string
+		invite      *goparent.UserInvitation
+		returnError error
+	}{
+		{
+			desc: "nothing returned",
+			env:  &config.Env{},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Get("1"),
+			).Return(nil, nil),
+			id:          "1",
+			returnError: r.ErrEmptyResult,
+		},
+		{
+			desc: "invite returned",
+			env:  &config.Env{},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Get("1"),
+			).Return(map[string]interface{}{
+				"id":          "1",
+				"inviteEmail": "invitedUser@test.com",
+				"userID":      "1",
+				"timestamp":   timestamp,
+			}, nil),
+			id: "1",
+			invite: &goparent.UserInvitation{
+				ID:          "1",
+				InviteEmail: "invitedUser@test.com",
+				UserID:      "1",
+				Timestamp:   timestamp,
+			},
+		},
+		{
+			desc: "error returned",
+			env:  &config.Env{},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Get("1"),
+			).Return(nil, errors.New("test error")),
+			id:          "1",
+			returnError: errors.New("test error"),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			uis := UserInviteService{Env: tC.env}
+			invite, err := uis.Invite(tC.id)
+			if tC.returnError != nil {
+				assert.Error(t, tC.returnError, err)
+			} else {
+				assert.Nil(t, err)
+				t.Logf("%#v", invite)
+				assert.Equal(t, tC.id, invite.ID)
+			}
+
+		})
+	}
+}
+
+func TestInvites(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		user         *goparent.User
+		query        *r.MockQuery
+		returnLength int
+		returnError  error
+	}{
+		{
+			desc: "nothing returned",
+			env:  &config.Env{},
+			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"inviteEmail": "testUser@test.com",
+				}).OrderBy(r.Desc("timestamp")),
+			).Return(nil, nil),
+			returnLength: 1,
+		},
+		{
+			desc: "nothing returned",
+			env:  &config.Env{},
+			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"inviteEmail": "testUser@test.com",
+				}).OrderBy(r.Desc("timestamp")),
+			).Return(nil, errors.New("test error")),
+			returnLength: 0,
+			returnError:  errors.New("test error"),
+		},
+		{
+			desc: "two invites returned",
+			env:  &config.Env{},
+			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
+			query: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"inviteEmail": "testUser@test.com",
+				}).OrderBy(r.Desc("timestamp")),
+			).Return([]map[string]interface{}{
+				map[string]interface{}{
+					"id":          "1",
+					"inviteEmail": "testUser@test.com",
+					"userID":      "1",
+					"timestamp":   time.Now(),
+				},
+				map[string]interface{}{
+					"id":          "2",
+					"inviteEmail": "testUser@test.com",
+					"userID":      "2",
+					"timestamp":   time.Now(),
+				},
+			}, nil),
+			returnLength: 2,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			uis := UserInviteService{Env: tC.env}
+			invites, err := uis.Invites(tC.user)
+			t.Logf("invites: %#v len: %#v err: %#v", invites, len(invites), err)
+			if tC.returnError != nil {
+				assert.Error(t, tC.returnError, err)
+			} else {
+				assert.Nil(t, err)
+			}
+			assert.Equal(t, tC.returnLength, len(invites))
+		})
+	}
+}
