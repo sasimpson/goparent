@@ -334,3 +334,155 @@ func TestInvites(t *testing.T) {
 		})
 	}
 }
+
+func TestAcceptInvite(t *testing.T) {
+	timestamp := time.Now()
+	testCases := []struct {
+		desc           string
+		env            *config.Env
+		id             string
+		invitedUser    *goparent.User
+		inviteQuery    *r.MockQuery
+		returnError    error
+		userQuery      *r.MockQuery
+		familyQuery    *r.MockQuery
+		addMemberQuery *r.MockQuery
+		deleteQuery    *r.MockQuery
+	}{
+		{
+			desc: "invite accepted, no errors",
+			env:  &config.Env{},
+			id:   "invite-1",
+			invitedUser: &goparent.User{
+				ID: "user-2", Email: "invitedUser@test.com",
+			},
+			inviteQuery: (&r.Mock{}).On(
+				r.Table("invites").Filter(
+					map[string]interface{}{
+						"id":          "invite-1",
+						"inviteEmail": "invitedUser@test.com",
+					},
+				).OrderBy(r.Desc("timestamp")),
+			).Return(map[string]interface{}{
+				"id":          "invite-1",
+				"inviteEmail": "invitedUser@test.com",
+				"userID":      "user-1",
+				"timestamp":   time.Now(),
+			}, nil),
+			userQuery: (&r.Mock{}).On(r.Table("users").MockAnything()).Once().Return(
+				map[string]interface{}{
+					"id":            "user-1",
+					"currentFamily": "family-1",
+				}, nil),
+			familyQuery: (&r.Mock{}).On(r.Table("family").MockAnything()).Once().Return(
+				map[string]interface{}{
+					"id":           "family-1",
+					"created_at":   timestamp,
+					"last_updated": timestamp,
+				}, nil),
+			addMemberQuery: (&r.Mock{}).On(r.Table("family").MockAnything()).Once().Return(
+				r.WriteResponse{
+					Updated: 1,
+					Errors:  0,
+				}, nil),
+			deleteQuery: (&r.Mock{}).On(r.Table("invites").Filter(map[string]interface{}{
+				"id": "invite-1",
+			}).Delete()).Return(
+				r.WriteResponse{
+					Deleted: 1,
+					Errors:  0,
+				}, nil),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.inviteQuery)
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.userQuery)
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.familyQuery)
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.addMemberQuery)
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.deleteQuery)
+			tC.env.DB = config.DBEnv{Session: mock}
+			uis := UserInviteService{Env: tC.env}
+			err := uis.Accept(tC.invitedUser, tC.id)
+			if tC.returnError != nil {
+				assert.Error(t, err, tC.returnError)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
+func TestDelete(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		env         *config.Env
+		invite      *goparent.UserInvitation
+		deleteQuery *r.MockQuery
+		returnError error
+	}{
+		{
+			desc: "valid delete",
+			env:  &config.Env{},
+			invite: &goparent.UserInvitation{
+				ID: "invite-1",
+			},
+			deleteQuery: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"id": "invite-1",
+				}).Delete(),
+			).Return(r.WriteResponse{
+				Errors:  0,
+				Deleted: 1,
+			}, nil),
+			returnError: nil,
+		},
+		{
+			desc: "delete error",
+			env:  &config.Env{},
+			invite: &goparent.UserInvitation{
+				ID: "invite-1",
+			},
+			deleteQuery: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"id": "invite-1",
+				}).Delete(),
+			).Return(r.WriteResponse{
+				Errors:  1,
+				Deleted: 0,
+			}, errors.New("test error")),
+			returnError: errors.New("test error"),
+		},
+		{
+			desc: "nothing deleted",
+			env:  &config.Env{},
+			invite: &goparent.UserInvitation{
+				ID: "invite-1",
+			},
+			deleteQuery: (&r.Mock{}).On(
+				r.Table("invites").Filter(map[string]interface{}{
+					"id": "invite-1",
+				}).Delete(),
+			).Return(r.WriteResponse{
+				Errors:  0,
+				Deleted: 0,
+			}, nil),
+			returnError: errors.New("no record to delete"),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.deleteQuery)
+			tC.env.DB = config.DBEnv{Session: mock}
+			uis := UserInviteService{Env: tC.env}
+			err := uis.Delete(tC.invite)
+			if tC.returnError != nil {
+				assert.Error(t, tC.returnError, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}

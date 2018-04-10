@@ -119,7 +119,7 @@ func (uis *UserInviteService) Invites(user *goparent.User) ([]*goparent.UserInvi
 	var rows []*goparent.UserInvitation
 	err = res.All(&rows)
 	if err != nil {
-		return rows, err
+		return nil, err
 	}
 
 	return rows, nil
