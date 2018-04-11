@@ -336,6 +336,7 @@ func TestInvites(t *testing.T) {
 }
 
 func TestAcceptInvite(t *testing.T) {
+	//TODO: add error conditions
 	timestamp := time.Now()
 	testCases := []struct {
 		desc           string
