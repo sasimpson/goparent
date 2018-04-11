@@ -26,5 +26,5 @@ or this:
 
 ## ToDo:
 
-- [ ] handle multiple kids
+- [x] handle multiple kids
 - [ ] add in some statistical analysis of data

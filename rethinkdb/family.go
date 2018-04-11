@@ -92,12 +92,6 @@ func (fs *FamilyService) AddMember(family *goparent.Family, newMember *goparent.
 		return err
 	}
 
-	// newMember.CurrentFamily = family.ID
-	// err = newMember.Save(env)
-	// if err != nil {
-	// 	return err
-	// }
-
 	return nil
 }
 
@@ -115,7 +109,7 @@ func (fs *FamilyService) GetAdminFamily(user *goparent.User) (*goparent.Family, 
 	}
 
 	var family goparent.Family
-	err = res.One(family)
+	err = res.One(&family)
 	if err != nil {
 		return nil, err
 	}

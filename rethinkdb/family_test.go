@@ -172,7 +172,7 @@ func TestChildren(t *testing.T) {
 		returnError  error
 	}{
 		{
-			desc: "",
+			desc: "get some children",
 			env:  &config.Env{},
 			family: &goparent.Family{
 				ID:          "family-1",
@@ -194,8 +194,33 @@ func TestChildren(t *testing.T) {
 					"familyID": "family-1",
 					"birthday": timestamp.AddDate(0, -30, 0),
 				},
+				{
+					"id":       "child-2",
+					"name":     "test-child-2",
+					"userID":   "user-1",
+					"familyID": "family-1",
+					"birthday": timestamp.AddDate(-2, -30, 0),
+				},
 			}, nil),
-			resultLength: 1,
+			resultLength: 2,
+		},
+		{
+			desc: "get error",
+			env:  &config.Env{},
+			family: &goparent.Family{
+				ID:          "family-1",
+				Admin:       "1",
+				Members:     []string{"1"},
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
+			},
+			query: (&r.Mock{}).On(
+				r.Table("children").Filter(
+					map[string]interface{}{
+						"familyID": "family-1",
+					}).OrderBy(r.Desc("birthday")),
+			).Return(nil, errors.New("test error")),
+			returnError: errors.New("test error"),
 		},
 	}
 	for _, tC := range testCases {
@@ -215,63 +240,158 @@ func TestChildren(t *testing.T) {
 	}
 }
 
-// func TestFamily_AddMember(t *testing.T) {
-// 	type args struct {
-// 		env       *config.Env
-// 		newMember *User
-// 	}
-// 	tests := []struct {
-// 		name    string
-// 		family  *Family
-// 		args    args
-// 		wantErr bool
-// 	}{
-// 		{
-// 			name: "Already in family error",
-// 			family: &Family{
-// 				ID:          "1",
-// 				Admin:       "1",
-// 				Members:     []string{"1", "2"},
-// 				CreatedAt:   time.Now(),
-// 				LastUpdated: time.Now(),
-// 			},
-// 			args: args{
-// 				env: &config.Env{},
-// 				newMember: &User{
-// 					ID:            "2",
-// 					Name:          "test user jr",
-// 					Username:      "testuserjr",
-// 					Email:         "testuserjr@test.com",
-// 					CurrentFamily: "1",
-// 				},
-// 			},
-// 			wantErr: true,
-// 		},
-// 		// {
-// 		// 	name: "Added",
-// 		// 	family: &Family{
-// 		// 		ID:          "1",
-// 		// 		Admin:       "1",
-// 		// 		Members:     []string{"1"},
-// 		// 		CreatedAt:   time.Now(),
-// 		// 		LastUpdated: time.Now(),
-// 		// 	},
-// 		// 	args: args{
-// 		// 		env: &config.Env{},
-// 		// 		newMember: &User{
-// 		// 			ID:            "2",
-// 		// 			Name:          "test user jr",
-// 		// 			Username:      "testuserjr",
-// 		// 			Email:         "testuserjr@test.com",
-// 		// 			CurrentFamily: "2",
-// 		// 		},
-// 		// 	},
-// 		// 	wantErr: false,
-// 		// },
-// 	}
-// 	for _, tt := range tests {
-// 		if err := tt.family.AddMember(tt.args.env, tt.args.newMember); (err != nil) != tt.wantErr {
-// 			t.Errorf("%q. Family.AddMember() error = %v, wantErr %v", tt.name, err, tt.wantErr)
-// 		}
-// 	}
-// }
+func TestAddMember(t *testing.T) {
+	timestamp := time.Now()
+	testCases := []struct {
+		desc        string
+		env         *config.Env
+		family      *goparent.Family
+		user        *goparent.User
+		query       *r.MockQuery
+		returnError error
+	}{
+		{
+			desc: "add member",
+			env:  &config.Env{},
+			family: &goparent.Family{
+				ID:          "family-1",
+				Admin:       "1",
+				Members:     []string{"1"},
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
+			},
+			user: &goparent.User{
+				ID: "user-1",
+			},
+			query: (&r.Mock{}).On(r.Table("family").MockAnything()).Once().Return(
+				r.WriteResponse{
+					Updated: 1,
+					Errors:  0,
+				}, nil),
+		},
+		{
+			desc: "add member fail",
+			env:  &config.Env{},
+			family: &goparent.Family{
+				ID:          "family-1",
+				Admin:       "1",
+				Members:     []string{"user-1"},
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
+			},
+			user: &goparent.User{
+				ID: "user-1",
+			},
+			query: (&r.Mock{}).On(r.Table("family").MockAnything()).Once().Return(
+				r.WriteResponse{
+					Updated: 1,
+					Errors:  0,
+				}, nil),
+			returnError: errors.New("user already in that family"),
+		},
+		{
+			desc: "add member db error",
+			env:  &config.Env{},
+			family: &goparent.Family{
+				ID:          "family-1",
+				Admin:       "1",
+				Members:     []string{"user-1"},
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
+			},
+			user: &goparent.User{
+				ID: "user-1",
+			},
+			query: (&r.Mock{}).On(r.Table("family").MockAnything()).Once().Return(
+				r.WriteResponse{
+					Updated: 0,
+					Errors:  1,
+				}, errors.New("test error")),
+			returnError: errors.New("test error"),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			fs := FamilyService{Env: tC.env}
+			err := fs.AddMember(tC.family, tC.user)
+			if tC.returnError != nil {
+				assert.Error(t, tC.returnError, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
+func TestGetAdminFamily(t *testing.T) {
+	timestamp := time.Now()
+	testCases := []struct {
+		desc        string
+		env         *config.Env
+		user        *goparent.User
+		family      *goparent.Family
+		query       *r.MockQuery
+		returnError error
+	}{
+		{
+			desc: "valid call",
+			env:  &config.Env{},
+			user: &goparent.User{
+				ID: "user-1",
+			},
+			family: &goparent.Family{
+				ID:          "family-1",
+				Admin:       "user-1",
+				Members:     []string{"user-1"},
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
+			},
+			query: (&r.Mock{}).On(r.Table("family").Filter(map[string]interface{}{
+				"admin": "user-1",
+			})).Return(map[string]interface{}{
+				"id":           "family-1",
+				"admin":        "user-1",
+				"members":      []string{"user-1"},
+				"created_at":   timestamp,
+				"last_updated": timestamp,
+			}, nil),
+		},
+		{
+			desc: "nothing returned",
+			env:  &config.Env{},
+			user: &goparent.User{
+				ID: "user-1",
+			},
+			family: &goparent.Family{
+				ID:          "family-1",
+				Admin:       "user-1",
+				Members:     []string{"user-1"},
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
+			},
+			query: (&r.Mock{}).On(r.Table("family").Filter(map[string]interface{}{
+				"admin": "user-1",
+			})).Return(nil, r.ErrEmptyResult),
+			returnError: r.ErrEmptyResult,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			fs := FamilyService{Env: tC.env}
+			family, err := fs.GetAdminFamily(tC.user)
+			t.Logf("%#v %#v", family, err)
+			if tC.returnError != nil {
+				assert.Error(t, tC.returnError, err)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tC.family.ID, family.ID)
+			}
+		})
+	}
+}
