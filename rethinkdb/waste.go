@@ -8,6 +8,7 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+//WasteService - struct for implmenting the interface
 type WasteService struct {
 	Env *config.Env
 }
@@ -55,7 +56,7 @@ func (ws *WasteService) Waste(family *goparent.Family) ([]*goparent.Waste, error
 	return rows, nil
 }
 
-//WasteGetStats - get waste stats for one child for the last 24 hours.
+//Stats - get waste stats for one child for the last 24 hours.
 func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, error) {
 	session, err := ws.Env.DB.GetConnection()
 	if err != nil {

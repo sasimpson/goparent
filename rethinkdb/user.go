@@ -11,6 +11,7 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+//UserService -
 type UserService struct {
 	Env *config.Env
 }
@@ -25,7 +26,7 @@ type UserClaims struct {
 	jwt.StandardClaims
 }
 
-//GetUser - gets the user data based on the id string
+//User - gets the user data based on the id string
 func (us *UserService) User(id string) (*goparent.User, error) {
 	session, err := us.Env.DB.GetConnection()
 	if err != nil {
@@ -46,7 +47,7 @@ func (us *UserService) User(id string) (*goparent.User, error) {
 	return &user, nil
 }
 
-//GetUserByLogin - gets a user by their username and password
+//UserByLogin - gets a user by their username and password
 func (us *UserService) UserByLogin(username string, password string) (*goparent.User, error) {
 	//TODO: need to hash the password
 	session, err := us.Env.DB.GetConnection()

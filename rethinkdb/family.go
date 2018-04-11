@@ -9,10 +9,12 @@ import (
 	"gopkg.in/gorethink/gorethink.v3"
 )
 
+//FamilyService - structure for replicating the interface
 type FamilyService struct {
 	Env *config.Env
 }
 
+//Save - Create or Update a family record
 func (fs *FamilyService) Save(family *goparent.Family) error {
 	session, err := fs.Env.DB.GetConnection()
 	if err != nil {
@@ -35,6 +37,7 @@ func (fs *FamilyService) Save(family *goparent.Family) error {
 	return nil
 }
 
+//Family - returns a family for an ID
 func (fs *FamilyService) Family(id string) (*goparent.Family, error) {
 	session, err := fs.Env.DB.GetConnection()
 	if err != nil {
@@ -95,6 +98,7 @@ func (fs *FamilyService) AddMember(family *goparent.Family, newMember *goparent.
 	return nil
 }
 
+//GetAdminFamily - returns the family for which the user is the admin.
 func (fs *FamilyService) GetAdminFamily(user *goparent.User) (*goparent.Family, error) {
 	session, err := fs.Env.DB.GetConnection()
 	if err != nil {

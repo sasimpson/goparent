@@ -12,6 +12,7 @@ import (
 //ErrExistingInvitation - the user already has an invitation
 const ErrExistingInvitation string = "existing invitation for that user"
 
+//UserInviteService - struct for implementing the interface
 type UserInviteService struct {
 	Env *config.Env
 }

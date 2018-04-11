@@ -8,6 +8,7 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+//FeedingService - struct for implementing interface
 type FeedingService struct {
 	Env *config.Env
 }

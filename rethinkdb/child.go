@@ -6,10 +6,12 @@ import (
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
+//ChildService - service for implementing the interface
 type ChildService struct {
 	Env *config.Env
 }
 
+//Save - Create or update child record
 func (cs *ChildService) Save(child *goparent.Child) error {
 	session, err := cs.Env.DB.GetConnection()
 	if err != nil {
@@ -27,6 +29,7 @@ func (cs *ChildService) Save(child *goparent.Child) error {
 	return nil
 }
 
+//Child - return a child for an ID
 func (cs *ChildService) Child(id string) (*goparent.Child, error) {
 
 	session, err := cs.Env.DB.GetConnection()
@@ -53,6 +56,7 @@ func (cs *ChildService) Child(id string) (*goparent.Child, error) {
 	return &child, nil
 }
 
+//Delete - delete a passed child record from the datastore
 func (cs *ChildService) Delete(child *goparent.Child) (int, error) {
 	session, err := cs.Env.DB.GetConnection()
 	if err != nil {

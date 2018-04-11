@@ -9,6 +9,7 @@ import (
 	"gopkg.in/gorethink/gorethink.v3"
 )
 
+//SleepService - struct for implementing the interface
 type SleepService struct {
 	Env *config.Env
 }
@@ -52,7 +53,7 @@ func (ss *SleepService) Status(family *goparent.Family, child *goparent.Child) (
 	return true, nil
 }
 
-//SleepStart - record start of sleep
+//Start - record start of sleep
 func (ss *SleepService) Start(sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
 	ok, err := ss.Status(family, child)
 	if err != nil {
@@ -66,7 +67,7 @@ func (ss *SleepService) Start(sleep *goparent.Sleep, family *goparent.Family, ch
 	return ErrExistingStart
 }
 
-//SleepEnd - record end of sleep
+//End - record end of sleep
 func (ss *SleepService) End(sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
 	ok, err := ss.Status(family, child)
 	if err != nil {
