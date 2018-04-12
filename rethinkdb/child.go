@@ -37,12 +37,7 @@ func (cs *ChildService) Child(id string) (*goparent.Child, error) {
 		return nil, err
 	}
 
-	res, err := gorethink.Table("children").
-		Filter(
-			map[string]interface{}{
-				"id": id,
-			},
-		).Run(session)
+	res, err := gorethink.Table("children").Get(id).Run(session)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +58,7 @@ func (cs *ChildService) Delete(child *goparent.Child) (int, error) {
 		return 0, err
 	}
 
-	res, err := gorethink.Table("children").
-		Filter(map[string]interface{}{"id": child.ID}).Delete().RunWrite(session)
+	res, err := gorethink.Table("children").Get(child.ID).Delete().RunWrite(session)
 	if err != nil {
 		return 0, err
 	}
