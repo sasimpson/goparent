@@ -180,6 +180,7 @@ func TestStatus(t *testing.T) {
 		query       *r.MockQuery
 		family      *goparent.Family
 		child       *goparent.Child
+		sleep       *goparent.Sleep
 		result      bool
 		returnError error
 	}{
@@ -197,6 +198,7 @@ func TestStatus(t *testing.T) {
 			}, nil),
 			family: &goparent.Family{ID: "1"},
 			child:  &goparent.Child{ID: "1"},
+			sleep:  &goparent.Sleep{ID: "1"},
 			result: true,
 		},
 		{
@@ -211,6 +213,7 @@ func TestStatus(t *testing.T) {
 			).Return(nil, nil),
 			family: &goparent.Family{ID: "1"},
 			child:  &goparent.Child{ID: "1"},
+			sleep:  &goparent.Sleep{ID: "1"},
 			result: false,
 		},
 		{
@@ -225,6 +228,7 @@ func TestStatus(t *testing.T) {
 			).Return(map[string]interface{}{}, r.ErrEmptyResult),
 			family:      &goparent.Family{ID: "1"},
 			child:       &goparent.Child{ID: "1"},
+			sleep:       &goparent.Sleep{ID: "1"},
 			result:      false,
 			returnError: nil,
 		},
@@ -240,6 +244,7 @@ func TestStatus(t *testing.T) {
 			).Return(nil, errors.New("test error")),
 			family:      &goparent.Family{ID: "1"},
 			child:       &goparent.Child{ID: "1"},
+			sleep:       &goparent.Sleep{ID: "1"},
 			result:      false,
 			returnError: errors.New("test error"),
 		},
@@ -249,13 +254,28 @@ func TestStatus(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			tC.env.DB = config.DBEnv{Session: mock}
-			fs := SleepService{Env: tC.env}
-			status, err := fs.Status(tC.family, tC.child)
+			ss := SleepService{Env: tC.env}
+			status, err := ss.Status(tC.family, tC.child)
+			sleepStart := ss.Start(tC.sleep, tC.family, tC.child)
+			sleepEnd := ss.End(tC.sleep, tC.family, tC.child)
 			if tC.returnError != nil {
 				assert.Error(t, err, tC.returnError)
+				assert.Error(t, sleepStart)
+				assert.Error(t, sleepEnd)
+
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tC.result, status)
+
+				switch tC.result {
+				case true:
+					assert.Error(t, sleepStart)
+					assert.Nil(t, sleepEnd)
+					break
+				case false:
+					assert.Error(t, sleepEnd)
+					assert.Nil(t, sleepStart)
+				}
 			}
 
 		})
