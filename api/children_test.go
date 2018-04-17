@@ -1,36 +1,196 @@
 package api
 
-// import (
-// 	"context"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"reflect"
-// 	"testing"
-// 	"time"
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 
-// 	"github.com/gorilla/mux"
-// 	"github.com/sasimpson/goparent"
-// 	"github.com/sasimpson/goparent/config"
-// 	"github.com/stretchr/testify/assert"
-// 	r "gopkg.in/gorethink/gorethink.v3"
-// )
+	"github.com/gorilla/mux"
+	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/config"
+	"github.com/sasimpson/goparent/mock"
+	"github.com/stretchr/testify/assert"
+)
 
-// func Test_initChildrenHandlers(t *testing.T) {
-// 	t.Skip()
-// 	type args struct {
-// 		env *config.Env
-// 		r   *mux.Router
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		initChildrenHandlers(tt.args.env, tt.args.r)
-// 	}
-// }
+func Test(t *testing.T) {
+	testCases := []struct {
+		desc    string
+		name    string
+		path    string
+		methods []string
+	}{
+		{
+			desc:    "children get",
+			name:    "ChildrenGet",
+			path:    "/children",
+			methods: []string{"GET"},
+		},
+		{
+			desc:    "child new",
+			name:    "ChildNew",
+			path:    "/children",
+			methods: []string{"POST"},
+		},
+		{
+			desc:    "child view",
+			name:    "ChildView",
+			path:    "/children/{id}",
+			methods: []string{"GET"},
+		},
+		{
+			desc:    "child edit",
+			name:    "ChildEdit",
+			path:    "/children/{id}",
+			methods: []string{"PUT"},
+		},
+		{
+			desc:    "child delete",
+			name:    "ChildDelete",
+			path:    "/children/{id}",
+			methods: []string{"DELETE"},
+		},
+		{
+			desc:    "child summary",
+			name:    "ChildSummary",
+			path:    "/children/{id}/summary",
+			methods: []string{"GET"},
+		},
+	}
+
+	var testEnv *config.Env
+	h := Handler{Env: testEnv}
+	routes := mux.NewRouter()
+	h.initChildrenHandlers(routes)
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			route := routes.Get(tC.name)
+			path, _ := route.GetPathTemplate()
+			methods, _ := route.GetMethods()
+			assert.Equal(t, tC.name, route.GetName())
+			assert.Equal(t, tC.path, path)
+			assert.Equal(t, tC.methods, methods)
+		})
+	}
+}
+
+func TestChildrenGetHandler(t *testing.T) {
+	testCases := []struct {
+		desc          string
+		env           *config.Env
+		userService   goparent.UserService
+		familyService goparent.FamilyService
+		childService  goparent.ChildService
+		contextUser   *goparent.User
+		contextError  bool
+		responseCode  int
+		resultLength  int
+	}{
+		{
+			desc:          "returns auth error",
+			env:           &config.Env{},
+			userService:   &mock.MockUserService{},
+			familyService: &mock.MockFamilyService{},
+			childService:  &mock.MockChildService{},
+			contextUser:   &goparent.User{},
+			contextError:  true,
+			responseCode:  http.StatusUnauthorized,
+		},
+		{
+			desc: "returns family error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				GetErr: errors.New("test error"),
+			},
+			familyService: &mock.MockFamilyService{},
+			childService:  &mock.MockChildService{},
+			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError:  false,
+			responseCode:  http.StatusInternalServerError,
+		},
+		{
+			desc: "returns chilren error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			familyService: &mock.MockFamilyService{
+				GetErr: errors.New("test error"),
+			},
+			childService: &mock.MockChildService{},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError: false,
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc: "return no children",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			familyService: &mock.MockFamilyService{
+				Kids: []*goparent.Child{},
+			},
+			childService: &mock.MockChildService{},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError: false,
+			responseCode: http.StatusOK,
+			resultLength: 0,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env:           tC.env,
+				UserService:   tC.userService,
+				FamilyService: tC.familyService,
+				ChildService:  tC.childService,
+			}
+
+			req, err := http.NewRequest("GET", "/children", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			handler := mockHandler.childrenGetHandler()
+			rr := httptest.NewRecorder()
+
+			ctx := req.Context()
+			if tC.contextError == true {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+			if tC.responseCode == http.StatusOK {
+				var result ChildrenResponse
+				decoder := json.NewDecoder(rr.Body)
+				err := decoder.Decode(&result)
+				assert.Nil(t, err)
+				assert.Equal(t, tC.resultLength, len(result.Children))
+			}
+		})
+	}
+}
 
 // func TestChildSummary(t *testing.T) {
 // 	type args struct {

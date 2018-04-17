@@ -6,7 +6,9 @@ import (
 )
 
 type MockFamilyService struct {
-	Env *config.Env
+	Env    *config.Env
+	Kids   []*goparent.Child
+	GetErr error
 }
 
 func (mfs *MockFamilyService) Save(*goparent.Family) error {
@@ -18,7 +20,10 @@ func (mfs *MockFamilyService) Family(string) (*goparent.Family, error) {
 }
 
 func (mfs *MockFamilyService) Children(*goparent.Family) ([]*goparent.Child, error) {
-	panic("not implemented")
+	if mfs.GetErr != nil {
+		return nil, mfs.GetErr
+	}
+	return mfs.Kids, nil
 }
 
 func (mfs *MockFamilyService) AddMember(*goparent.Family, *goparent.User) error {
