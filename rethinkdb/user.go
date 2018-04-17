@@ -82,6 +82,7 @@ func (us *UserService) Save(user *goparent.User) error {
 		return err
 	}
 
+	//check to see if a user with that email exists already
 	res, err := gorethink.Table("users").Filter(map[string]interface{}{
 		"email": user.Email,
 	}).Run(session)
@@ -92,9 +93,12 @@ func (us *UserService) Save(user *goparent.User) error {
 
 	var family *goparent.Family
 	fs := &FamilyService{Env: us.Env}
+	//if the user doesn't have a current family
 	if user.CurrentFamily == "" && user.ID != "" {
+		//get the family for which the user is the admin.
 		family, err := fs.GetAdminFamily(user)
 		if err != nil {
+			//if no result is returned, create a new family
 			if err == gorethink.ErrEmptyResult {
 				family = &goparent.Family{Admin: user.ID, Members: []string{user.ID}}
 				fs.Save(family)
@@ -106,18 +110,21 @@ func (us *UserService) Save(user *goparent.User) error {
 		user.CurrentFamily = family.ID
 	}
 
+	//if the user has no current family and no id, then we need to create a family.
 	if user.CurrentFamily == "" && user.ID == "" {
-		family = &goparent.Family{Admin: user.ID, Members: []string{user.ID}}
+		family = &goparent.Family{}
 		fs.Save(family)
 		user.CurrentFamily = family.ID
 	}
 
+	//if the user doesn't exist in the db OR the ID exists, save to db
 	if res.IsNil() || user.ID != "" {
 		res2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
 		if err != nil {
 			return err
 		}
 
+		//if the user was inserted and not replaced, set the ID and family bits.s
 		if res2.Inserted > 0 {
 			user.ID = res2.GeneratedKeys[0]
 			family.Admin = user.ID
