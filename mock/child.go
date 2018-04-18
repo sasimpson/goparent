@@ -6,9 +6,11 @@ import (
 )
 
 type MockChildService struct {
-	Env    *config.Env
-	Kid    *goparent.Child
-	GetErr error
+	Env       *config.Env
+	Kid       *goparent.Child
+	Deleted   int
+	GetErr    error
+	DeleteErr error
 }
 
 func (mcs MockChildService) Save(*goparent.Child) error {
@@ -26,5 +28,8 @@ func (mcs MockChildService) Child(string) (*goparent.Child, error) {
 }
 
 func (mcs MockChildService) Delete(*goparent.Child) (int, error) {
-	panic("not implemented")
+	if mcs.DeleteErr != nil {
+		return 0, mcs.DeleteErr
+	}
+	return mcs.Deleted, nil
 }

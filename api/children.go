@@ -173,7 +173,7 @@ func (h *Handler) childViewHandler() http.Handler {
 		childID := mux.Vars(r)["id"]
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -205,7 +205,7 @@ func (h *Handler) childEditHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -226,13 +226,13 @@ func (h *Handler) childEditHandler() http.Handler {
 		id := mux.Vars(r)["id"]
 		child, err := h.ChildService.Child(id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
 		//verify both the child we requested to edit, and that the parent is the user id.
 		if (child.ID != childRequest.ChildData.ID) || (childRequest.ChildData.FamilyID != family.ID) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "invalid relationship", http.StatusBadRequest)
 			return
 		}
 		h.ChildService.Save(&childRequest.ChildData)
@@ -247,7 +247,7 @@ func (h *Handler) childDeleteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
