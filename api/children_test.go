@@ -79,6 +79,153 @@ func Test(t *testing.T) {
 	}
 }
 
+func TestChildSummary(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		env            *config.Env
+		userService    goparent.UserService
+		childService   goparent.ChildService
+		feedingService goparent.FeedingService
+		sleepService   goparent.SleepService
+		wasteService   goparent.WasteService
+		contextUser    *goparent.User
+		contextError   bool
+		responseCode   int
+		resultLength   int
+	}{
+		{
+			desc: "get child summary",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			childService: &mock.MockChildService{
+				Kid: &goparent.Child{
+					Name:     "test child",
+					ID:       "1",
+					FamilyID: "1",
+					Birthday: time.Now()},
+			},
+			feedingService: &mock.MockFeedingService{
+				Stat: &goparent.FeedingSummary{
+					Total: map[string]float32{"1": 1.1, "2": 2.2},
+					Mean:  map[string]float32{"1": 0.6, "2": 1.1},
+					Range: map[string]int{"1": 2, "2": 2},
+					Data: []goparent.Feeding{
+						goparent.Feeding{ID: "1"},
+						goparent.Feeding{ID: "2"},
+					},
+				},
+			},
+			sleepService: &mock.MockSleepService{
+				Stat: &goparent.SleepSummary{
+					Total: 5,
+					Mean:  2.5,
+					Range: 2,
+					Data: []goparent.Sleep{
+						goparent.Sleep{ID: "1"},
+						goparent.Sleep{ID: "2"},
+					},
+				},
+			},
+			wasteService: &mock.MockWasteService{
+				Stat: &goparent.WasteSummary{
+					Total: map[int]int{1: 5, 2: 5, 3: 10},
+					Data: []goparent.Waste{
+						goparent.Waste{ID: "1"},
+						goparent.Waste{ID: "2"},
+					},
+				},
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusOK,
+		},
+		{
+			desc:           "get child summary, fail auth",
+			env:            &config.Env{},
+			userService:    &mock.MockUserService{},
+			childService:   &mock.MockChildService{},
+			feedingService: &mock.MockFeedingService{},
+			sleepService:   &mock.MockSleepService{},
+			wasteService:   &mock.MockWasteService{},
+			contextUser:    &goparent.User{},
+			contextError:   true,
+			responseCode:   http.StatusUnauthorized,
+		},
+		{
+			desc: "get child summary, fail get family",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				GetErr: errors.New("test error"),
+			},
+			childService:   &mock.MockChildService{},
+			feedingService: &mock.MockFeedingService{},
+			sleepService:   &mock.MockSleepService{},
+			wasteService:   &mock.MockWasteService{},
+			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode:   http.StatusInternalServerError,
+		},
+		{
+			desc: "get child summary, fail get child",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			childService: &mock.MockChildService{
+				GetErr: errors.New("test error"),
+			},
+			feedingService: &mock.MockFeedingService{},
+			sleepService:   &mock.MockSleepService{},
+			wasteService:   &mock.MockWasteService{},
+			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode:   http.StatusInternalServerError,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env:            tC.env,
+				UserService:    tC.userService,
+				ChildService:   tC.childService,
+				FeedingService: tC.feedingService,
+				SleepService:   tC.sleepService,
+				WasteService:   tC.wasteService,
+			}
+
+			req, err := http.NewRequest("GET", "/children/1/summary", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req = mux.SetURLVars(req, map[string]string{"id": "1"})
+			handler := mockHandler.childSummary()
+			rr := httptest.NewRecorder()
+
+			ctx := req.Context()
+			if tC.contextError == true {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+		})
+	}
+}
+
 func TestChildrenGetHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
