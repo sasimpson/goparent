@@ -101,7 +101,6 @@ func (h *Handler) sleepNewHandler() http.Handler {
 		var sleepRequest SleepRequest
 		err = decoder.Decode(&sleepRequest)
 		if err != nil {
-			log.Panicln(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

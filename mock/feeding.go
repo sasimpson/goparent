@@ -13,30 +13,30 @@ type MockFeedingService struct {
 	StatErr  error
 }
 
-func (mfs *MockFeedingService) Save(feeding *goparent.Feeding) error {
-	if mfs.GetErr != nil {
-		return mfs.GetErr
+func (m *MockFeedingService) Save(feeding *goparent.Feeding) error {
+	if m.GetErr != nil {
+		return m.GetErr
 	}
 	return nil
 }
 
-func (mfs *MockFeedingService) Feeding(family *goparent.Family) ([]*goparent.Feeding, error) {
-	if mfs.GetErr != nil {
-		return nil, mfs.GetErr
+func (m *MockFeedingService) Feeding(family *goparent.Family) ([]*goparent.Feeding, error) {
+	if m.GetErr != nil {
+		return nil, m.GetErr
 	}
-	if mfs.Feedings != nil {
-		return mfs.Feedings, nil
+	if m.Feedings != nil {
+		return m.Feedings, nil
 	}
 
 	return nil, nil
 }
 
-func (mfs *MockFeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary, error) {
-	if mfs.StatErr != nil {
-		return nil, mfs.StatErr
+func (m *MockFeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary, error) {
+	if m.StatErr != nil {
+		return nil, m.StatErr
 	}
-	if mfs.Stat != nil {
-		return mfs.Stat, nil
+	if m.Stat != nil {
+		return m.Stat, nil
 	}
 
 	return nil, nil

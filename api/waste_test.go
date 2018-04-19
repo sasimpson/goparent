@@ -1,56 +1,150 @@
 package api
 
-// import (
-// 	"bytes"
-// 	"context"
-// 	"encoding/json"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
-// 	"time"
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 
-// 	"github.com/gorilla/mux"
-// 	"github.com/sasimpson/goparent"
-// 	"github.com/sasimpson/goparent/config"
-// 	"github.com/stretchr/testify/assert"
+	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/config"
+	"github.com/sasimpson/goparent/mock"
+	"github.com/stretchr/testify/assert"
+)
 
-// 	r "gopkg.in/gorethink/gorethink.v3"
-// )
+func TestWasteGetHandler(t *testing.T) {
+	testCases := []struct {
+		desc          string
+		env           *config.Env
+		userService   goparent.UserService
+		familyService goparent.FamilyService
+		wasteService  goparent.WasteService
+		contextUser   *goparent.User
+		responseCode  int
+		resultLength  int
+	}{
+		{
+			desc:          "returns auth error",
+			env:           &config.Env{},
+			userService:   &mock.MockUserService{},
+			familyService: &mock.MockFamilyService{},
+			wasteService:  &mock.MockWasteService{},
+			contextUser:   nil,
+			responseCode:  http.StatusUnauthorized,
+		},
+		{
+			desc: "returns family error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				GetErr: errors.New("test error"),
+			},
+			familyService: &mock.MockFamilyService{},
+			wasteService:  &mock.MockWasteService{},
+			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode:  http.StatusInternalServerError,
+		},
+		{
+			desc: "returns waste error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
 
-// func TestWasteGetHandler(t *testing.T) {
-// 	//TODO: verify output
-// 	var testEnv config.Env
+			wasteService: &mock.MockWasteService{
+				GetErr: errors.New("test error"),
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc: "returns no waste",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
 
-// 	//mock out the db stuff and return call
-// 	mock := r.NewMock()
-// 	mock.On(
-// 		r.Table("waste").MockAnything(),
-// 	).Return([]interface{}{
-// 		map[string]interface{}{
-// 			"id":        "1",
-// 			"wasteType": 1,
-// 			"notes":     "test note",
-// 			"userID":    "1",
-// 			"timestamp": time.Now(),
-// 		},
-// 	}, nil)
-// 	testEnv.DB.Session = mock
+			wasteService: &mock.MockWasteService{
+				Wastes: []*goparent.Waste{},
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusOK,
+			resultLength: 0,
+		},
+		{
+			desc: "returns one waste",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
 
-// 	//setup request
-// 	req, err := http.NewRequest("GET", "/waste", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+			wasteService: &mock.MockWasteService{
+				Wastes: []*goparent.Waste{
+					&goparent.Waste{ID: "1"},
+				},
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusOK,
+			resultLength: 1,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env:           tC.env,
+				UserService:   tC.userService,
+				FamilyService: tC.familyService,
+				WasteService:  tC.wasteService,
+			}
 
-// 	handler := wasteGetHandler(&testEnv)
-// 	rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", "/waste", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 	ctx := req.Context()
-// 	ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 	req = req.WithContext(ctx)
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// }
+			handler := mockHandler.wasteGetHandler()
+			rr := httptest.NewRecorder()
+
+			ctx := req.Context()
+			if tC.contextUser != nil {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			}
+
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+			if tC.responseCode == http.StatusOK {
+				var result WasteResponse
+				decoder := json.NewDecoder(rr.Body)
+				err := decoder.Decode(&result)
+				assert.Nil(t, err)
+				assert.Equal(t, tC.resultLength, len(result.WasteData))
+			}
+		})
+	}
+}
 
 // func TestWasteNewHandler(t *testing.T) {
 // 	//TODO: verify output

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
+	mux "github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/mock"
@@ -192,6 +192,118 @@ func TestChildSummary(t *testing.T) {
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:   http.StatusInternalServerError,
 		},
+		{
+			desc: "get child summary, fail child/family match",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "2",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			childService: &mock.MockChildService{
+				Kid: &goparent.Child{
+					Name:     "test child",
+					ID:       "1",
+					FamilyID: "1",
+					Birthday: time.Now()},
+			},
+			feedingService: &mock.MockFeedingService{},
+			sleepService:   &mock.MockSleepService{},
+			wasteService:   &mock.MockWasteService{},
+			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode:   http.StatusNotFound,
+		},
+		{
+			desc: "get child summary, fail feeding",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			childService: &mock.MockChildService{
+				Kid: &goparent.Child{
+					Name:     "test child",
+					ID:       "1",
+					FamilyID: "1",
+					Birthday: time.Now()},
+			},
+			feedingService: &mock.MockFeedingService{
+				StatErr: errors.New("test error"),
+			},
+			sleepService: &mock.MockSleepService{},
+			wasteService: &mock.MockWasteService{},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc: "get child summary, fail sleep",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			childService: &mock.MockChildService{
+				Kid: &goparent.Child{
+					Name:     "test child",
+					ID:       "1",
+					FamilyID: "1",
+					Birthday: time.Now()},
+			},
+			feedingService: &mock.MockFeedingService{
+				Stat: &goparent.FeedingSummary{},
+			},
+			sleepService: &mock.MockSleepService{
+				StatErr: errors.New("test error"),
+			},
+			wasteService: &mock.MockWasteService{},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc: "get child summary, fail waste",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			childService: &mock.MockChildService{
+				Kid: &goparent.Child{
+					Name:     "test child",
+					ID:       "1",
+					FamilyID: "1",
+					Birthday: time.Now()},
+			},
+			feedingService: &mock.MockFeedingService{
+				Stat: &goparent.FeedingSummary{},
+			},
+			sleepService: &mock.MockSleepService{
+				Stat: &goparent.SleepSummary{},
+			},
+			wasteService: &mock.MockWasteService{
+				StatErr: errors.New("test error"),
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusInternalServerError,
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -261,7 +373,7 @@ func TestChildrenGetHandler(t *testing.T) {
 			responseCode:  http.StatusInternalServerError,
 		},
 		{
-			desc: "returns chilren error",
+			desc: "returns children error",
 			env:  &config.Env{},
 			userService: &mock.MockUserService{
 				Family: &goparent.Family{

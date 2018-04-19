@@ -13,33 +13,42 @@ type MockSleepService struct {
 	StatErr error
 }
 
-func (mss *MockSleepService) Save(*goparent.Sleep) error {
-	panic("not implemented")
-}
-
-func (mss *MockSleepService) Sleep(*goparent.Family) ([]*goparent.Sleep, error) {
-	panic("not implemented")
-}
-
-func (mss *MockSleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
-	if mss.StatErr != nil {
-		return nil, mss.StatErr
+func (m *MockSleepService) Save(*goparent.Sleep) error {
+	if m.GetErr != nil {
+		return m.GetErr
 	}
-	if mss.Stat != nil {
-		return mss.Stat, nil
+	return nil
+}
+
+func (m *MockSleepService) Sleep(*goparent.Family) ([]*goparent.Sleep, error) {
+	if m.GetErr != nil {
+		return nil, m.GetErr
+	}
+	if m.Sleeps != nil {
+		return m.Sleeps, nil
+	}
+	return nil, nil
+}
+
+func (m *MockSleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
+	if m.StatErr != nil {
+		return nil, m.StatErr
+	}
+	if m.Stat != nil {
+		return m.Stat, nil
 	}
 
 	return nil, nil
 }
 
-func (mss *MockSleepService) Status(*goparent.Family, *goparent.Child) (bool, error) {
+func (m *MockSleepService) Status(*goparent.Family, *goparent.Child) (bool, error) {
 	panic("not implemented")
 }
 
-func (mss *MockSleepService) Start(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+func (m *MockSleepService) Start(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
-func (mss *MockSleepService) End(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+func (m *MockSleepService) End(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }

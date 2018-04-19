@@ -13,20 +13,29 @@ type MockWasteService struct {
 	StatErr error
 }
 
-func (mws *MockWasteService) Save(*goparent.Waste) error {
-	panic("not implemented")
-}
-
-func (mws *MockWasteService) Waste(*goparent.Family) ([]*goparent.Waste, error) {
-	panic("not implemented")
-}
-
-func (mws *MockWasteService) Stats(*goparent.Child) (*goparent.WasteSummary, error) {
-	if mws.StatErr != nil {
-		return nil, mws.StatErr
+func (m *MockWasteService) Save(*goparent.Waste) error {
+	if m.GetErr != nil {
+		return m.GetErr
 	}
-	if mws.Stat != nil {
-		return mws.Stat, nil
+	return nil
+}
+
+func (m *MockWasteService) Waste(*goparent.Family) ([]*goparent.Waste, error) {
+	if m.GetErr != nil {
+		return nil, m.GetErr
+	}
+	if m.Wastes != nil {
+		return m.Wastes, nil
+	}
+	return nil, nil
+}
+
+func (m *MockWasteService) Stats(*goparent.Child) (*goparent.WasteSummary, error) {
+	if m.StatErr != nil {
+		return nil, m.StatErr
+	}
+	if m.Stat != nil {
+		return m.Stat, nil
 	}
 
 	return nil, nil

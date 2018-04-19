@@ -70,10 +70,11 @@ func (h *Handler) childSummary() http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		summary.ChildData = *child
 
+		summary.ChildData = *child
 		if child.FamilyID != family.ID {
 			http.Error(w, "not found", http.StatusNotFound)
+			return
 		}
 
 		feedingSummary, err := h.FeedingService.Stats(child)
