@@ -310,340 +310,317 @@ func TestSleepNewHandler(t *testing.T) {
 	}
 }
 
-// import (
-// 	"bytes"
-// 	"context"
-// 	"encoding/json"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
-// 	"time"
+func TestSleepViewHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepViewHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "GET",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepViewHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "GET",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 	"github.com/gorilla/mux"
-// 	"github.com/sasimpson/goparent"
-// 	"github.com/sasimpson/goparent/config"
-// 	"github.com/stretchr/testify/assert"
+			handler := mockHandler.sleepViewHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-// 	r "gopkg.in/gorethink/gorethink.v3"
-// )
+		})
+	}
+}
 
-// func TestSleepNewHandler(t *testing.T) {
-// 	var testEnv config.Env
+func TestSleepEditHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepEditHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "PUT",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepEditHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "PUT",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 	mock := r.NewMock()
-// 	mock.
-// 		On(
-// 			r.Table("family").Filter(
-// 				func(row r.Term) r.Term {
-// 					return row.Field("members").Contains("1")
-// 				},
-// 			),
-// 		).
-// 		Return(map[string]interface{}{
-// 			"id":           "1",
-// 			"admin":        "1",
-// 			"members":      []string{"1"},
-// 			"created_at":   time.Now(),
-// 			"last_updated": time.Now(),
-// 		}, nil).
-// 		On(
-// 			r.Table("sleep").MockAnything(),
-// 		).
-// 		Return(r.WriteResponse{
-// 			Inserted:      1,
-// 			Errors:        0,
-// 			GeneratedKeys: []string{"1"},
-// 		}, nil)
-// 	testEnv.DB.Session = mock
+			handler := mockHandler.sleepEditHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-// 	s := SleepRequest{SleepData: goparent.Sleep{UserID: "1", ChildID: "1", Start: time.Now().AddDate(0, 0, -1), End: time.Now()}}
-// 	js, err := json.Marshal(&s)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	req, err := http.NewRequest("POST", "/sleep", bytes.NewReader(js))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+		})
+	}
+}
 
-// 	handler := sleepNewHandler(&testEnv)
-// 	rr := httptest.NewRecorder()
-// 	ctx := req.Context()
-// 	ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 	req = req.WithContext(ctx)
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// }
+func TestSleepDeleteHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepDeleteHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "DELETE",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepDeleteHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "DELETE",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// func TestSleepStatusHandler(t *testing.T) {
-// 	//TODO: verify returned values
-// 	testCases := []struct {
-// 		desc   string
-// 		status int
-// 		ret    map[string]interface{}
-// 		err    error
-// 	}{
-// 		{
-// 			desc:   "false",
-// 			status: http.StatusNotFound,
-// 			ret:    nil,
-// 			err:    r.ErrEmptyResult,
-// 		},
-// 		{
-// 			desc:   "true",
-// 			status: http.StatusOK,
-// 			ret: map[string]interface{}{
-// 				"start":    time.Now().AddDate(0, 0, -1),
-// 				"userID":   "1",
-// 				"childID":  "1",
-// 				"familyID": "1",
-// 				"id":       "1",
-// 			},
-// 			err: nil,
-// 		},
-// 	}
-// 	for _, tC := range testCases {
-// 		t.Run(tC.desc, func(t *testing.T) {
-// 			var testEnv config.Env
+			handler := mockHandler.sleepDeleteHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-// 			mock := r.NewMock()
-// 			mock.
-// 				On(
-// 					r.Table("family").Filter(
-// 						func(row r.Term) r.Term {
-// 							return row.Field("members").Contains("1")
-// 						},
-// 					),
-// 				).
-// 				Return(map[string]interface{}{
-// 					"id":           "1",
-// 					"admin":        "1",
-// 					"members":      []string{"1"},
-// 					"created_at":   time.Now(),
-// 					"last_updated": time.Now(),
-// 				}, nil).
-// 				On(
-// 					r.Table("sleep").MockAnything(),
-// 				).
-// 				Return(
-// 					tC.ret, tC.err,
-// 				)
-// 			testEnv.DB.Session = mock
+		})
+	}
+}
 
-// 			req, err := http.NewRequest("GET", "/sleep/status", nil)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
+func TestSleepStartHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepStartHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/start",
+			method:       "POST",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepStartHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/start",
+			method:       "POST",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 			handler := sleepToggleStatus(&testEnv)
-// 			rr := httptest.NewRecorder()
+			handler := mockHandler.sleepStartHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-// 			ctx := req.Context()
-// 			ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 			req = req.WithContext(ctx)
-// 			handler.ServeHTTP(rr, req)
-// 			assert.Equal(t, tC.status, rr.Code)
-// 		})
-// 	}
-// }
+		})
+	}
+}
 
-// func TestSleepStartHandler(t *testing.T) {
-// 	//TODO: verify returned values
-// 	testCases := []struct {
-// 		desc   string
-// 		status int
-// 		ret    map[string]interface{}
-// 		err    error
-// 	}{
-// 		{
-// 			desc:   "false, no sleep active",
-// 			status: http.StatusOK,
-// 			ret:    nil,
-// 			err:    r.ErrEmptyResult,
-// 		},
-// 		{
-// 			desc:   "true, sleep active",
-// 			status: http.StatusConflict,
-// 			ret: map[string]interface{}{
-// 				"start":    time.Now().AddDate(0, 0, -1),
-// 				"userID":   "1",
-// 				"familyID": "1",
-// 				"childID":  "1",
-// 				"id":       "1",
-// 			},
-// 			err: nil,
-// 		},
-// 	}
+func TestSleepEndHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepStartHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/end",
+			method:       "POST",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepStartHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/end",
+			method:       "POST",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 	for _, tC := range testCases {
-// 		t.Run(tC.desc, func(t *testing.T) {
-// 			var testEnv config.Env
+			handler := mockHandler.sleepEndHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-// 			mock := r.NewMock()
-// 			mock.
-// 				On(
-// 					r.Table("family").Filter(
-// 						func(row r.Term) r.Term {
-// 							return row.Field("members").Contains("1")
-// 						},
-// 					),
-// 				).
-// 				Return(map[string]interface{}{
-// 					"id":           "1",
-// 					"admin":        "1",
-// 					"members":      []string{"1"},
-// 					"created_at":   time.Now(),
-// 					"last_updated": time.Now(),
-// 				}, nil).
-// 				On(
-// 					r.Table("sleep").MockAnything(),
-// 				).
-// 				Return(
-// 					tC.ret, tC.err,
-// 				)
-// 			testEnv.DB.Session = mock
+		})
+	}
+}
 
-// 			req, err := http.NewRequest("GET", "/sleep/start", nil)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
+func TestSleepToggleStatusHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepToggleStatusHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/status",
+			method:       "GET",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepToggleStatusHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/status",
+			method:       "GET",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 			handler := sleepStartHandler(&testEnv)
-// 			rr := httptest.NewRecorder()
+			handler := mockHandler.sleepToggleStatus()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-// 			ctx := req.Context()
-// 			ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 			req = req.WithContext(ctx)
-// 			handler.ServeHTTP(rr, req)
-// 			assert.Equal(t, tC.status, rr.Code)
-// 		})
-// 	}
-// }
-
-// func TestSleepEndHandler(t *testing.T) {
-// 	//TODO: verify returned values
-// 	testCases := []struct {
-// 		desc   string
-// 		status int
-// 		ret    map[string]interface{}
-// 		err    error
-// 	}{
-// 		{
-// 			desc:   "false, no sleep active",
-// 			status: http.StatusNotFound,
-// 			ret:    nil,
-// 			err:    r.ErrEmptyResult,
-// 		},
-// 		{
-// 			desc:   "true, sleep active",
-// 			status: http.StatusOK,
-// 			ret: map[string]interface{}{
-// 				"start":  time.Now().AddDate(0, 0, -1),
-// 				"userid": "1",
-// 				"id":     "1",
-// 			},
-// 			err: nil,
-// 		},
-// 	}
-
-// 	for _, tC := range testCases {
-// 		t.Run(tC.desc, func(t *testing.T) {
-// 			var testEnv config.Env
-
-// 			mock := r.NewMock()
-// 			mock.
-// 				On(
-// 					r.Table("family").Filter(
-// 						func(row r.Term) r.Term {
-// 							return row.Field("members").Contains("1")
-// 						},
-// 					),
-// 				).
-// 				Return(map[string]interface{}{
-// 					"id":           "1",
-// 					"admin":        "1",
-// 					"members":      []string{"1"},
-// 					"created_at":   time.Now(),
-// 					"last_updated": time.Now(),
-// 				}, nil).
-// 				On(
-// 					r.Table("sleep").MockAnything(),
-// 				).
-// 				Return(
-// 					tC.ret, tC.err,
-// 				)
-// 			testEnv.DB.Session = mock
-
-// 			req, err := http.NewRequest("GET", "/sleep/end", nil)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
-
-// 			handler := sleepEndHandler(&testEnv)
-// 			rr := httptest.NewRecorder()
-
-// 			ctx := req.Context()
-// 			ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 			req = req.WithContext(ctx)
-// 			handler.ServeHTTP(rr, req)
-// 			assert.Equal(t, tC.status, rr.Code)
-// 		})
-// 	}
-// }
-
-// func TestSleepViewHandler(t *testing.T) {
-// 	var testEnv config.Env
-
-// 	req, err := http.NewRequest("GET", "/sleep/1", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	handler := sleepViewHandler(&testEnv)
-// 	rr := httptest.NewRecorder()
-
-// 	ctx := req.Context()
-// 	ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 	req = req.WithContext(ctx)
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// }
-
-// func TestSleepEditHandler(t *testing.T) {
-// 	var testEnv config.Env
-
-// 	req, err := http.NewRequest("GET", "/sleep/1", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	handler := sleepEditHandler(&testEnv)
-// 	rr := httptest.NewRecorder()
-
-// 	ctx := req.Context()
-// 	ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 	req = req.WithContext(ctx)
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// }
-
-// func TestSleepDeleteHandler(t *testing.T) {
-// 	var testEnv config.Env
-
-// 	req, err := http.NewRequest("GET", "/sleep/1", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	handler := sleepDeleteHandler(&testEnv)
-// 	rr := httptest.NewRecorder()
-
-// 	ctx := req.Context()
-// 	ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 	req = req.WithContext(ctx)
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// }
+		})
+	}
+}
 
 func TestInitSleepHandlers(t *testing.T) {
 	testCases := []struct {
