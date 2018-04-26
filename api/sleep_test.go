@@ -42,7 +42,7 @@ func TestSleepGetHandler(t *testing.T) {
 			desc: "returns family error",
 			env:  &config.Env{},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("test error"),
+				FamilyErr: errors.New("test error"),
 			},
 			familyService: &mock.MockFamilyService{},
 			sleepService:  &mock.MockSleepService{},
@@ -200,7 +200,7 @@ func TestSleepNewHandler(t *testing.T) {
 					ChildID:  "1",
 					FamilyID: "1"}},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("user has no current family"),
+				FamilyErr: errors.New("user has no current family"),
 			},
 			familyService: &mock.MockFamilyService{},
 			sleepService:  &mock.MockSleepService{},

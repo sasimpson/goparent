@@ -112,7 +112,8 @@ func (h *Handler) userNewHandler() http.Handler {
 		err := decoder.Decode(&newUserRequest)
 		userData := goparent.User(newUserRequest.UserData)
 		if err != nil {
-			log.Panicln(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		defer r.Body.Close()
 

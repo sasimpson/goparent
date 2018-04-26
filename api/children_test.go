@@ -162,7 +162,7 @@ func TestChildSummary(t *testing.T) {
 			desc: "get child summary, fail get family",
 			env:  &config.Env{},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("test error"),
+				FamilyErr: errors.New("test error"),
 			},
 			childService:   &mock.MockChildService{},
 			feedingService: &mock.MockFeedingService{},
@@ -364,7 +364,7 @@ func TestChildrenGetHandler(t *testing.T) {
 			desc: "returns family error",
 			env:  &config.Env{},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("test error"),
+				FamilyErr: errors.New("test error"),
 			},
 			familyService: &mock.MockFamilyService{},
 			childService:  &mock.MockChildService{},
@@ -500,7 +500,7 @@ func TestChildrenNewHandler(t *testing.T) {
 					FamilyID: "1",
 					Birthday: time.Now()}},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("user has no current family"),
+				FamilyErr: errors.New("user has no current family"),
 			},
 			familyService: &mock.MockFamilyService{},
 			childService:  &mock.MockChildService{},
@@ -644,7 +644,7 @@ func TestChildViewHandler(t *testing.T) {
 			desc: "returns no family error",
 			env:  &config.Env{},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("user has no current family"),
+				FamilyErr: errors.New("user has no current family"),
 			},
 			familyService: &mock.MockFamilyService{},
 			childService:  &mock.MockChildService{},
@@ -813,7 +813,7 @@ func TestChildEditHandler(t *testing.T) {
 					FamilyID: "1",
 					Birthday: time.Now()}},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("user has no current family"),
+				FamilyErr: errors.New("user has no current family"),
 			},
 			familyService: &mock.MockFamilyService{},
 			childService:  &mock.MockChildService{},

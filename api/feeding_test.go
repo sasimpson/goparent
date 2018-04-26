@@ -78,7 +78,7 @@ func TestFeedingGetHandler(t *testing.T) {
 			desc: "returns no family error",
 			env:  &config.Env{},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("user has no current family"),
+				FamilyErr: errors.New("user has no current family"),
 			},
 			familyService:  &mock.MockFamilyService{},
 			feedingService: &mock.MockFeedingService{},
@@ -202,7 +202,7 @@ func TestFeedingNewHandler(t *testing.T) {
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
 			userService: &mock.MockUserService{
-				GetErr: errors.New("user has no current family"),
+				FamilyErr: errors.New("user has no current family"),
 			},
 			familyService:  &mock.MockFamilyService{},
 			feedingService: &mock.MockFeedingService{},
