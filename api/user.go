@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/rethinkdb"
 )
 
 //UserRequest - structure for incoming user request
@@ -152,7 +151,7 @@ func (h *Handler) userNewInviteHandler() http.Handler {
 
 		err = h.UserInvitationService.InviteParent(user, invitedUserEmail, time.Now())
 		if err != nil {
-			if err.Error() == rethinkdb.ErrExistingInvitation {
+			if err == goparent.ErrExistingInvitation {
 				http.Error(w, err.Error(), http.StatusConflict)
 				return
 			}

@@ -1,10 +1,13 @@
 package goparent
 
 import (
+	"errors"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
+
+var ErrExistingInvitation = errors.New("invitation already exists for that parent")
 
 type User struct {
 	ID            string `json:"id" gorethink:"id,omitempty"`
