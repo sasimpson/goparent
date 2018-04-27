@@ -220,6 +220,10 @@ func (h *Handler) userDeleteInviteHandler() http.Handler {
 		}
 		id := mux.Vars(r)["id"]
 		invite, err := h.UserInvitationService.Invite(id)
+		if err != nil {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
 		err = h.UserInvitationService.Delete(invite)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

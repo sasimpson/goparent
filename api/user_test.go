@@ -353,87 +353,220 @@ func TestUserNewInviteHandler(t *testing.T) {
 	}
 }
 
-// func TestListInviteHandler(t *testing.T) {
-// 	var testEnv config.Env
-// 	mock := r.NewMock()
-// 	mock.
-// 		On(
-// 			r.Table("users").Get("1"),
-// 		).
-// 		Return([]map[string]interface{}{
-// 			{"id": "1",
-// 				"name":     "test user",
-// 				"email":    "testuser@test.com",
-// 				"username": "testuser",
-// 				"password": "testpassword"},
-// 		}, nil).
-// 		On(
-// 			r.Table("invites").Filter(map[string]interface{}{
-// 				"userID": "1",
-// 			}).OrderBy(r.Desc("timestamp")),
-// 		).
-// 		Return([]map[string]interface{}{
-// 			{"id": "1", "userID": "1", "inviteEmail": "testinvite1@test.com", "timestamp": time.Now()},
-// 			{"id": "2", "userID": "1", "inviteEmail": "testinvite2@test.com", "timestamp": time.Now()},
-// 		}, nil)
-// 	testEnv.DB.Session = mock
+func TestListInviteHandler(t *testing.T) {
+	testCases := []struct {
+		desc                  string
+		env                   *config.Env
+		contextUser           *goparent.User
+		userInvitationService goparent.UserInvitationService
+		responseCode          int
+		resultLength          int
+	}{
+		{
+			desc:         "bad auth",
+			responseCode: http.StatusUnauthorized,
+		},
+		{
+			desc:        "get SentInvites error",
+			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{
+				SentInvitesErr: errors.New("test error"),
+			},
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc:        "get pending invites error",
+			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{
+				InvitesErr: errors.New("test error"),
+			},
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc:                  "empty response",
+			contextUser:           &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{},
+			responseCode:          http.StatusOK,
+			resultLength:          0,
+		},
+		{
+			desc:        "non-empty response",
+			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{
+				GetSentInvites: []*goparent.UserInvitation{
+					&goparent.UserInvitation{
+						ID:          "1",
+						UserID:      "1",
+						InviteEmail: "testuser@test.com",
+						Timestamp:   time.Now(),
+					},
+				},
+				GetInvites: []*goparent.UserInvitation{
+					&goparent.UserInvitation{
+						ID:          "2",
+						UserID:      "2",
+						InviteEmail: "testowner@test.com",
+						Timestamp:   time.Now(),
+					},
+				},
+			},
+			responseCode: http.StatusOK,
+			resultLength: 2,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+				UserInvitationService: tC.userInvitationService,
+			}
 
-// 	req, _ := http.NewRequest("GET", "/user/invite", nil)
-// 	req.Header.Add("Content-Type", jsonContentType)
+			handler := mockHandler.userListInviteHandler()
+			req, _ := http.NewRequest("GET", "/user/invite", nil)
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser != nil {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+		})
+	}
+}
 
-// 	handler := userListInviteHandler(&testEnv)
-// 	rr := httptest.NewRecorder()
-// 	ctx := req.Context()
-// 	ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 	req = req.WithContext(ctx)
+func TestAcceptInviteHandler(t *testing.T) {
+	testCases := []struct {
+		desc                  string
+		env                   *config.Env
+		contextUser           *goparent.User
+		userInvitationService goparent.UserInvitationService
+		responseCode          int
+	}{
+		{
+			desc:         "bad auth",
+			env:          &config.Env{},
+			responseCode: http.StatusUnauthorized,
+		},
+		{
+			desc:        "accept fail",
+			env:         &config.Env{},
+			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{
+				AcceptErr: errors.New("test error"),
+			},
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc:                  "accept success",
+			env:                   &config.Env{},
+			contextUser:           &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{},
+			responseCode:          http.StatusNoContent,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+				UserInvitationService: tC.userInvitationService,
+			}
 
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// }
+			handler := mockHandler.userAcceptInviteHandler()
+			req, _ := http.NewRequest("GET", "/user/invite/accept/1", nil)
+			req = mux.SetURLVars(req, map[string]string{"id": "1"})
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser != nil {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+		})
+	}
+}
 
-// func TestDeleteInviteHandler(t *testing.T) {
-// 	var testEnv config.Env
-// 	mock := r.NewMock()
-// 	mock.
-// 		On(
-// 			r.Table("users").Get("1"),
-// 		).
-// 		Return([]map[string]interface{}{
-// 			{
-// 				"id":       "1",
-// 				"name":     "test user",
-// 				"email":    "testuser@test.com",
-// 				"username": "testuser",
-// 				"password": "testpassword"},
-// 		}, nil).
-// 		On(
-// 			r.Table("invites").Filter(map[string]interface{}{
-// 				"userID": "1",
-// 				"id":     "1",
-// 			}).Delete(),
-// 		).
-// 		Return(
-// 			r.WriteResponse{
-// 				Deleted: 1,
-// 			}, nil)
-// 	testEnv.DB.Session = mock
+func TestDeleteInviteHandler(t *testing.T) {
+	testCases := []struct {
+		desc                  string
+		env                   *config.Env
+		contextUser           *goparent.User
+		userInvitationService goparent.UserInvitationService
+		responseCode          int
+	}{
+		{
+			desc:         "bad auth",
+			env:          &config.Env{},
+			responseCode: http.StatusUnauthorized,
+		},
+		{
+			desc:        "get invite fail",
+			env:         &config.Env{},
+			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{
+				InviteErr: errors.New("not found"),
+			},
+			responseCode: http.StatusNotFound,
+		},
+		{
+			desc:        "delete fail",
+			env:         &config.Env{},
+			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{
+				GetInvite: &goparent.UserInvitation{
+					ID:          "1",
+					UserID:      "1",
+					InviteEmail: "testuser@test.com",
+					Timestamp:   time.Now(),
+				},
+				DeleteErr: errors.New("test error"),
+			},
+			responseCode: http.StatusInternalServerError,
+		},
+		{
+			desc:        "delete success",
+			env:         &config.Env{},
+			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			userInvitationService: &mock.MockUserInvitationService{
+				GetInvite: &goparent.UserInvitation{
+					ID:          "1",
+					UserID:      "1",
+					InviteEmail: "testuser@test.com",
+					Timestamp:   time.Now(),
+				},
+			},
+			responseCode: http.StatusNoContent,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+				UserInvitationService: tC.userInvitationService,
+			}
 
-// 	req, err := http.NewRequest("DELETE", "/user/invite/1", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	//this is needed because apparently gorilla mux doesn't do ^ and we have to set it ahead of time to work.
-// 	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+			handler := mockHandler.userDeleteInviteHandler()
+			req, _ := http.NewRequest("DELETE", "/user/invite/1", nil)
+			req = mux.SetURLVars(req, map[string]string{"id": "1"})
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser != nil {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+		})
+	}
+}
 
-// 	handler := userDeleteInviteHandler(&testEnv)
-// 	rr := httptest.NewRecorder()
-// 	ctx := req.Context()
-// 	ctx = context.WithValue(ctx, userContextKey, goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-// 	req = req.WithContext(ctx)
-
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusNoContent, rr.Code)
-// }
 func TestInitUsersHandlers(t *testing.T) {
 	//TODO: update with new handler routes
 	testCases := []struct {
