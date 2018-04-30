@@ -110,6 +110,7 @@ func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := request.ParseFromRequestWithClaims(r, request.AuthorizationHeaderExtractor, &goparent.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
 			return sh.Env.Auth.SigningKey, nil

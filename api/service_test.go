@@ -1,34 +1,142 @@
 package api
 
-// import (
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 
-// 	"github.com/stretchr/testify/assert"
-// )
+	"github.com/sasimpson/goparent"
 
-// func TestBaseHandlers(t *testing.T) {
-// 	req, err := http.NewRequest("GET", "/", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/sasimpson/goparent/config"
+	"github.com/stretchr/testify/assert"
+)
 
-// 	handler := http.HandlerFunc(apiHandler)
-// 	rr := httptest.NewRecorder()
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
+func getTestHandler() http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "thanks")
+		return
+		// panic("test entered test handler, this should not happen")
+	}
+	return http.HandlerFunc(fn)
+}
 
-// 	req, err = http.NewRequest("GET", "/info", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+//sample/test token creation.
+func makeTestToken(user *goparent.User, key interface{}) string {
+	// foo := map[string]interface{}{
+	// 	"Name":     user.Name,
+	// 	"ID":       user.ID,
+	// 	"Email":    user.Email,
+	// 	"Username": user.Username,
+	// 	"exp":      time.Now().Add(time.Hour).Unix(),
+	// }
+	// claims := &goparent.UserClaims{
+	// 	user.ID,
+	// 	user.Name,
+	// 	user.Email,
+	// 	user.Username,
+	// 	user.Password,
+	// 	jwt.StandardClaims{
+	// 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
+	// 	},
+	// }
+	// token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	log.Printf("%#v", token)
+	log.Printf("%#v", claims)
+	log.Printf("%#v", user)
+	claims["Name"] = user.Name
+	claims["ID"] = user.ID
+	claims["Email"] = user.Email
+	claims["Username"] = user.Username
+	claims["exp"] = time.Now().Add(time.Hour).Unix()
+	tokenString, err := token.SignedString(key)
 
-// 	handler = http.HandlerFunc(infoHandler)
-// 	handler.ServeHTTP(rr, req)
-// 	assert.Equal(t, http.StatusOK, rr.Code)
-// }
+	if err != nil {
+		panic(err.Error())
+	}
 
-// func TestAuthRequiredHandler(t *testing.T) {
+	return tokenString
+}
+func TestBaseHandlers(t *testing.T) {
+	req, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// }
+	handler := http.HandlerFunc(apiHandler)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	req, err = http.NewRequest("GET", "/info", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handler = http.HandlerFunc(infoHandler)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestAuthRequiredMiddleware(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		user         *goparent.User
+		responseCode int
+	}{
+		// {
+		// 	desc: "no auth",
+		// 	env: &config.Env{
+		// 		Auth: config.Authentication{
+		// 			SigningKey: []byte("testkey"),
+		// 		},
+		// 	},
+		// 	user: &goparent.User{
+		// 		ID:       "1",
+		// 		Name:     "Test User",
+		// 		Email:    "testuser@test.com",
+		// 		Username: "testuser",
+		// 		Password: "",
+		// 	},
+		// 	responseCode: http.StatusUnauthorized,
+		// },
+		{
+			desc: "with token",
+			env: &config.Env{
+				Auth: config.Authentication{
+					SigningKey: []byte("testkey"),
+				},
+			},
+			user: &goparent.User{
+				ID:       "1",
+				Name:     "Test User",
+				Email:    "testuser@test.com",
+				Username: "testuser",
+				Password: "",
+			},
+			responseCode: http.StatusUnauthorized,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{}
+
+			token := makeTestToken(tC.user, tC.env.Auth.SigningKey)
+			req, err := http.NewRequest("GET", "/test", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+			rr := httptest.NewRecorder()
+			handler := mockHandler.AuthRequired(getTestHandler())
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+		})
+	}
+}
