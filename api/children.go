@@ -6,18 +6,17 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/models"
+	"github.com/sasimpson/goparent"
 )
 
 //ChildrenResponse - response for children lists
 type ChildrenResponse struct {
-	Children []models.Child `json:"children"`
+	Children []*goparent.Child `json:"children"`
 }
 
 //ChildRequest - incoming request structure
 type ChildRequest struct {
-	ChildData models.Child `json:"childData"`
+	ChildData goparent.Child `json:"childData"`
 }
 
 //ChildDeletedResponse - response of deleted child
@@ -27,30 +26,30 @@ type ChildDeletedResponse struct {
 
 //ChildSummaryResponse - Summary response
 type ChildSummaryResponse struct {
-	ChildData models.Child `json:"childData"`
-	Stats     Summary      `json:"stats"`
+	ChildData goparent.Child `json:"childData"`
+	Stats     Summary        `json:"stats"`
 }
 
 //Summary - return structure of all summary data
 type Summary struct {
-	Feeding models.FeedingSummary `json:"feeding"`
-	Sleep   models.SleepSummary   `json:"sleep"`
-	Waste   models.WasteSummary   `json:"waste"`
+	Feeding goparent.FeedingSummary `json:"feeding"`
+	Sleep   goparent.SleepSummary   `json:"sleep"`
+	Waste   goparent.WasteSummary   `json:"waste"`
 }
 
-func initChildrenHandlers(env *config.Env, r *mux.Router) {
+func (h *Handler) initChildrenHandlers(r *mux.Router) {
 	c := r.PathPrefix("/children").Subrouter()
-	c.Handle("", AuthRequired(childrenGetHandler(env), env)).Methods("GET").Name("ChildrenGet")
-	c.Handle("", AuthRequired(childNewHandler(env), env)).Methods("POST").Name("ChildNew")
-	c.Handle("/{id}", AuthRequired(childViewHandler(env), env)).Methods("GET").Name("ChildView")
-	c.Handle("/{id}", AuthRequired(childEditHandler(env), env)).Methods("PUT").Name("ChildEdit")
-	c.Handle("/{id}", AuthRequired(childDeleteHandler(env), env)).Methods("DELETE").Name("ChildDelete")
-	c.Handle("/{id}/summary", AuthRequired(childSummary(env), env)).Methods("GET").Name("ChildSummary")
+	c.Handle("", h.AuthRequired(h.childrenGetHandler())).Methods("GET").Name("ChildrenGet")
+	c.Handle("", h.AuthRequired(h.childNewHandler())).Methods("POST").Name("ChildNew")
+	c.Handle("/{id}", h.AuthRequired(h.childViewHandler())).Methods("GET").Name("ChildView")
+	c.Handle("/{id}", h.AuthRequired(h.childEditHandler())).Methods("PUT").Name("ChildEdit")
+	c.Handle("/{id}", h.AuthRequired(h.childDeleteHandler())).Methods("DELETE").Name("ChildDelete")
+	c.Handle("/{id}/summary", h.AuthRequired(h.childSummary())).Methods("GET").Name("ChildSummary")
 
 }
 
 //ChildSummary - handler to assemble and reuturn child summary data
-func childSummary(env *config.Env) http.Handler {
+func (h *Handler) childSummary() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
 		user, err := UserFromContext(r.Context())
@@ -58,43 +57,54 @@ func childSummary(env *config.Env) http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		var summary ChildSummaryResponse
-		var child models.Child
-		err = child.GetChild(env, &user, childID)
+		child, err := h.ChildService.Child(childID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		summary.ChildData = child
 
-		feedingSummary, err := models.FeedingGetStats(env, &user, &child)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		summary.ChildData = *child
+		if child.FamilyID != family.ID {
+			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
-		summary.Stats.Feeding = feedingSummary
 
-		sleeps, err := models.SleepGetStats(env, &user, &child)
+		feedingSummary, err := h.FeedingService.Stats(child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		summary.Stats.Sleep = sleeps
+		summary.Stats.Feeding = *feedingSummary
 
-		wastes, err := models.WasteGetStats(env, &user, &child)
+		sleeps, err := h.SleepService.Stats(child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		summary.Stats.Waste = wastes
+		summary.Stats.Sleep = *sleeps
+
+		wastes, err := h.WasteService.Stats(child)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		summary.Stats.Waste = *wastes
 
 		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(summary)
 	})
 }
 
-//ChildrenGetHandler - GET / - gets all children for user
-func childrenGetHandler(env *config.Env) http.Handler {
+//childrenGetHandler - GET / - gets all children for user
+func (h *Handler) childrenGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -102,7 +112,13 @@ func childrenGetHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		allChildren, err := models.GetAllChildren(env, &user)
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		allChildren, err := h.FamilyService.Children(family)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -115,7 +131,7 @@ func childrenGetHandler(env *config.Env) http.Handler {
 }
 
 //ChildNewHandler - POST / - create a new child for a user
-func childNewHandler(env *config.Env) http.Handler {
+func (h *Handler) childNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -123,7 +139,7 @@ func childNewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		family, err := user.GetFamily(env)
+		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -142,7 +158,7 @@ func childNewHandler(env *config.Env) http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		childRequest.ChildData.ParentID = user.ID
 		childRequest.ChildData.FamilyID = family.ID
-		err = childRequest.ChildData.Save(env)
+		err = h.ChildService.Save(&childRequest.ChildData)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -153,19 +169,30 @@ func childNewHandler(env *config.Env) http.Handler {
 }
 
 //ChildViewHandler - GET /{id} - gets the data for a child for a user
-func childViewHandler(env *config.Env) http.Handler {
+func (h *Handler) childViewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		childID := mux.Vars(r)["id"]
 		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		var child models.Child
-		err = child.GetChild(env, &user, childID)
+		child, err := h.ChildService.Child(childID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		//child needs to belong to the user's family.
+		if child.FamilyID != family.ID {
+			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
 
@@ -175,15 +202,15 @@ func childViewHandler(env *config.Env) http.Handler {
 }
 
 // ChildEditHandler - PUT /{id} - edit a child for a user
-func childEditHandler(env *config.Env) http.Handler {
+func (h *Handler) childEditHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := user.GetFamily(env)
+		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -198,20 +225,18 @@ func childEditHandler(env *config.Env) http.Handler {
 		}
 
 		id := mux.Vars(r)["id"]
-		var child models.Child
-		err = child.GetChild(env, &user, id)
+		child, err := h.ChildService.Child(id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
 		//verify both the child we requested to edit, and that the parent is the user id.
 		if (child.ID != childRequest.ChildData.ID) || (childRequest.ChildData.FamilyID != family.ID) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "invalid relationship", http.StatusBadRequest)
 			return
 		}
-
-		childRequest.ChildData.Save(env)
+		h.ChildService.Save(&childRequest.ChildData)
 		err = json.NewEncoder(w).Encode(childRequest.ChildData)
 		return
 	})
@@ -219,22 +244,27 @@ func childEditHandler(env *config.Env) http.Handler {
 
 //ChildDeleteHandler - DELETE /{id} - delete a child for a user
 //TODO - need to delete or archive child and child's data.
-func childDeleteHandler(env *config.Env) http.Handler {
+func (h *Handler) childDeleteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
+		family, err := h.UserService.GetFamily(user)
 		id := mux.Vars(r)["id"]
-		var child models.Child
-		err = child.GetChild(env, &user, id)
+		child, err := h.ChildService.Child(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		deleted, err := child.DeleteChild(env, &user)
+		if child.FamilyID != family.ID {
+			http.Error(w, "not found", http.StatusNotFound)
+		}
+
+		deleted, err := h.ChildService.Delete(child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -249,21 +279,3 @@ func childDeleteHandler(env *config.Env) http.Handler {
 		json.NewEncoder(w).Encode(deletedResponse)
 	})
 }
-
-// func RandomData(env *config.Env) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		user, err := UserFromContext(r.Context())
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-// 		id := mux.Vars(r)["id"]
-// 		var child models.Child
-// 		err = child.GetChild(env, &user, id)
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusNotFound)
-// 			return
-// 		}
-
-// 	})
-// }

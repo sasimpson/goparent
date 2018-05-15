@@ -7,3 +7,5 @@ debug.test
 vendor
 .vscode
 goparent.json
+build
+goparent-*

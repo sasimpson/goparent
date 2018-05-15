@@ -4,384 +4,622 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/sasimpson/goparent"
+
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/models"
+	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
-
-	r "gopkg.in/gorethink/gorethink.v3"
 )
 
-func TestSleepNewHandler(t *testing.T) {
-	var testEnv config.Env
-
-	mock := r.NewMock()
-	mock.
-		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
-				},
-			),
-		).
-		Return(map[string]interface{}{
-			"id":           "1",
-			"admin":        "1",
-			"members":      []string{"1"},
-			"created_at":   time.Now(),
-			"last_updated": time.Now(),
-		}, nil).
-		On(
-			r.Table("sleep").MockAnything(),
-		).
-		Return(r.WriteResponse{
-			Inserted:      1,
-			Errors:        0,
-			GeneratedKeys: []string{"1"},
-		}, nil)
-	testEnv.DB.Session = mock
-
-	s := SleepRequest{SleepData: models.Sleep{UserID: "1", ChildID: "1", Start: time.Now().AddDate(0, 0, -1), End: time.Now()}}
-	js, err := json.Marshal(&s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req, err := http.NewRequest("POST", "/feeding", bytes.NewReader(js))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	handler := sleepNewHandler(&testEnv)
-	rr := httptest.NewRecorder()
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-	req = req.WithContext(ctx)
-	handler.ServeHTTP(rr, req)
-	assert.Equal(t, http.StatusOK, rr.Code)
-}
-
 func TestSleepGetHandler(t *testing.T) {
-	//TODO: test returned values
-	var testEnv config.Env
-
-	mock := r.NewMock()
-	mock.
-		On(
-			r.Table("family").Filter(
-				func(row r.Term) r.Term {
-					return row.Field("members").Contains("1")
+	testCases := []struct {
+		desc          string
+		env           *config.Env
+		userService   goparent.UserService
+		familyService goparent.FamilyService
+		sleepService  goparent.SleepService
+		contextUser   *goparent.User
+		responseCode  int
+		resultLength  int
+	}{
+		{
+			desc:          "returns auth error",
+			env:           &config.Env{},
+			userService:   &mock.MockUserService{},
+			familyService: &mock.MockFamilyService{},
+			sleepService:  &mock.MockSleepService{},
+			contextUser:   nil,
+			responseCode:  http.StatusUnauthorized,
+		},
+		{
+			desc: "returns family error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				FamilyErr: errors.New("test error"),
+			},
+			familyService: &mock.MockFamilyService{},
+			sleepService:  &mock.MockSleepService{},
+			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode:  http.StatusInternalServerError,
+		},
+		{
+			desc: "returns sleep error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
 				},
-			),
-		).
-		Return(map[string]interface{}{
-			"id":           "1",
-			"admin":        "1",
-			"members":      []string{"1"},
-			"created_at":   time.Now(),
-			"last_updated": time.Now(),
-		}, nil).
-		On(
-			r.Table("sleep").MockAnything(),
-		).
-		Return(
-			map[string]interface{}{
-				"start":    time.Now().AddDate(0, 0, -1),
-				"end":      time.Now(),
-				"userID":   "1",
-				"familyID": "1",
-				"childID":  "1",
-			}, nil,
-		)
-	testEnv.DB.Session = mock
+			},
 
-	req, err := http.NewRequest("GET", "/sleep", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	handler := sleepGetHandler(&testEnv)
-	rr := httptest.NewRecorder()
-
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-	req = req.WithContext(ctx)
-	handler.ServeHTTP(rr, req)
-	assert.Equal(t, http.StatusOK, rr.Code)
-}
-
-func TestSleepStatusHandler(t *testing.T) {
-	//TODO: verify returned values
-	testCases := []struct {
-		desc   string
-		status int
-		ret    map[string]interface{}
-		err    error
-	}{
-		{
-			desc:   "false",
-			status: http.StatusNotFound,
-			ret:    nil,
-			err:    r.ErrEmptyResult,
+			sleepService: &mock.MockSleepService{
+				GetErr: errors.New("test error"),
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusInternalServerError,
 		},
 		{
-			desc:   "true",
-			status: http.StatusOK,
-			ret: map[string]interface{}{
-				"start":    time.Now().AddDate(0, 0, -1),
-				"userID":   "1",
-				"childID":  "1",
-				"familyID": "1",
-				"id":       "1",
+			desc: "returns no sleep",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
 			},
-			err: nil,
+
+			sleepService: &mock.MockSleepService{
+				Sleeps: []*goparent.Sleep{},
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusOK,
+			resultLength: 0,
+		},
+		{
+			desc: "returns one sleep",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+
+			sleepService: &mock.MockSleepService{
+				Sleeps: []*goparent.Sleep{
+					&goparent.Sleep{ID: "1"},
+				},
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusOK,
+			resultLength: 1,
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			var testEnv config.Env
+			mockHandler := Handler{
+				Env:           tC.env,
+				UserService:   tC.userService,
+				FamilyService: tC.familyService,
+				SleepService:  tC.sleepService,
+			}
 
-			mock := r.NewMock()
-			mock.
-				On(
-					r.Table("family").Filter(
-						func(row r.Term) r.Term {
-							return row.Field("members").Contains("1")
-						},
-					),
-				).
-				Return(map[string]interface{}{
-					"id":           "1",
-					"admin":        "1",
-					"members":      []string{"1"},
-					"created_at":   time.Now(),
-					"last_updated": time.Now(),
-				}, nil).
-				On(
-					r.Table("sleep").MockAnything(),
-				).
-				Return(
-					tC.ret, tC.err,
-				)
-			testEnv.DB.Session = mock
-
-			req, err := http.NewRequest("GET", "/sleep/status", nil)
+			req, err := http.NewRequest("GET", "/sleep", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			handler := sleepToggleStatus(&testEnv)
+			handler := mockHandler.sleepGetHandler()
 			rr := httptest.NewRecorder()
 
 			ctx := req.Context()
-			ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
+			if tC.contextUser != nil {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			}
+
 			req = req.WithContext(ctx)
 			handler.ServeHTTP(rr, req)
-			assert.Equal(t, tC.status, rr.Code)
+			assert.Equal(t, tC.responseCode, rr.Code)
+			if tC.responseCode == http.StatusOK {
+				var result SleepResponse
+				decoder := json.NewDecoder(rr.Body)
+				err := decoder.Decode(&result)
+				assert.Nil(t, err)
+				assert.Equal(t, tC.resultLength, len(result.SleepData))
+			}
 		})
 	}
 }
 
-func TestSleepStartHandler(t *testing.T) {
-	//TODO: verify returned values
+func TestSleepNewHandler(t *testing.T) {
+	timestamp := time.Now()
 	testCases := []struct {
-		desc   string
-		status int
-		ret    map[string]interface{}
-		err    error
+		desc          string
+		env           *config.Env
+		sleepRequest  SleepRequest
+		userService   goparent.UserService
+		familyService goparent.FamilyService
+		sleepService  goparent.SleepService
+		contextUser   *goparent.User
+		contextError  bool
+		responseCode  int
+		resultLength  int
 	}{
 		{
-			desc:   "false, no sleep active",
-			status: http.StatusOK,
-			ret:    nil,
-			err:    r.ErrEmptyResult,
+			desc: "submit sleep",
+			env:  &config.Env{},
+			sleepRequest: SleepRequest{
+				SleepData: goparent.Sleep{
+					Start:    timestamp,
+					End:      timestamp.Add(time.Hour),
+					UserID:   "1",
+					ChildID:  "1",
+					FamilyID: "1"}},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			familyService: &mock.MockFamilyService{},
+			sleepService:  &mock.MockSleepService{},
+			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError:  false,
+			responseCode:  http.StatusOK,
+			resultLength:  0,
 		},
 		{
-			desc:   "true, sleep active",
-			status: http.StatusConflict,
-			ret: map[string]interface{}{
-				"start":    time.Now().AddDate(0, 0, -1),
-				"userID":   "1",
-				"familyID": "1",
-				"childID":  "1",
-				"id":       "1",
+			desc: "returns no family error",
+			env:  &config.Env{},
+			sleepRequest: SleepRequest{
+				SleepData: goparent.Sleep{
+					Start:    timestamp,
+					End:      timestamp.Add(time.Hour),
+					UserID:   "1",
+					ChildID:  "1",
+					FamilyID: "1"}},
+			userService: &mock.MockUserService{
+				FamilyErr: errors.New("user has no current family"),
 			},
-			err: nil,
+			familyService: &mock.MockFamilyService{},
+			sleepService:  &mock.MockSleepService{},
+			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError:  false,
+			responseCode:  http.StatusInternalServerError,
+		},
+		{
+			desc: "returns sleep error",
+			env:  &config.Env{},
+			sleepRequest: SleepRequest{
+				SleepData: goparent.Sleep{
+					Start:    timestamp,
+					End:      timestamp.Add(time.Hour),
+					UserID:   "1",
+					ChildID:  "1",
+					FamilyID: "1"}},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			familyService: &mock.MockFamilyService{},
+			sleepService: &mock.MockSleepService{
+				GetErr: errors.New("unknown sleep error"),
+			},
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError: false,
+			responseCode: http.StatusConflict,
+		},
+		{
+			desc: "returns auth error",
+			env:  &config.Env{},
+			sleepRequest: SleepRequest{
+				SleepData: goparent.Sleep{
+					Start:    timestamp,
+					End:      timestamp.Add(time.Hour),
+					UserID:   "1",
+					ChildID:  "1",
+					FamilyID: "1"}},
+			userService:   &mock.MockUserService{},
+			familyService: &mock.MockFamilyService{},
+			sleepService:  &mock.MockSleepService{},
+			contextUser:   &goparent.User{},
+			contextError:  true,
+			responseCode:  http.StatusUnauthorized,
+		},
+		{
+			desc: "decode input error",
+			env:  &config.Env{},
+			userService: &mock.MockUserService{
+				Family: &goparent.Family{
+					ID:          "1",
+					Admin:       "1",
+					Members:     []string{"1"},
+					CreatedAt:   time.Now(),
+					LastUpdated: time.Now(),
+				},
+			},
+			familyService: &mock.MockFamilyService{},
+			sleepService:  &mock.MockSleepService{},
+			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			contextError:  false,
+			responseCode:  http.StatusInternalServerError,
 		},
 	}
-
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			var testEnv config.Env
+			mockHandler := Handler{
+				Env:           tC.env,
+				UserService:   tC.userService,
+				FamilyService: tC.familyService,
+				SleepService:  tC.sleepService,
+			}
 
-			mock := r.NewMock()
-			mock.
-				On(
-					r.Table("family").Filter(
-						func(row r.Term) r.Term {
-							return row.Field("members").Contains("1")
-						},
-					),
-				).
-				Return(map[string]interface{}{
-					"id":           "1",
-					"admin":        "1",
-					"members":      []string{"1"},
-					"created_at":   time.Now(),
-					"last_updated": time.Now(),
-				}, nil).
-				On(
-					r.Table("sleep").MockAnything(),
-				).
-				Return(
-					tC.ret, tC.err,
-				)
-			testEnv.DB.Session = mock
-
-			req, err := http.NewRequest("GET", "/sleep/start", nil)
+			js, err := json.Marshal(&tC.sleepRequest)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if (tC.sleepRequest == SleepRequest{}) {
+				js = []byte("this is a test")
+			}
+			req, err := http.NewRequest("POST", "/sleep", bytes.NewReader(js))
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			handler := sleepStartHandler(&testEnv)
+			handler := mockHandler.sleepNewHandler()
 			rr := httptest.NewRecorder()
-
 			ctx := req.Context()
-			ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-			req = req.WithContext(ctx)
-			handler.ServeHTTP(rr, req)
-			assert.Equal(t, tC.status, rr.Code)
-		})
-	}
-}
-
-func TestSleepEndHandler(t *testing.T) {
-	//TODO: verify returned values
-	testCases := []struct {
-		desc   string
-		status int
-		ret    map[string]interface{}
-		err    error
-	}{
-		{
-			desc:   "false, no sleep active",
-			status: http.StatusNotFound,
-			ret:    nil,
-			err:    r.ErrEmptyResult,
-		},
-		{
-			desc:   "true, sleep active",
-			status: http.StatusOK,
-			ret: map[string]interface{}{
-				"start":  time.Now().AddDate(0, 0, -1),
-				"userid": "1",
-				"id":     "1",
-			},
-			err: nil,
-		},
-	}
-
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			var testEnv config.Env
-
-			mock := r.NewMock()
-			mock.
-				On(
-					r.Table("family").Filter(
-						func(row r.Term) r.Term {
-							return row.Field("members").Contains("1")
-						},
-					),
-				).
-				Return(map[string]interface{}{
-					"id":           "1",
-					"admin":        "1",
-					"members":      []string{"1"},
-					"created_at":   time.Now(),
-					"last_updated": time.Now(),
-				}, nil).
-				On(
-					r.Table("sleep").MockAnything(),
-				).
-				Return(
-					tC.ret, tC.err,
-				)
-			testEnv.DB.Session = mock
-
-			req, err := http.NewRequest("GET", "/sleep/end", nil)
-			if err != nil {
-				t.Fatal(err)
+			if tC.contextError == true {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
 			}
-
-			handler := sleepEndHandler(&testEnv)
-			rr := httptest.NewRecorder()
-
-			ctx := req.Context()
-			ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
 			req = req.WithContext(ctx)
 			handler.ServeHTTP(rr, req)
-			assert.Equal(t, tC.status, rr.Code)
+			assert.Equal(t, tC.responseCode, rr.Code)
+			// if tC.responseCode == http.StatusOK {
+
+			// }
 		})
 	}
 }
 
 func TestSleepViewHandler(t *testing.T) {
-	var testEnv config.Env
-
-	req, err := http.NewRequest("GET", "/sleep/1", nil)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepViewHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "GET",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepViewHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "GET",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
 	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	handler := sleepViewHandler(&testEnv)
-	rr := httptest.NewRecorder()
+			handler := mockHandler.sleepViewHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-	req = req.WithContext(ctx)
-	handler.ServeHTTP(rr, req)
-	assert.Equal(t, http.StatusOK, rr.Code)
+		})
+	}
 }
 
 func TestSleepEditHandler(t *testing.T) {
-	var testEnv config.Env
-
-	req, err := http.NewRequest("GET", "/sleep/1", nil)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepEditHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "PUT",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepEditHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "PUT",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
 	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	handler := sleepEditHandler(&testEnv)
-	rr := httptest.NewRecorder()
+			handler := mockHandler.sleepEditHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-	req = req.WithContext(ctx)
-	handler.ServeHTTP(rr, req)
-	assert.Equal(t, http.StatusOK, rr.Code)
+		})
+	}
 }
 
 func TestSleepDeleteHandler(t *testing.T) {
-	var testEnv config.Env
-
-	req, err := http.NewRequest("GET", "/sleep/1", nil)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepDeleteHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "DELETE",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepDeleteHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/1",
+			method:       "DELETE",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
 	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	handler := sleepDeleteHandler(&testEnv)
-	rr := httptest.NewRecorder()
+			handler := mockHandler.sleepDeleteHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
 
-	ctx := req.Context()
-	ctx = context.WithValue(ctx, userContextKey, models.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"})
-	req = req.WithContext(ctx)
-	handler.ServeHTTP(rr, req)
-	assert.Equal(t, http.StatusOK, rr.Code)
+		})
+	}
+}
+
+func TestSleepStartHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepStartHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/start",
+			method:       "POST",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepStartHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/start",
+			method:       "POST",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			handler := mockHandler.sleepStartHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+
+		})
+	}
+}
+
+func TestSleepEndHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepStartHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/end",
+			method:       "POST",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepStartHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/end",
+			method:       "POST",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			handler := mockHandler.sleepEndHandler()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+
+		})
+	}
+}
+
+func TestSleepToggleStatusHandler(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		env          *config.Env
+		route        string
+		method       string
+		responseCode int
+		contextUser  *goparent.User
+	}{
+		{
+			desc:         "sleepToggleStatusHandler unauthorized",
+			env:          &config.Env{},
+			route:        "/sleep/status",
+			method:       "GET",
+			responseCode: http.StatusUnauthorized,
+			contextUser:  nil,
+		},
+		{
+			desc:         "sleepToggleStatusHandler not impl",
+			env:          &config.Env{},
+			route:        "/sleep/status",
+			method:       "GET",
+			responseCode: http.StatusNotImplemented,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mockHandler := Handler{
+				Env: tC.env,
+			}
+			req, err := http.NewRequest(tC.method, tC.route, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			handler := mockHandler.sleepToggleStatus()
+			rr := httptest.NewRecorder()
+			ctx := req.Context()
+			if tC.contextUser == nil {
+				ctx = context.WithValue(ctx, userContextKey, "")
+			} else {
+				ctx = context.WithValue(ctx, userContextKey, tC.contextUser)
+			}
+			req = req.WithContext(ctx)
+			handler.ServeHTTP(rr, req)
+			assert.Equal(t, tC.responseCode, rr.Code)
+
+		})
+	}
 }
 
 func TestInitSleepHandlers(t *testing.T) {
@@ -442,8 +680,9 @@ func TestInitSleepHandlers(t *testing.T) {
 	}
 
 	var testEnv config.Env
+	h := Handler{Env: &testEnv}
 	routes := mux.NewRouter()
-	initSleepHandlers(&testEnv, routes)
+	h.initSleepHandlers(routes)
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {

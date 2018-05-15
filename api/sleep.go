@@ -1,40 +1,38 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
 	"encoding/json"
 
 	"github.com/gorilla/mux"
-	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/models"
+	"github.com/sasimpson/goparent"
 )
 
 //SleepRequest - request structure for sleep
 type SleepRequest struct {
-	SleepData models.Sleep `json:"sleepData"`
+	SleepData goparent.Sleep `json:"sleepData"`
 }
 
 //SleepResponse - response structure for sleep
 type SleepResponse struct {
-	SleepData []models.Sleep `json:"sleepData"`
+	SleepData []*goparent.Sleep `json:"sleepData"`
 }
 
-func initSleepHandlers(env *config.Env, r *mux.Router) {
+func (h *Handler) initSleepHandlers(r *mux.Router) {
 	s := r.PathPrefix("/sleep").Subrouter()
-	s.Handle("", AuthRequired(sleepGetHandler(env), env)).Methods("GET").Name("SleepGet")
-	s.Handle("", AuthRequired(sleepNewHandler(env), env)).Methods("POST").Name("SleepNew")
-	s.Handle("/status", AuthRequired(sleepToggleStatus(env), env)).Methods("GET").Name("SleepStatus")
-	s.Handle("/start", AuthRequired(sleepStartHandler(env), env)).Methods("POST").Name("SleepStart")
-	s.Handle("/end", AuthRequired(sleepEndHandler(env), env)).Methods("POST").Name("SleepEnd")
-	s.Handle("/{id}", AuthRequired(sleepViewHandler(env), env)).Methods("GET").Name("SleepView")
-	s.Handle("/{id}", AuthRequired(sleepEditHandler(env), env)).Methods("PUT").Name("SleepEdit")
-	s.Handle("/{id}", AuthRequired(sleepDeleteHandler(env), env)).Methods("DELETE").Name("SleepDelete")
+	s.Handle("", h.AuthRequired(h.sleepGetHandler())).Methods("GET").Name("SleepGet")
+	s.Handle("", h.AuthRequired(h.sleepNewHandler())).Methods("POST").Name("SleepNew")
+	s.Handle("/status", h.AuthRequired(h.sleepToggleStatus())).Methods("GET").Name("SleepStatus")
+	s.Handle("/start", h.AuthRequired(h.sleepStartHandler())).Methods("POST").Name("SleepStart")
+	s.Handle("/end", h.AuthRequired(h.sleepEndHandler())).Methods("POST").Name("SleepEnd")
+	s.Handle("/{id}", h.AuthRequired(h.sleepViewHandler())).Methods("GET").Name("SleepView")
+	s.Handle("/{id}", h.AuthRequired(h.sleepEditHandler())).Methods("PUT").Name("SleepEdit")
+	s.Handle("/{id}", h.AuthRequired(h.sleepDeleteHandler())).Methods("DELETE").Name("SleepDelete")
 }
 
-func sleepGetHandler(env *config.Env) http.Handler {
+func (h *Handler) sleepGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -42,8 +40,13 @@ func sleepGetHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		var sleep models.Sleep
-		sleepData, err := sleep.GetAll(env, &user)
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		sleepData, err := h.SleepService.Sleep(family)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -55,7 +58,7 @@ func sleepGetHandler(env *config.Env) http.Handler {
 	})
 }
 
-func sleepViewHandler(env *config.Env) http.Handler {
+func (h *Handler) sleepViewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
@@ -63,12 +66,11 @@ func sleepViewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		id := mux.Vars(r)["id"]
-		fmt.Fprintf(w, "GET with id %s", id)
+		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
 
-func sleepEditHandler(env *config.Env) http.Handler {
+func (h *Handler) sleepEditHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
@@ -76,12 +78,11 @@ func sleepEditHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		id := mux.Vars(r)["id"]
-		fmt.Fprintf(w, "PUT with id %s", id)
+		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
 
-func sleepNewHandler(env *config.Env) http.Handler {
+func (h *Handler) sleepNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//how time should be passed "2017-03-09T18:09:31.409Z"
 		user, err := UserFromContext(r.Context())
@@ -90,7 +91,7 @@ func sleepNewHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		family, err := user.GetFamily(env)
+		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -100,7 +101,6 @@ func sleepNewHandler(env *config.Env) http.Handler {
 		var sleepRequest SleepRequest
 		err = decoder.Decode(&sleepRequest)
 		if err != nil {
-			log.Panicln(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -109,7 +109,7 @@ func sleepNewHandler(env *config.Env) http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		sleepRequest.SleepData.UserID = user.ID
 		sleepRequest.SleepData.FamilyID = family.ID
-		err = sleepRequest.SleepData.Save(env)
+		err = h.SleepService.Save(&sleepRequest.SleepData)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -120,7 +120,7 @@ func sleepNewHandler(env *config.Env) http.Handler {
 	})
 }
 
-func sleepDeleteHandler(env *config.Env) http.Handler {
+func (h *Handler) sleepDeleteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {
@@ -128,80 +128,89 @@ func sleepDeleteHandler(env *config.Env) http.Handler {
 			return
 		}
 
-		id := mux.Vars(r)["id"]
-		fmt.Fprintf(w, "DELETE with id %s", id)
+		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
 
-func sleepStartHandler(env *config.Env) http.Handler {
+func (h *Handler) sleepStartHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep start")
-		user, err := UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		var sleep models.Sleep
-		err = sleep.SleepStart(env, &user)
-		if err != nil {
-			log.Println("error", err.Error())
-			if err == models.ErrExistingStart {
-				http.Error(w, err.Error(), http.StatusConflict)
-				return
-			}
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		sleep.UserID = user.ID
-		sleep.Save(env)
-		fmt.Fprintf(w, "started Sleep")
-		return
+		// family, err := h.UserService.GetFamily(user)
+		// if err != nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+
+		// h.SleepService.Start(sleep, family, child)
+		// err = sleep.SleepStart(env, &user)
+		// if err != nil {
+		// 	log.Println("error", err.Error())
+		// 	if err == models.ErrExistingStart {
+		// 		http.Error(w, err.Error(), http.StatusConflict)
+		// 		return
+		// 	}
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+		// sleep.UserID = user.ID
+		// sleep.Save(env)
+		// fmt.Fprintf(w, "started Sleep")
+		// return
+		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
 
-func sleepEndHandler(env *config.Env) http.Handler {
+func (h *Handler) sleepEndHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep end")
-		user, err := UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		var sleep models.Sleep
-		err = sleep.SleepEnd(env, &user)
-		if err != nil {
-			if err == models.ErrNoExistingSession {
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return
-			}
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		sleep.UserID = user.ID
-		sleep.Save(env)
-		fmt.Fprintf(w, "ended Sleep")
+		// var sleep models.Sleep
+		// err = sleep.SleepEnd(env, &user)
+		// if err != nil {
+		// 	if err == models.ErrNoExistingSession {
+		// 		http.Error(w, err.Error(), http.StatusNotFound)
+		// 		return
+		// 	}
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+		// sleep.UserID = user.ID
+		// sleep.Save(env)
+		// fmt.Fprintf(w, "ended Sleep")
+		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
 
-func sleepToggleStatus(env *config.Env) http.Handler {
+func (h *Handler) sleepToggleStatus() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep toggle status")
-		user, err := UserFromContext(r.Context())
+		_, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		var sleep models.Sleep
-		ok, err := sleep.Status(env, &user)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		if ok {
-			fmt.Fprintf(w, "sleep session active")
-			return
-		}
-		http.Error(w, "not found", http.StatusNotFound)
-		return
+		// var sleep models.Sleep
+		// ok, err := sleep.Status(env, &user)
+		// if err != nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// }
+		// if ok {
+		// 	fmt.Fprintf(w, "sleep session active")
+		// 	return
+		// }
+		// http.Error(w, "not found", http.StatusNotFound)
+		// return
+		http.Error(w, "not implemented", http.StatusNotImplemented)
+
 	})
 }

@@ -14,8 +14,9 @@ import (
 	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/models"
+	"github.com/sasimpson/goparent/rethinkdb"
 )
 
 type contextKey string
@@ -28,6 +29,20 @@ const (
 	jsonContentType string     = "application/json"
 	userContextKey  contextKey = "user"
 )
+
+//Handler - this is the handler struct that contains all of the interfaces for
+// the api.  the implementation can be changed by inserting different implementations
+// of the interface
+type Handler struct {
+	UserService           goparent.UserService
+	UserInvitationService goparent.UserInvitationService
+	FamilyService         goparent.FamilyService
+	ChildService          goparent.ChildService
+	FeedingService        goparent.FeedingService
+	SleepService          goparent.SleepService
+	WasteService          goparent.WasteService
+	Env                   *config.Env
+}
 
 //ServiceInfo - return data about the service
 type ServiceInfo struct {
@@ -47,16 +62,27 @@ type ErrService struct {
 func RunService(env *config.Env) {
 	log.SetOutput(os.Stdout)
 
+	serviceHandler := Handler{
+		UserService:           &rethinkdb.UserService{Env: env},
+		UserInvitationService: &rethinkdb.UserInviteService{Env: env},
+		FamilyService:         &rethinkdb.FamilyService{Env: env},
+		ChildService:          &rethinkdb.ChildService{Env: env},
+		FeedingService:        &rethinkdb.FeedingService{Env: env},
+		SleepService:          &rethinkdb.SleepService{Env: env},
+		WasteService:          &rethinkdb.WasteService{Env: env},
+		Env:                   env,
+	}
+
 	r := mux.NewRouter()
 	a := r.PathPrefix("/api").Subrouter()
 	a.HandleFunc("/", apiHandler)
 	a.HandleFunc("/info", infoHandler)
 
-	initUsersHandlers(env, a)
-	initFeedingHandlers(env, a)
-	initSleepHandlers(env, a)
-	initWasteHandlers(env, a)
-	initChildrenHandlers(env, a)
+	serviceHandler.initUsersHandlers(a)
+	serviceHandler.initChildrenHandlers(a)
+	serviceHandler.initFeedingHandlers(a)
+	serviceHandler.initSleepHandlers(a)
+	serviceHandler.initWasteHandlers(a)
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
@@ -80,22 +106,26 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //AuthRequired - handler to handle authentication of users tokens.
-func AuthRequired(h http.Handler, env *config.Env) http.Handler {
+func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := request.ParseFromRequestWithClaims(r, request.AuthorizationHeaderExtractor, &models.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := request.ParseFromRequestWithClaims(r, request.AuthorizationHeaderExtractor, &goparent.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
-			return env.Auth.SigningKey, nil
+			return sh.Env.Auth.SigningKey, nil
 		})
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		var user models.User
-		if claims, ok := token.Claims.(*models.UserClaims); ok && token.Valid {
-			user.GetUser(env, claims.ID)
+		if claims, ok := token.Claims.(*goparent.UserClaims); ok && token.Valid {
+			user, err := sh.UserService.User(claims.ID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			ctx := context.WithValue(r.Context(), userContextKey, user)
 			r = r.WithContext(ctx)
 			h.ServeHTTP(w, r)
@@ -107,10 +137,10 @@ func AuthRequired(h http.Handler, env *config.Env) http.Handler {
 }
 
 //UserFromContext - helper to get the user from the request context
-func UserFromContext(ctx context.Context) (models.User, error) {
-	user, ok := ctx.Value(userContextKey).(models.User)
+func UserFromContext(ctx context.Context) (*goparent.User, error) {
+	user, ok := ctx.Value(userContextKey).(*goparent.User)
 	if !ok {
-		return models.User{}, errors.New("no user found in context")
+		return nil, errors.New("no user found in context")
 	}
 	return user, nil
 }
