@@ -4,27 +4,12 @@ a go based infant data tracking system for my graduate program web engineering c
 
 ## requirements
 
-1. running instance of rethinkdb with tables:
-    - users
-    - sleep
-    - feeding
-    - waste
-2. gui front end [here](https://github.com/sasimpson/goparentgui)
-3. go service running
+Docker, Docker Compose
 
 to run do this:
 
-    go get -u 
-    go run 
+   cd docker
+   docker-compose up
 
-or this:  
+the service should be availble on port 8000
 
-    go get -u 
-    go build
-    ./main
-
-
-## ToDo:
-
-- [x] handle multiple kids
-- [ ] add in some statistical analysis of data
