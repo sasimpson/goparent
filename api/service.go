@@ -51,6 +51,7 @@ type ServiceInfo struct {
 	Hostname string `json:"hostname"`
 }
 
+//Pagination - structure to hold the pagination data for service calls and responses
 type Pagination struct {
 	Skip  uint64
 	Take  uint64
