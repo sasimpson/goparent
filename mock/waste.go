@@ -20,7 +20,7 @@ func (m *MockWasteService) Save(*goparent.Waste) error {
 	return nil
 }
 
-func (m *MockWasteService) Waste(*goparent.Family) ([]*goparent.Waste, error) {
+func (m *MockWasteService) Waste(*goparent.Family, uint64) ([]*goparent.Waste, error) {
 	if m.GetErr != nil {
 		return nil, m.GetErr
 	}

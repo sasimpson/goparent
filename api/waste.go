@@ -16,6 +16,7 @@ type WasteRequest struct {
 
 //WasteResponse - response structure for waste
 type WasteResponse struct {
+	Pagination
 	WasteData []*goparent.Waste `json:"wasteData"`
 }
 
@@ -36,18 +37,20 @@ func (h *Handler) wasteGetHandler() http.Handler {
 			return
 		}
 
+		pagination := getPagination(r)
+
 		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		wasteData, err := h.WasteService.Waste(family)
+		wasteData, err := h.WasteService.Waste(family, pagination.Days)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		wasteResponse := WasteResponse{WasteData: wasteData}
+		wasteResponse := WasteResponse{WasteData: wasteData, Pagination: *pagination}
 		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(wasteResponse)
 	})

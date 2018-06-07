@@ -79,7 +79,7 @@ func TestGetWastes(t *testing.T) {
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			tC.env.DB = config.DBEnv{Session: mock}
 			fs := WasteService{Env: tC.env}
-			wasteResult, err := fs.Waste(tC.family)
+			wasteResult, err := fs.Waste(tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {

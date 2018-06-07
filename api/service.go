@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"encoding/json"
 
@@ -48,6 +49,13 @@ type Handler struct {
 type ServiceInfo struct {
 	Version  string `json:"version"`
 	Hostname string `json:"hostname"`
+}
+
+type Pagination struct {
+	Skip  uint64
+	Take  uint64
+	Total uint64
+	Days  uint64
 }
 
 //ErrService - error message format for service calls
@@ -143,4 +151,14 @@ func UserFromContext(ctx context.Context) (*goparent.User, error) {
 		return nil, errors.New("no user found in context")
 	}
 	return user, nil
+}
+
+func getPagination(r *http.Request) *Pagination {
+	q := r.URL.Query()
+
+	days, err := strconv.ParseUint(q.Get("days"), 10, 64)
+	if err != nil {
+		days = 7
+	}
+	return &Pagination{Days: days}
 }

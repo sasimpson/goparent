@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"log"
 	"time"
 
 	"github.com/sasimpson/goparent"
@@ -32,17 +33,20 @@ func (ws *WasteService) Save(waste *goparent.Waste) error {
 }
 
 //Waste - get all waste by user and child id.
-func (ws *WasteService) Waste(family *goparent.Family) ([]*goparent.Waste, error) {
+func (ws *WasteService) Waste(family *goparent.Family, days uint64) ([]*goparent.Waste, error) {
 	session, err := ws.Env.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
+	daysBack := int(0 - days)
+	log.Printf("days back: %d", daysBack)
 	res, err := gorethink.Table("waste").
 		Filter(
 			map[string]interface{}{
 				"familyID": family.ID,
 			}).
+		Filter(gorethink.Row.Field("timestamp").During(time.Now().AddDate(0, 0, daysBack), time.Now())).
 		OrderBy(gorethink.Desc("timestamp")).Run(session)
 	if err != nil {
 		return nil, err
