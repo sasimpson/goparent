@@ -102,3 +102,22 @@ func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, er
 	}
 	return &summary, nil
 }
+
+func (ws *WasteService) GraphData(child *goparent.Child) error {
+	// session, err := ws.Env.DB.GetConnection()
+	// if err != nil {
+	// 	return err
+	// }
+
+	/*
+		r.db("goparent")
+			.table("waste")
+			.filter(r.row("timestamp")
+				.during(r.time(2018,6,7,"Z"),r.now()))
+			.group([r.row("timestamp").year(), r.row("timestamp").month(),r.row("timestamp").day(), r.row("wasteType")])
+			.count()
+	*/
+
+	return nil
+
+}

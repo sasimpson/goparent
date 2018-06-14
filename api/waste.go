@@ -24,6 +24,7 @@ func (h *Handler) initWasteHandlers(r *mux.Router) {
 	w := r.PathPrefix("/waste").Subrouter()
 	w.Handle("", h.AuthRequired(h.wasteGetHandler())).Methods("GET").Name("WasteGet")
 	w.Handle("", h.AuthRequired(h.wasteNewHandler())).Methods("POST").Name("WasteNew")
+	w.Handle("/graph", h.AuthRequired(h.wasteGraphDataHandler())).Methods("GET").Name("WasteGraphData")
 	w.Handle("/{id}", h.AuthRequired(h.wasteViewHandler())).Methods("GET").Name("WasteView")
 	w.Handle("/{id}", h.AuthRequired(h.wasteEditHandler())).Methods("PUT").Name("WasteEdit")
 	w.Handle("/{id}", h.AuthRequired(h.wasteDeleteHandler())).Methods("DELETE").Name("WasteDelete")
@@ -120,6 +121,18 @@ func (h *Handler) wasteNewHandler() http.Handler {
 }
 
 func (h *Handler) wasteDeleteHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		http.Error(w, "not implemented", http.StatusNotImplemented)
+	})
+}
+
+func (h *Handler) wasteGraphDataHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := UserFromContext(r.Context())
 		if err != nil {

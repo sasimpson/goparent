@@ -165,4 +165,5 @@ type WasteService interface {
 	Save(*Waste) error
 	Waste(*Family, uint64) ([]*Waste, error)
 	Stats(*Child) (*WasteSummary, error)
+	GraphData(*Child) error
 }
