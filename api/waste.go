@@ -24,7 +24,7 @@ func (h *Handler) initWasteHandlers(r *mux.Router) {
 	w := r.PathPrefix("/waste").Subrouter()
 	w.Handle("", h.AuthRequired(h.wasteGetHandler())).Methods("GET").Name("WasteGet")
 	w.Handle("", h.AuthRequired(h.wasteNewHandler())).Methods("POST").Name("WasteNew")
-	w.Handle("/graph", h.AuthRequired(h.wasteGraphDataHandler())).Methods("GET").Name("WasteGraphData")
+	w.Handle("/graph/{id}", h.AuthRequired(h.wasteGraphDataHandler())).Methods("GET").Name("WasteGraphData")
 	w.Handle("/{id}", h.AuthRequired(h.wasteViewHandler())).Methods("GET").Name("WasteView")
 	w.Handle("/{id}", h.AuthRequired(h.wasteEditHandler())).Methods("PUT").Name("WasteEdit")
 	w.Handle("/{id}", h.AuthRequired(h.wasteDeleteHandler())).Methods("DELETE").Name("WasteDelete")
@@ -134,12 +134,37 @@ func (h *Handler) wasteDeleteHandler() http.Handler {
 
 func (h *Handler) wasteGraphDataHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := UserFromContext(r.Context())
+		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
+		childID := mux.Vars(r)["id"]
+
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		child, err := h.ChildService.Child(childID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		//child needs to belong to the user's family.
+		if child.FamilyID != family.ID {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
+		err = h.WasteService.GraphData(child)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		http.Error(w, "not implemented", http.StatusNotImplemented)
 	})
 }
