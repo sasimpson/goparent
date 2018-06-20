@@ -49,7 +49,7 @@ func (h *Handler) feedingGetHandler() http.Handler {
 		}
 
 		feedingResponse := FeedingResponse{FeedingData: feedingData}
-		log.Printf("feedingResponse %#v", feedingResponse)
+		// log.Printf("feedingResponse %#v", feedingResponse)
 		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(feedingResponse)
 	})

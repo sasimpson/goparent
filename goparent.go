@@ -156,6 +156,12 @@ type WasteSummary struct {
 	Total map[int]int `json:"total"`
 }
 
+type WasteGraphData struct {
+	Date  time.Time `json:"date"`
+	Type  int       `json:"type"`
+	Count int       `json:"count"`
+}
+
 //WasteType - the type of waste, solid, liquid, solid & liquid
 type WasteType struct {
 	Name string `json:"name"`
@@ -165,5 +171,5 @@ type WasteService interface {
 	Save(*Waste) error
 	Waste(*Family, uint64) ([]*Waste, error)
 	Stats(*Child) (*WasteSummary, error)
-	GraphData(*Child) error
+	GraphData(*Child) (*[]WasteGraphData, error)
 }

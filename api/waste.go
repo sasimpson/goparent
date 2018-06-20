@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -100,7 +99,6 @@ func (h *Handler) wasteNewHandler() http.Handler {
 		var wasteRequest WasteRequest
 		err = decoder.Decode(&wasteRequest)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -111,7 +109,6 @@ func (h *Handler) wasteNewHandler() http.Handler {
 		wasteRequest.WasteData.FamilyID = family.ID
 		err = h.WasteService.Save(&wasteRequest.WasteData)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
@@ -160,11 +157,12 @@ func (h *Handler) wasteGraphDataHandler() http.Handler {
 			return
 		}
 
-		err = h.WasteService.GraphData(child)
+		wasteGraphData, err := h.WasteService.GraphData(child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		http.Error(w, "not implemented", http.StatusNotImplemented)
+		w.Header().Set("Content-Type", jsonContentType)
+		json.NewEncoder(w).Encode(wasteGraphData)
 	})
 }
