@@ -6,11 +6,13 @@ import (
 )
 
 type MockWasteService struct {
-	Env     *config.Env
-	Wastes  []*goparent.Waste
-	Stat    *goparent.WasteSummary
-	GetErr  error
-	StatErr error
+	Env      *config.Env
+	Wastes   []*goparent.Waste
+	Stat     *goparent.WasteSummary
+	Graph    *goparent.Chart
+	GetErr   error
+	StatErr  error
+	GraphErr error
 }
 
 func (m *MockWasteService) Save(*goparent.Waste) error {
@@ -38,5 +40,15 @@ func (m *MockWasteService) Stats(*goparent.Child) (*goparent.WasteSummary, error
 		return m.Stat, nil
 	}
 
+	return nil, nil
+}
+
+func (m *MockWasteService) GraphData(*goparent.Child) (*goparent.Chart, error) {
+	if m.GraphErr != nil {
+		return nil, m.GraphErr
+	}
+	if m.Graph != nil {
+		return m.Graph, nil
+	}
 	return nil, nil
 }

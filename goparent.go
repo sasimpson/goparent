@@ -171,5 +171,17 @@ type WasteService interface {
 	Save(*Waste) error
 	Waste(*Family, uint64) ([]*Waste, error)
 	Stats(*Child) (*WasteSummary, error)
-	GraphData(*Child) (*[]WasteGraphData, error)
+	GraphData(*Child) (*WasteChartData, error)
+}
+
+type WasteChartData struct {
+	Start   time.Time           `json:"start"`
+	End     time.Time           `json:"end"`
+	Dataset []WasteChartDataset `json:"dataset"`
+}
+
+type WasteChartDataset struct {
+	Date  time.Time `json:"date"`
+	Type  int       `json:"type"`
+	Count int       `json:"count"`
 }

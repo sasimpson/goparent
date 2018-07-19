@@ -145,7 +145,7 @@ func generateRandomDiaper(env *config.Env, child *goparent.Child, user *goparent
 			ChildID:   child.ID,
 			UserID:    user.ID,
 			FamilyID:  family.ID,
-			Type:      r.Intn(2) + 1,
+			Type:      r.Intn(3) + 1,
 		}
 		wasteService.Save(diaper)
 	}

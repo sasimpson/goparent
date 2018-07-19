@@ -162,6 +162,11 @@ func (h *Handler) wasteGraphDataHandler() http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// chartData := goparent.WasteChartData{Type: "bar"}
+		// for i, x := range wasteGraphData {
+		// 	x.
+		// }
 		w.Header().Set("Content-Type", jsonContentType)
 		json.NewEncoder(w).Encode(wasteGraphData)
 	})

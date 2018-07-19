@@ -14,7 +14,7 @@ type WasteService struct {
 	Env *config.Env
 }
 
-type graphData struct {
+type reductionData struct {
 	Group     []int `gorethink:"group"`
 	Reduction int   `gorethink:"reduction"`
 }
@@ -107,7 +107,7 @@ func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, er
 	return &summary, nil
 }
 
-func (ws *WasteService) GraphData(child *goparent.Child) (*[]goparent.WasteGraphData, error) {
+func (ws *WasteService) GraphData(child *goparent.Child) (*goparent.WasteChartData, error) {
 	session, err := ws.Env.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -115,47 +115,46 @@ func (ws *WasteService) GraphData(child *goparent.Child) (*[]goparent.WasteGraph
 
 	end := time.Now()
 	start := end.AddDate(0, 0, -7)
-
+	/*
+			r.db("goparent")
+			.table("waste")
+			.filter(r.row("timestamp")
+				.during(r.time(2018,6,7,"Z"),r.now()))
+			.group([r.row("timestamp").year(), r.row("timestamp").month(), r.row("timestamp").day()])
+			.map(function(row){
+				return row("wasteType")
+		  })
+	*/
 	res, err := gorethink.Table("waste").
-		Filter(gorethink.Row.Field("timestamp").During(start, end)).
+		Filter(gorethink.Row.Field("timestamp").During(start, end)).OrderBy("timestamp").
 		Group(
 			gorethink.Row.Field("timestamp").Year(),
 			gorethink.Row.Field("timestamp").Month(),
 			gorethink.Row.Field("timestamp").Day(),
-			gorethink.Row.Field("wasteType")).
-		Count().Run(session)
-	/*
-		r.db("goparent")
-			.table("waste")
-			.filter(r.row("timestamp")
-				.during(r.time(2018,6,7,"Z"),r.now()))
-			.group([r.row("timestamp").year(), r.row("timestamp").month(),r.row("timestamp").day(), r.row("wasteType")])
-			.count()
-	*/
+			gorethink.Row.Field("wasteType"),
+		).Count().
+		Run(session)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Close()
 
-	var data []graphData
+	var data []reductionData
 	err = res.All(&data)
 	if err != nil {
 		return nil, err
 	}
 
-	var wasteGraphData []goparent.WasteGraphData
+	chartData := &goparent.WasteChartData{Start: start, End: end, Dataset: make([]goparent.WasteChartDataset, 1)}
+	// graph.Data = goparent.ChartData{Datasets: []goparent.ChartDataset{}}
 	for _, line := range data {
-		var wgd goparent.WasteGraphData
-		wgdDate, err := time.Parse("2006-01-02", fmt.Sprintf("%d-%02d-%02d", line.Group[0], line.Group[1], line.Group[2]))
+		gdDate, err := time.Parse("2006-01-02", fmt.Sprintf("%d-%02d-%02d", line.Group[0], line.Group[1], line.Group[2]))
 		if err != nil {
 			return nil, err
 		}
-		wgd.Date = wgdDate
-		wgd.Count = line.Reduction
-		wgd.Type = line.Group[3]
-		wasteGraphData = append(wasteGraphData, wgd)
+
+		dataset := goparent.WasteChartDataset{Date: gdDate, Type: line.Group[3], Count: line.Reduction}
+		chartData.Dataset = append(chartData.Dataset, dataset)
 	}
-
-	return &wasteGraphData, nil
-
+	return chartData, nil
 }

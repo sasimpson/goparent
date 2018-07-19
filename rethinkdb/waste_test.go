@@ -24,10 +24,11 @@ func TestGetWastes(t *testing.T) {
 			desc: "return 1 waste",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("waste").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("timestamp")),
+				r.Table("waste").MockAnything(),
+				// Filter(
+				// 	map[string]interface{}{
+				// 		"familyID": "1",
+				// 	}).OrderBy(r.Desc("timestamp")),
 			).
 				Return([]interface{}{
 					map[string]interface{}{
@@ -48,10 +49,11 @@ func TestGetWastes(t *testing.T) {
 			desc: "return 0 waste",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("waste").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("timestamp")),
+				r.Table("waste").MockAnything(),
+				// r.Table("waste").Filter(
+				// 	map[string]interface{}{
+				// 		"familyID": "1",
+				// 	}).OrderBy(r.Desc("timestamp")),
 			).
 				Return([]interface{}{}, nil),
 			family:       &goparent.Family{ID: "1"},
@@ -62,10 +64,11 @@ func TestGetWastes(t *testing.T) {
 			desc: "return 0 waste",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("waste").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("timestamp")),
+				r.Table("waste").MockAnything(),
+				// r.Table("waste").Filter(
+				// 	map[string]interface{}{
+				// 		"familyID": "1",
+				// 	}).OrderBy(r.Desc("timestamp")),
 			).
 				Return([]interface{}{}, errors.New("unknown error")),
 			family:       &goparent.Family{ID: "1"},
@@ -157,6 +160,81 @@ func TestWasteSave(t *testing.T) {
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tC.id, tC.data.ID)
+			}
+		})
+	}
+}
+
+func TestStats(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		env         *config.Env
+		query       *r.MockQuery
+		child       *goparent.Child
+		returnError error
+	}{
+		{
+			desc: "get stats",
+			env:  &config.Env{},
+			query: (&r.Mock{}).On(
+				r.Table("waste").MockAnything(),
+			).Return([]map[string]interface{}{
+				{"id": "1"},
+				{"id": "2"},
+			}, nil),
+			child:       &goparent.Child{ID: "1"},
+			returnError: nil,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			fs := WasteService{Env: tC.env}
+			statsData, err := fs.Stats(tC.child)
+			if tC.returnError != nil {
+				assert.Error(t, err, tC.returnError)
+			} else {
+				assert.Nil(t, err)
+				assert.NotNil(t, statsData)
+			}
+		})
+	}
+}
+
+func TestWasteGraph(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		env         *config.Env
+		query       *r.MockQuery
+		child       *goparent.Child
+		returnError *error
+	}{
+		{
+			desc: "get graph data",
+			env:  &config.Env{},
+			query: (&r.Mock{}).On(
+				r.Table("waste").MockAnything(),
+			).Return([]map[string]interface{}{
+				{"group": []int{2018, 1, 1, 1}, "reduction": 1},
+				{"group": []int{2018, 1, 1, 2}, "reduction": 2},
+			}, nil),
+			child: &goparent.Child{ID: "1", Name: "Billy"},
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			mock := r.NewMock()
+			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
+			tC.env.DB = config.DBEnv{Session: mock}
+			fs := WasteService{Env: tC.env}
+			chartData, err := fs.GraphData(tC.child)
+			if tC.returnError != nil {
+				assert.Error(t, err, tC.returnError)
+			} else {
+				assert.Nil(t, err)
+				assert.NotNil(t, chartData)
 			}
 		})
 	}

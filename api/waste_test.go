@@ -491,7 +491,7 @@ func TestInitWasteHandler(t *testing.T) {
 		{
 			desc:    "waste graph data",
 			name:    "WasteGraphData",
-			path:    "/waste/graph",
+			path:    "/waste/graph/{id}",
 			methods: []string{"GET"},
 		},
 		{
