@@ -23,6 +23,7 @@ func (h *Handler) initFeedingHandlers(r *mux.Router) {
 	f := r.PathPrefix("/feeding").Subrouter()
 	f.Handle("", h.AuthRequired(h.feedingGetHandler())).Methods("GET").Name("FeedingGet")
 	f.Handle("", h.AuthRequired(h.feedingNewHandler())).Methods("POST").Name("FeedingNew")
+	f.Handle("/graph/{id}", h.AuthRequired(h.feedingGraphDataHandler())).Methods("GET").Name("FeedingGraphData")
 	f.Handle("/{id}", h.AuthRequired(h.feedingViewHandler())).Methods("GET").Name("FeedingView")
 	f.Handle("/{id}", h.AuthRequired(h.feedingEditHandler())).Methods("PUT").Name("FeedingEdit")
 	f.Handle("/{id}", h.AuthRequired(h.feedingDeleteHandler())).Methods("DELETE").Name("FeedingDelete")
@@ -121,5 +122,44 @@ func (h *Handler) feedingDeleteHandler() http.Handler {
 			return
 		}
 		http.Error(w, "not implemented", http.StatusNotImplemented)
+	})
+}
+
+func (h *Handler) feedingGraphDataHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		childID := mux.Vars(r)["id"]
+
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		child, err := h.ChildService.Child(childID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		//child needs to belong to the user's family.
+		if child.FamilyID != family.ID {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
+		feedingGraphData, err := h.FeedingService.GraphData(child)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", jsonContentType)
+		json.NewEncoder(w).Encode(feedingGraphData)
 	})
 }

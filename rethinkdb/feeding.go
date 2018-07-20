@@ -1,6 +1,8 @@
 package rethinkdb
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/sasimpson/goparent"
@@ -11,6 +13,13 @@ import (
 //FeedingService - struct for implementing interface
 type FeedingService struct {
 	Env *config.Env
+}
+
+type feedingReductionData struct {
+	Group     []interface{} `gorethink:"group"`
+	Reduction []struct {
+		FeedingAmount float32 `gorethink:"feedingAmount"`
+	} `gorethink:"reduction"`
 }
 
 //Save - save the structure to the datastore
@@ -106,4 +115,64 @@ func (fs *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary
 		summary.Mean[k] = summary.Total[k] / float32(summary.Range[k])
 	}
 	return summary, nil
+}
+
+func (ws *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingChartData, error) {
+	session, err := ws.Env.DB.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	end := time.Now()
+	start := end.AddDate(0, 0, -7)
+	/*
+		r.db("goparent")
+		.table("feeding")
+		.filter(r.row("timestamp")
+			.during(r.time(2018,7,13,"Z"),r.now()))
+		.group([r.row("timestamp").year(), r.row("timestamp").month(), r.row("timestamp").day(), r.row("feedingType")])
+		.pluck( "feedingAmount")
+	*/
+	res, err := gorethink.Table("feeding").
+		Filter(gorethink.Row.Field("timestamp").During(start, end)).OrderBy("timestamp").
+		Group(
+			gorethink.Row.Field("timestamp").Year(),
+			gorethink.Row.Field("timestamp").Month(),
+			gorethink.Row.Field("timestamp").Day(),
+			gorethink.Row.Field("feedingType"),
+		).
+		Pluck("feedingAmount").
+		Run(session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	var data []feedingReductionData
+	err = res.All(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("")
+
+	chartData := &goparent.FeedingChartData{Start: start, End: end}
+	// graph.Data = goparent.ChartData{Datasets: []goparent.ChartDataset{}}
+	for _, line := range data {
+		gdDate, err := time.Parse("2006-01-02", fmt.Sprintf("%.0f-%02.0f-%02.0f", line.Group[0], line.Group[1], line.Group[2]))
+		if err != nil {
+			return nil, err
+		}
+
+		var rC int
+		var rS float32
+		for _, reduction := range line.Reduction {
+			rC++
+			rS += reduction.FeedingAmount
+		}
+
+		dataset := goparent.FeedingChartDataset{Date: gdDate, Type: line.Group[3].(string), Count: rC, Sum: rS}
+		chartData.Dataset = append(chartData.Dataset, dataset)
+	}
+	return chartData, nil
 }

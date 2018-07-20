@@ -9,8 +9,10 @@ type MockFeedingService struct {
 	Env      *config.Env
 	Feedings []*goparent.Feeding
 	Stat     *goparent.FeedingSummary
+	Graph    *goparent.FeedingChartData
 	GetErr   error
 	StatErr  error
+	GraphErr error
 }
 
 func (m *MockFeedingService) Save(feeding *goparent.Feeding) error {
@@ -39,5 +41,15 @@ func (m *MockFeedingService) Stats(child *goparent.Child) (*goparent.FeedingSumm
 		return m.Stat, nil
 	}
 
+	return nil, nil
+}
+
+func (m *MockFeedingService) GraphData(*goparent.Child) (*goparent.FeedingChartData, error) {
+	if m.GraphErr != nil {
+		return nil, m.GraphErr
+	}
+	if m.Graph != nil {
+		return m.Graph, nil
+	}
 	return nil, nil
 }

@@ -9,7 +9,7 @@ type MockWasteService struct {
 	Env      *config.Env
 	Wastes   []*goparent.Waste
 	Stat     *goparent.WasteSummary
-	Graph    *goparent.Chart
+	Graph    *goparent.WasteChartData
 	GetErr   error
 	StatErr  error
 	GraphErr error
@@ -43,7 +43,7 @@ func (m *MockWasteService) Stats(*goparent.Child) (*goparent.WasteSummary, error
 	return nil, nil
 }
 
-func (m *MockWasteService) GraphData(*goparent.Child) (*goparent.Chart, error) {
+func (m *MockWasteService) GraphData(*goparent.Child) (*goparent.WasteChartData, error) {
 	if m.GraphErr != nil {
 		return nil, m.GraphErr
 	}

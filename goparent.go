@@ -106,10 +106,24 @@ type FeedingSummary struct {
 	Range map[string]int     `json:"range"`
 }
 
+type FeedingChartData struct {
+	Start   time.Time             `json:"start"`
+	End     time.Time             `json:"end"`
+	Dataset []FeedingChartDataset `json:"dataset"`
+}
+
+type FeedingChartDataset struct {
+	Date  time.Time `json:"date"`
+	Type  string    `json:"type"`
+	Count int       `json:"count"`
+	Sum   float32   `json:"sum"`
+}
+
 type FeedingService interface {
 	Save(*Feeding) error
 	Feeding(*Family) ([]*Feeding, error)
 	Stats(*Child) (*FeedingSummary, error)
+	GraphData(*Child) (*FeedingChartData, error)
 }
 
 //Sleep - tracks the baby's sleep start and end.
