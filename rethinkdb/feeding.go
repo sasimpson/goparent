@@ -2,7 +2,6 @@ package rethinkdb
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/sasimpson/goparent"
@@ -154,8 +153,6 @@ func (ws *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingCha
 		return nil, err
 	}
 
-	log.Printf("")
-
 	chartData := &goparent.FeedingChartData{Start: start, End: end}
 	// graph.Data = goparent.ChartData{Datasets: []goparent.ChartDataset{}}
 	for _, line := range data {
@@ -170,7 +167,6 @@ func (ws *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingCha
 			rC++
 			rS += reduction.FeedingAmount
 		}
-
 		dataset := goparent.FeedingChartDataset{Date: gdDate, Type: line.Group[3].(string), Count: rC, Sum: rS}
 		chartData.Dataset = append(chartData.Dataset, dataset)
 	}
