@@ -37,13 +37,15 @@ func (h *Handler) feedingGetHandler() http.Handler {
 			return
 		}
 
+		pagination := getPagination(r)
+
 		family, err := h.UserService.GetFamily(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		feedingData, err := h.FeedingService.Feeding(family)
+		feedingData, err := h.FeedingService.Feeding(family, pagination.Days)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

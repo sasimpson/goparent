@@ -121,7 +121,7 @@ type FeedingChartDataset struct {
 
 type FeedingService interface {
 	Save(*Feeding) error
-	Feeding(*Family) ([]*Feeding, error)
+	Feeding(*Family, uint64) ([]*Feeding, error)
 	Stats(*Child) (*FeedingSummary, error)
 	GraphData(*Child) (*FeedingChartData, error)
 }

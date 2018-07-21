@@ -40,16 +40,19 @@ func (fs *FeedingService) Save(feeding *goparent.Feeding) error {
 }
 
 //Feeding - get all records for a user from the datastore
-func (fs *FeedingService) Feeding(family *goparent.Family) ([]*goparent.Feeding, error) {
+func (fs *FeedingService) Feeding(family *goparent.Family, days uint64) ([]*goparent.Feeding, error) {
 	session, err := fs.Env.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
+	daysBack := int(0 - days)
+
 	res, err := gorethink.Table("feeding").
 		Filter(map[string]interface{}{
 			"familyID": family.ID,
 		}).
+		Filter(gorethink.Row.Field("timestamp").During(time.Now().AddDate(0, 0, daysBack), time.Now())).
 		OrderBy(gorethink.Desc("timestamp")).
 		Run(session)
 	if err != nil {
