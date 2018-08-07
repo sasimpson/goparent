@@ -107,6 +107,7 @@ func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, er
 	return &summary, nil
 }
 
+//GraphData -
 func (ws *WasteService) GraphData(child *goparent.Child) (*goparent.WasteChartData, error) {
 	session, err := ws.Env.DB.GetConnection()
 	if err != nil {

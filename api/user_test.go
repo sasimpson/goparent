@@ -33,7 +33,7 @@ func TestLoginHandler(t *testing.T) {
 			env:      &config.Env{},
 			email:    "testuser@test.com",
 			password: "testpassword",
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				ReturnedUser: &goparent.User{
 					ID:       "1",
 					Name:     "test user",
@@ -49,7 +49,7 @@ func TestLoginHandler(t *testing.T) {
 			env:      &config.Env{},
 			email:    "testuser@test.com",
 			password: "testpassword",
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				ReturnedUser: &goparent.User{
 					ID:       "1",
 					Name:     "test user",
@@ -65,7 +65,7 @@ func TestLoginHandler(t *testing.T) {
 			env:      &config.Env{},
 			email:    "testuser@test.com",
 			password: "testpassword",
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				ReturnedUser: &goparent.User{
 					ID:       "1",
 					Name:     "test user",
@@ -108,7 +108,7 @@ func TestUserGetHandler(t *testing.T) {
 		{
 			desc: "valid user",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -123,7 +123,7 @@ func TestUserGetHandler(t *testing.T) {
 		{
 			desc: "invalid user",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -138,7 +138,7 @@ func TestUserGetHandler(t *testing.T) {
 		{
 			desc: "family error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("family error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -194,13 +194,13 @@ func TestUserNewHandler(t *testing.T) {
 		{
 			desc:         "invalid json",
 			env:          &config.Env{},
-			userService:  &mock.MockUserService{},
+			userService:  &mock.UserService{},
 			responseCode: http.StatusInternalServerError,
 		},
 		{
 			desc: "invalid user save",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				SaveErr: errors.New("user exists"),
 			},
 			userRequest: &UserRequest{
@@ -216,7 +216,7 @@ func TestUserNewHandler(t *testing.T) {
 		{
 			desc: "valid user save",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				UserID: "1",
 			},
 			userRequest: &UserRequest{
@@ -292,7 +292,7 @@ func TestUserNewInviteHandler(t *testing.T) {
 		{
 			desc: "existing invite",
 			env:  &config.Env{},
-			userInviteService: &mock.MockUserInvitationService{
+			userInviteService: &mock.UserInvitationService{
 				InviteParentErr: goparent.ErrExistingInvitation,
 			},
 			inviteUser:   "invitedUser@test.com",
@@ -302,7 +302,7 @@ func TestUserNewInviteHandler(t *testing.T) {
 		{
 			desc: "unknown invite error",
 			env:  &config.Env{},
-			userInviteService: &mock.MockUserInvitationService{
+			userInviteService: &mock.UserInvitationService{
 				InviteParentErr: errors.New("unknown error"),
 			},
 			inviteUser:   "invitedUser@test.com",
@@ -312,7 +312,7 @@ func TestUserNewInviteHandler(t *testing.T) {
 		{
 			desc:              "successful invite",
 			env:               &config.Env{},
-			userInviteService: &mock.MockUserInvitationService{},
+			userInviteService: &mock.UserInvitationService{},
 			inviteUser:        "invitedUser@test.com",
 			contextUser:       &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:      http.StatusCreated,
@@ -369,7 +369,7 @@ func TestListInviteHandler(t *testing.T) {
 		{
 			desc:        "get SentInvites error",
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{
+			userInvitationService: &mock.UserInvitationService{
 				SentInvitesErr: errors.New("test error"),
 			},
 			responseCode: http.StatusInternalServerError,
@@ -377,7 +377,7 @@ func TestListInviteHandler(t *testing.T) {
 		{
 			desc:        "get pending invites error",
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{
+			userInvitationService: &mock.UserInvitationService{
 				InvitesErr: errors.New("test error"),
 			},
 			responseCode: http.StatusInternalServerError,
@@ -385,14 +385,14 @@ func TestListInviteHandler(t *testing.T) {
 		{
 			desc:                  "empty response",
 			contextUser:           &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{},
+			userInvitationService: &mock.UserInvitationService{},
 			responseCode:          http.StatusOK,
 			resultLength:          0,
 		},
 		{
 			desc:        "non-empty response",
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{
+			userInvitationService: &mock.UserInvitationService{
 				GetSentInvites: []*goparent.UserInvitation{
 					&goparent.UserInvitation{
 						ID:          "1",
@@ -454,7 +454,7 @@ func TestAcceptInviteHandler(t *testing.T) {
 			desc:        "accept fail",
 			env:         &config.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{
+			userInvitationService: &mock.UserInvitationService{
 				AcceptErr: errors.New("test error"),
 			},
 			responseCode: http.StatusInternalServerError,
@@ -463,7 +463,7 @@ func TestAcceptInviteHandler(t *testing.T) {
 			desc:                  "accept success",
 			env:                   &config.Env{},
 			contextUser:           &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{},
+			userInvitationService: &mock.UserInvitationService{},
 			responseCode:          http.StatusNoContent,
 		},
 	}
@@ -508,7 +508,7 @@ func TestDeleteInviteHandler(t *testing.T) {
 			desc:        "get invite fail",
 			env:         &config.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{
+			userInvitationService: &mock.UserInvitationService{
 				InviteErr: errors.New("not found"),
 			},
 			responseCode: http.StatusNotFound,
@@ -517,7 +517,7 @@ func TestDeleteInviteHandler(t *testing.T) {
 			desc:        "delete fail",
 			env:         &config.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{
+			userInvitationService: &mock.UserInvitationService{
 				GetInvite: &goparent.UserInvitation{
 					ID:          "1",
 					UserID:      "1",
@@ -532,7 +532,7 @@ func TestDeleteInviteHandler(t *testing.T) {
 			desc:        "delete success",
 			env:         &config.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
-			userInvitationService: &mock.MockUserInvitationService{
+			userInvitationService: &mock.UserInvitationService{
 				GetInvite: &goparent.UserInvitation{
 					ID:          "1",
 					UserID:      "1",

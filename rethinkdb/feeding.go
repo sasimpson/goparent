@@ -119,8 +119,9 @@ func (fs *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary
 	return summary, nil
 }
 
-func (ws *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingChartData, error) {
-	session, err := ws.Env.DB.GetConnection()
+//GraphData -
+func (fs *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingChartData, error) {
+	session, err := fs.Env.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}

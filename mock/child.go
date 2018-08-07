@@ -5,7 +5,8 @@ import (
 	"github.com/sasimpson/goparent/config"
 )
 
-type MockChildService struct {
+//ChildService -
+type ChildService struct {
 	Env       *config.Env
 	Kid       *goparent.Child
 	Deleted   int
@@ -13,21 +14,24 @@ type MockChildService struct {
 	DeleteErr error
 }
 
-func (mcs *MockChildService) Save(*goparent.Child) error {
+//Save -
+func (mcs *ChildService) Save(*goparent.Child) error {
 	if mcs.GetErr != nil {
 		return mcs.GetErr
 	}
 	return nil
 }
 
-func (mcs *MockChildService) Child(string) (*goparent.Child, error) {
+//Child -
+func (mcs *ChildService) Child(string) (*goparent.Child, error) {
 	if mcs.GetErr != nil {
 		return nil, mcs.GetErr
 	}
 	return mcs.Kid, nil
 }
 
-func (mcs *MockChildService) Delete(*goparent.Child) (int, error) {
+//Delete -
+func (mcs *ChildService) Delete(*goparent.Child) (int, error) {
 	if mcs.DeleteErr != nil {
 		return 0, mcs.DeleteErr
 	}

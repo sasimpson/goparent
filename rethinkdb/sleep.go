@@ -165,3 +165,8 @@ func (ss *SleepService) Stats(child *goparent.Child) (*goparent.SleepSummary, er
 	summary.Mean = float64(summary.Total) / float64(summary.Range)
 	return &summary, nil
 }
+
+//GraphData -
+func (ss *SleepService) GraphData(child *goparent.Child) (*goparent.SleepChartData, error) {
+	return nil, nil
+}

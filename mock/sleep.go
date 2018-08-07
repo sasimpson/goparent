@@ -5,7 +5,8 @@ import (
 	"github.com/sasimpson/goparent/config"
 )
 
-type MockSleepService struct {
+//SleepService -
+type SleepService struct {
 	Env     *config.Env
 	Sleeps  []*goparent.Sleep
 	Stat    *goparent.SleepSummary
@@ -13,14 +14,16 @@ type MockSleepService struct {
 	StatErr error
 }
 
-func (m *MockSleepService) Save(*goparent.Sleep) error {
+//Save -
+func (m *SleepService) Save(*goparent.Sleep) error {
 	if m.GetErr != nil {
 		return m.GetErr
 	}
 	return nil
 }
 
-func (m *MockSleepService) Sleep(*goparent.Family) ([]*goparent.Sleep, error) {
+//Sleep -
+func (m *SleepService) Sleep(*goparent.Family) ([]*goparent.Sleep, error) {
 	if m.GetErr != nil {
 		return nil, m.GetErr
 	}
@@ -30,7 +33,8 @@ func (m *MockSleepService) Sleep(*goparent.Family) ([]*goparent.Sleep, error) {
 	return nil, nil
 }
 
-func (m *MockSleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
+//Stats -
+func (m *SleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
 	if m.StatErr != nil {
 		return nil, m.StatErr
 	}
@@ -41,14 +45,22 @@ func (m *MockSleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error
 	return nil, nil
 }
 
-func (m *MockSleepService) Status(*goparent.Family, *goparent.Child) (bool, error) {
+//Status -
+func (m *SleepService) Status(*goparent.Family, *goparent.Child) (bool, error) {
 	panic("not implemented")
 }
 
-func (m *MockSleepService) Start(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+//Start -
+func (m *SleepService) Start(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
-func (m *MockSleepService) End(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+//End -
+func (m *SleepService) End(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+	panic("not implemented")
+}
+
+//GraphData -
+func (m *SleepService) GraphData(*goparent.Child) (*goparent.SleepChartData, error) {
 	panic("not implemented")
 }

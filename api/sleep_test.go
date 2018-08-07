@@ -32,27 +32,27 @@ func TestSleepGetHandler(t *testing.T) {
 		{
 			desc:          "returns auth error",
 			env:           &config.Env{},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			sleepService:  &mock.MockSleepService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			sleepService:  &mock.SleepService{},
 			contextUser:   nil,
 			responseCode:  http.StatusUnauthorized,
 		},
 		{
 			desc: "returns family error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
-			familyService: &mock.MockFamilyService{},
-			sleepService:  &mock.MockSleepService{},
+			familyService: &mock.FamilyService{},
+			sleepService:  &mock.SleepService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:  http.StatusInternalServerError,
 		},
 		{
 			desc: "returns sleep error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -62,7 +62,7 @@ func TestSleepGetHandler(t *testing.T) {
 				},
 			},
 
-			sleepService: &mock.MockSleepService{
+			sleepService: &mock.SleepService{
 				GetErr: errors.New("test error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -71,7 +71,7 @@ func TestSleepGetHandler(t *testing.T) {
 		{
 			desc: "returns no sleep",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -81,7 +81,7 @@ func TestSleepGetHandler(t *testing.T) {
 				},
 			},
 
-			sleepService: &mock.MockSleepService{
+			sleepService: &mock.SleepService{
 				Sleeps: []*goparent.Sleep{},
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -91,7 +91,7 @@ func TestSleepGetHandler(t *testing.T) {
 		{
 			desc: "returns one sleep",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -101,7 +101,7 @@ func TestSleepGetHandler(t *testing.T) {
 				},
 			},
 
-			sleepService: &mock.MockSleepService{
+			sleepService: &mock.SleepService{
 				Sleeps: []*goparent.Sleep{
 					&goparent.Sleep{ID: "1"},
 				},
@@ -173,7 +173,7 @@ func TestSleepNewHandler(t *testing.T) {
 					UserID:   "1",
 					ChildID:  "1",
 					FamilyID: "1"}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -182,8 +182,8 @@ func TestSleepNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			sleepService:  &mock.MockSleepService{},
+			familyService: &mock.FamilyService{},
+			sleepService:  &mock.SleepService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusOK,
@@ -199,11 +199,11 @@ func TestSleepNewHandler(t *testing.T) {
 					UserID:   "1",
 					ChildID:  "1",
 					FamilyID: "1"}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
-			familyService: &mock.MockFamilyService{},
-			sleepService:  &mock.MockSleepService{},
+			familyService: &mock.FamilyService{},
+			sleepService:  &mock.SleepService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,
@@ -218,7 +218,7 @@ func TestSleepNewHandler(t *testing.T) {
 					UserID:   "1",
 					ChildID:  "1",
 					FamilyID: "1"}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -227,8 +227,8 @@ func TestSleepNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			sleepService: &mock.MockSleepService{
+			familyService: &mock.FamilyService{},
+			sleepService: &mock.SleepService{
 				GetErr: errors.New("unknown sleep error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -245,9 +245,9 @@ func TestSleepNewHandler(t *testing.T) {
 					UserID:   "1",
 					ChildID:  "1",
 					FamilyID: "1"}},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			sleepService:  &mock.MockSleepService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			sleepService:  &mock.SleepService{},
 			contextUser:   &goparent.User{},
 			contextError:  true,
 			responseCode:  http.StatusUnauthorized,
@@ -255,7 +255,7 @@ func TestSleepNewHandler(t *testing.T) {
 		{
 			desc: "decode input error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -264,8 +264,8 @@ func TestSleepNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			sleepService:  &mock.MockSleepService{},
+			familyService: &mock.FamilyService{},
+			sleepService:  &mock.SleepService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,

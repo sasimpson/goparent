@@ -7,8 +7,10 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+//ErrExistingInvitation -
 var ErrExistingInvitation = errors.New("invitation already exists for that parent")
 
+//User -
 type User struct {
 	ID            string `json:"id" gorethink:"id,omitempty"`
 	Name          string `json:"name" gorethink:"name"`
@@ -28,6 +30,7 @@ type UserClaims struct {
 	jwt.StandardClaims
 }
 
+//UserService -
 type UserService interface {
 	User(string) (*User, error)
 	UserByLogin(string, string) (*User, error)
@@ -46,6 +49,7 @@ type UserInvitation struct {
 	Timestamp   time.Time `json:"timestamp" gorethink:"timestamp"`
 }
 
+//UserInvitationService -
 type UserInvitationService interface {
 	InviteParent(*User, string, time.Time) error
 	SentInvites(*User) ([]*UserInvitation, error)
@@ -55,6 +59,7 @@ type UserInvitationService interface {
 	Delete(*UserInvitation) error
 }
 
+//Family -
 type Family struct {
 	ID          string    `json:"id" gorethink:"id,omitempty"`
 	Admin       string    `json:"admin" gorethink:"admin"`
@@ -63,6 +68,7 @@ type Family struct {
 	LastUpdated time.Time `json:"last_updated" gorethink:"last_updated"`
 }
 
+//FamilyService -
 type FamilyService interface {
 	Save(*Family) error
 	Family(string) (*Family, error)
@@ -72,6 +78,7 @@ type FamilyService interface {
 	// Delete(*Family) (int, error)
 }
 
+//Child -
 type Child struct {
 	ID       string    `json:"id" gorethink:"id,omitempty"`
 	Name     string    `json:"name" gorethink:"name"`
@@ -80,6 +87,7 @@ type Child struct {
 	Birthday time.Time `json:"birthday" gorethink:"birthday"`
 }
 
+//ChildService -
 type ChildService interface {
 	Save(*Child) error
 	Child(string) (*Child, error)
@@ -106,12 +114,14 @@ type FeedingSummary struct {
 	Range map[string]int     `json:"range"`
 }
 
+//FeedingChartData -
 type FeedingChartData struct {
 	Start   time.Time             `json:"start"`
 	End     time.Time             `json:"end"`
 	Dataset []FeedingChartDataset `json:"dataset"`
 }
 
+//FeedingChartDataset -
 type FeedingChartDataset struct {
 	Date  time.Time `json:"date"`
 	Type  string    `json:"type"`
@@ -119,6 +129,7 @@ type FeedingChartDataset struct {
 	Sum   float32   `json:"sum"`
 }
 
+//FeedingService -
 type FeedingService interface {
 	Save(*Feeding) error
 	Feeding(*Family, uint64) ([]*Feeding, error)
@@ -144,6 +155,22 @@ type SleepSummary struct {
 	Range int     `json:"range"`
 }
 
+//SleepChartData -
+type SleepChartData struct {
+	Start   time.Time             `json:"start"`
+	End     time.Time             `json:"end"`
+	Dataset []FeedingChartDataset `json:"dataset"`
+}
+
+//SleepChartDataset -
+type SleepChartDataset struct {
+	Date  time.Time `json:"date"`
+	Type  string    `json:"type"`
+	Count int       `json:"count"`
+	Sum   float32   `json:"sum"`
+}
+
+//SleepService -
 type SleepService interface {
 	Save(*Sleep) error
 	Sleep(*Family) ([]*Sleep, error)
@@ -151,6 +178,7 @@ type SleepService interface {
 	Status(*Family, *Child) (bool, error)
 	Start(*Sleep, *Family, *Child) error
 	End(*Sleep, *Family, *Child) error
+	GraphData(*Child) (*SleepChartData, error)
 }
 
 //Waste - structure for holding waste data such as diapers
@@ -170,6 +198,7 @@ type WasteSummary struct {
 	Total map[int]int `json:"total"`
 }
 
+//WasteGraphData -
 type WasteGraphData struct {
 	Date  time.Time `json:"date"`
 	Type  int       `json:"type"`
@@ -181,6 +210,7 @@ type WasteType struct {
 	Name string `json:"name"`
 }
 
+//WasteService -
 type WasteService interface {
 	Save(*Waste) error
 	Waste(*Family, uint64) ([]*Waste, error)
@@ -188,12 +218,14 @@ type WasteService interface {
 	GraphData(*Child) (*WasteChartData, error)
 }
 
+//wasteChartData -
 type WasteChartData struct {
 	Start   time.Time           `json:"start"`
 	End     time.Time           `json:"end"`
 	Dataset []WasteChartDataset `json:"dataset"`
 }
 
+//WasteChartDataset -
 type WasteChartDataset struct {
 	Date  time.Time `json:"date"`
 	Type  int       `json:"type"`

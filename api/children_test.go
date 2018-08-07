@@ -96,7 +96,7 @@ func TestChildSummary(t *testing.T) {
 		{
 			desc: "get child summary",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -105,14 +105,14 @@ func TestChildSummary(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			childService: &mock.MockChildService{
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()},
 			},
-			feedingService: &mock.MockFeedingService{
+			feedingService: &mock.FeedingService{
 				Stat: &goparent.FeedingSummary{
 					Total: map[string]float32{"1": 1.1, "2": 2.2},
 					Mean:  map[string]float32{"1": 0.6, "2": 1.1},
@@ -123,7 +123,7 @@ func TestChildSummary(t *testing.T) {
 					},
 				},
 			},
-			sleepService: &mock.MockSleepService{
+			sleepService: &mock.SleepService{
 				Stat: &goparent.SleepSummary{
 					Total: 5,
 					Mean:  2.5,
@@ -134,7 +134,7 @@ func TestChildSummary(t *testing.T) {
 					},
 				},
 			},
-			wasteService: &mock.MockWasteService{
+			wasteService: &mock.WasteService{
 				Stat: &goparent.WasteSummary{
 					Total: map[int]int{1: 5, 2: 5, 3: 10},
 					Data: []goparent.Waste{
@@ -149,11 +149,11 @@ func TestChildSummary(t *testing.T) {
 		{
 			desc:           "get child summary, fail auth",
 			env:            &config.Env{},
-			userService:    &mock.MockUserService{},
-			childService:   &mock.MockChildService{},
-			feedingService: &mock.MockFeedingService{},
-			sleepService:   &mock.MockSleepService{},
-			wasteService:   &mock.MockWasteService{},
+			userService:    &mock.UserService{},
+			childService:   &mock.ChildService{},
+			feedingService: &mock.FeedingService{},
+			sleepService:   &mock.SleepService{},
+			wasteService:   &mock.WasteService{},
 			contextUser:    &goparent.User{},
 			contextError:   true,
 			responseCode:   http.StatusUnauthorized,
@@ -161,20 +161,20 @@ func TestChildSummary(t *testing.T) {
 		{
 			desc: "get child summary, fail get family",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
-			childService:   &mock.MockChildService{},
-			feedingService: &mock.MockFeedingService{},
-			sleepService:   &mock.MockSleepService{},
-			wasteService:   &mock.MockWasteService{},
+			childService:   &mock.ChildService{},
+			feedingService: &mock.FeedingService{},
+			sleepService:   &mock.SleepService{},
+			wasteService:   &mock.WasteService{},
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:   http.StatusInternalServerError,
 		},
 		{
 			desc: "get child summary, fail get child",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -183,19 +183,19 @@ func TestChildSummary(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			childService: &mock.MockChildService{
+			childService: &mock.ChildService{
 				GetErr: errors.New("test error"),
 			},
-			feedingService: &mock.MockFeedingService{},
-			sleepService:   &mock.MockSleepService{},
-			wasteService:   &mock.MockWasteService{},
+			feedingService: &mock.FeedingService{},
+			sleepService:   &mock.SleepService{},
+			wasteService:   &mock.WasteService{},
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:   http.StatusInternalServerError,
 		},
 		{
 			desc: "get child summary, fail child/family match",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "2",
 					Admin:       "1",
@@ -204,23 +204,23 @@ func TestChildSummary(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			childService: &mock.MockChildService{
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()},
 			},
-			feedingService: &mock.MockFeedingService{},
-			sleepService:   &mock.MockSleepService{},
-			wasteService:   &mock.MockWasteService{},
+			feedingService: &mock.FeedingService{},
+			sleepService:   &mock.SleepService{},
+			wasteService:   &mock.WasteService{},
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:   http.StatusNotFound,
 		},
 		{
 			desc: "get child summary, fail feeding",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -229,25 +229,25 @@ func TestChildSummary(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			childService: &mock.MockChildService{
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()},
 			},
-			feedingService: &mock.MockFeedingService{
+			feedingService: &mock.FeedingService{
 				StatErr: errors.New("test error"),
 			},
-			sleepService: &mock.MockSleepService{},
-			wasteService: &mock.MockWasteService{},
+			sleepService: &mock.SleepService{},
+			wasteService: &mock.WasteService{},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode: http.StatusInternalServerError,
 		},
 		{
 			desc: "get child summary, fail sleep",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -256,27 +256,27 @@ func TestChildSummary(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			childService: &mock.MockChildService{
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()},
 			},
-			feedingService: &mock.MockFeedingService{
+			feedingService: &mock.FeedingService{
 				Stat: &goparent.FeedingSummary{},
 			},
-			sleepService: &mock.MockSleepService{
+			sleepService: &mock.SleepService{
 				StatErr: errors.New("test error"),
 			},
-			wasteService: &mock.MockWasteService{},
+			wasteService: &mock.WasteService{},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode: http.StatusInternalServerError,
 		},
 		{
 			desc: "get child summary, fail waste",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -285,20 +285,20 @@ func TestChildSummary(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			childService: &mock.MockChildService{
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()},
 			},
-			feedingService: &mock.MockFeedingService{
+			feedingService: &mock.FeedingService{
 				Stat: &goparent.FeedingSummary{},
 			},
-			sleepService: &mock.MockSleepService{
+			sleepService: &mock.SleepService{
 				Stat: &goparent.SleepSummary{},
 			},
-			wasteService: &mock.MockWasteService{
+			wasteService: &mock.WasteService{
 				StatErr: errors.New("test error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -353,9 +353,9 @@ func TestChildrenGetHandler(t *testing.T) {
 		{
 			desc:          "returns auth error",
 			env:           &config.Env{},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{},
 			contextError:  true,
 			responseCode:  http.StatusUnauthorized,
@@ -363,11 +363,11 @@ func TestChildrenGetHandler(t *testing.T) {
 		{
 			desc: "returns family error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,
@@ -375,7 +375,7 @@ func TestChildrenGetHandler(t *testing.T) {
 		{
 			desc: "returns children error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -384,10 +384,10 @@ func TestChildrenGetHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{
+			familyService: &mock.FamilyService{
 				GetErr: errors.New("test error"),
 			},
-			childService: &mock.MockChildService{},
+			childService: &mock.ChildService{},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError: false,
 			responseCode: http.StatusInternalServerError,
@@ -395,7 +395,7 @@ func TestChildrenGetHandler(t *testing.T) {
 		{
 			desc: "return no children",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -404,10 +404,10 @@ func TestChildrenGetHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{
+			familyService: &mock.FamilyService{
 				Kids: []*goparent.Child{},
 			},
-			childService: &mock.MockChildService{},
+			childService: &mock.ChildService{},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError: false,
 			responseCode: http.StatusOK,
@@ -474,7 +474,7 @@ func TestChildrenNewHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -483,8 +483,8 @@ func TestChildrenNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusOK,
@@ -499,11 +499,11 @@ func TestChildrenNewHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,
@@ -517,7 +517,7 @@ func TestChildrenNewHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -526,8 +526,8 @@ func TestChildrenNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				GetErr: errors.New("unknown child error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -543,9 +543,9 @@ func TestChildrenNewHandler(t *testing.T) {
 					FamilyID: "1",
 					Name:     "Test Child",
 					Birthday: time.Now()}},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{},
 			contextError:  true,
 			responseCode:  http.StatusUnauthorized,
@@ -553,7 +553,7 @@ func TestChildrenNewHandler(t *testing.T) {
 		{
 			desc: "decode input error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -562,8 +562,8 @@ func TestChildrenNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,
@@ -620,7 +620,7 @@ func TestChildViewHandler(t *testing.T) {
 
 			desc: "get child",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -629,8 +629,8 @@ func TestChildViewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
@@ -643,18 +643,18 @@ func TestChildViewHandler(t *testing.T) {
 		{
 			desc: "returns no family error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:  http.StatusInternalServerError,
 		},
 		{
 			desc: "returns child error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -663,8 +663,8 @@ func TestChildViewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				GetErr: errors.New("unknown child error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -673,9 +673,9 @@ func TestChildViewHandler(t *testing.T) {
 		{
 			desc:          "returns auth error",
 			env:           &config.Env{},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{},
 			contextError:  true,
 			responseCode:  http.StatusUnauthorized,
@@ -684,7 +684,7 @@ func TestChildViewHandler(t *testing.T) {
 
 			desc: "get not user's child",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "2",
 					Admin:       "1",
@@ -693,8 +693,8 @@ func TestChildViewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
@@ -754,7 +754,7 @@ func TestChildEditHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -763,8 +763,8 @@ func TestChildEditHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
@@ -783,7 +783,7 @@ func TestChildEditHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "2",
 					Admin:       "1",
@@ -792,8 +792,8 @@ func TestChildEditHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "2",
@@ -812,11 +812,11 @@ func TestChildEditHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,
@@ -830,7 +830,7 @@ func TestChildEditHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -839,8 +839,8 @@ func TestChildEditHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				GetErr: errors.New("unknown child error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -856,9 +856,9 @@ func TestChildEditHandler(t *testing.T) {
 					FamilyID: "1",
 					Name:     "Test Child",
 					Birthday: time.Now()}},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{},
 			contextError:  true,
 			responseCode:  http.StatusUnauthorized,
@@ -866,7 +866,7 @@ func TestChildEditHandler(t *testing.T) {
 		{
 			desc: "decode input error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -875,8 +875,8 @@ func TestChildEditHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,
@@ -939,7 +939,7 @@ func TestChildDeleteHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -948,8 +948,8 @@ func TestChildDeleteHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
@@ -969,7 +969,7 @@ func TestChildDeleteHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -978,8 +978,8 @@ func TestChildDeleteHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
@@ -1000,7 +1000,7 @@ func TestChildDeleteHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "2",
 					Admin:       "1",
@@ -1009,8 +1009,8 @@ func TestChildDeleteHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
@@ -1030,7 +1030,7 @@ func TestChildDeleteHandler(t *testing.T) {
 					ID:       "1",
 					FamilyID: "1",
 					Birthday: time.Now()}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -1039,8 +1039,8 @@ func TestChildDeleteHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			childService: &mock.MockChildService{
+			familyService: &mock.FamilyService{},
+			childService: &mock.ChildService{
 				Kid: &goparent.Child{
 					Name:     "test child",
 					ID:       "1",
@@ -1061,9 +1061,9 @@ func TestChildDeleteHandler(t *testing.T) {
 					FamilyID: "1",
 					Name:     "Test Child",
 					Birthday: time.Now()}},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			childService:  &mock.MockChildService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			childService:  &mock.ChildService{},
 			contextUser:   &goparent.User{},
 			contextError:  true,
 			responseCode:  http.StatusUnauthorized,

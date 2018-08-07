@@ -78,7 +78,7 @@ func TestGetFeedings(t *testing.T) {
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			tC.env.DB = config.DBEnv{Session: mock}
 			fs := FeedingService{Env: tC.env}
-			feedingResult, err := fs.Feeding(tC.family)
+			feedingResult, err := fs.Feeding(tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {

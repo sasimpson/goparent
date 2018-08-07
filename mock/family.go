@@ -5,31 +5,37 @@ import (
 	"github.com/sasimpson/goparent/config"
 )
 
-type MockFamilyService struct {
+//FamilyService -
+type FamilyService struct {
 	Env    *config.Env
 	Kids   []*goparent.Child
 	GetErr error
 }
 
-func (mfs *MockFamilyService) Save(*goparent.Family) error {
+//Save -
+func (mfs *FamilyService) Save(*goparent.Family) error {
 	panic("not implemented")
 }
 
-func (mfs *MockFamilyService) Family(string) (*goparent.Family, error) {
+//Family -
+func (mfs *FamilyService) Family(string) (*goparent.Family, error) {
 	panic("not implemented")
 }
 
-func (mfs *MockFamilyService) Children(*goparent.Family) ([]*goparent.Child, error) {
+//Children -
+func (mfs *FamilyService) Children(*goparent.Family) ([]*goparent.Child, error) {
 	if mfs.GetErr != nil {
 		return nil, mfs.GetErr
 	}
 	return mfs.Kids, nil
 }
 
-func (mfs *MockFamilyService) AddMember(*goparent.Family, *goparent.User) error {
+//AddMember -
+func (mfs *FamilyService) AddMember(*goparent.Family, *goparent.User) error {
 	panic("not implemented")
 }
 
-func (mfs *MockFamilyService) GetAdminFamily(*goparent.User) (*goparent.Family, error) {
+//GetAdminFamily -
+func (mfs *FamilyService) GetAdminFamily(*goparent.User) (*goparent.Family, error) {
 	panic("not implemented")
 }

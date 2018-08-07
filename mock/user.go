@@ -5,7 +5,8 @@ import (
 	"github.com/sasimpson/goparent/config"
 )
 
-type MockUserService struct {
+//UserService -
+type UserService struct {
 	Env          *config.Env
 	Family       *goparent.Family
 	ReturnedUser *goparent.User
@@ -17,11 +18,13 @@ type MockUserService struct {
 	SaveErr      error
 }
 
-func (m *MockUserService) User(string) (*goparent.User, error) {
+//User -
+func (m *UserService) User(string) (*goparent.User, error) {
 	panic("not implemented")
 }
 
-func (m *MockUserService) UserByLogin(string, string) (*goparent.User, error) {
+//UserByLogin -
+func (m *UserService) UserByLogin(string, string) (*goparent.User, error) {
 	if m.AuthErr != nil {
 		return nil, m.AuthErr
 	}
@@ -31,7 +34,8 @@ func (m *MockUserService) UserByLogin(string, string) (*goparent.User, error) {
 	return nil, nil
 }
 
-func (m *MockUserService) Save(user *goparent.User) error {
+//Save -
+func (m *UserService) Save(user *goparent.User) error {
 	if m.SaveErr != nil {
 		return m.SaveErr
 	}
@@ -41,7 +45,8 @@ func (m *MockUserService) Save(user *goparent.User) error {
 	return nil
 }
 
-func (m *MockUserService) GetToken(*goparent.User) (string, error) {
+//GetToken -
+func (m *UserService) GetToken(*goparent.User) (string, error) {
 	if m.TokenErr != nil {
 		return "", m.TokenErr
 	}
@@ -51,17 +56,20 @@ func (m *MockUserService) GetToken(*goparent.User) (string, error) {
 	return "", nil
 }
 
-func (m *MockUserService) ValidateToken(string) (*goparent.User, bool, error) {
+//ValidateToken -
+func (m *UserService) ValidateToken(string) (*goparent.User, bool, error) {
 	panic("not implemented")
 }
 
-func (m *MockUserService) GetFamily(*goparent.User) (*goparent.Family, error) {
+//GetFamily -
+func (m *UserService) GetFamily(*goparent.User) (*goparent.Family, error) {
 	if m.FamilyErr != nil {
 		return nil, m.FamilyErr
 	}
 	return m.Family, nil
 }
 
-func (m *MockUserService) GetAllFamily(*goparent.User) ([]*goparent.Family, error) {
+//GetAllFamily -
+func (m *UserService) GetAllFamily(*goparent.User) ([]*goparent.Family, error) {
 	panic("not implemented")
 }

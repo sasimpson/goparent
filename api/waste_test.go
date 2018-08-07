@@ -31,27 +31,27 @@ func TestWasteGetHandler(t *testing.T) {
 		{
 			desc:          "returns auth error",
 			env:           &config.Env{},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			wasteService:  &mock.MockWasteService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			wasteService:  &mock.WasteService{},
 			contextUser:   nil,
 			responseCode:  http.StatusUnauthorized,
 		},
 		{
 			desc: "returns family error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
-			familyService: &mock.MockFamilyService{},
-			wasteService:  &mock.MockWasteService{},
+			familyService: &mock.FamilyService{},
+			wasteService:  &mock.WasteService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode:  http.StatusInternalServerError,
 		},
 		{
 			desc: "returns waste error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -61,7 +61,7 @@ func TestWasteGetHandler(t *testing.T) {
 				},
 			},
 
-			wasteService: &mock.MockWasteService{
+			wasteService: &mock.WasteService{
 				GetErr: errors.New("test error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -70,7 +70,7 @@ func TestWasteGetHandler(t *testing.T) {
 		{
 			desc: "returns no waste",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -80,7 +80,7 @@ func TestWasteGetHandler(t *testing.T) {
 				},
 			},
 
-			wasteService: &mock.MockWasteService{
+			wasteService: &mock.WasteService{
 				Wastes: []*goparent.Waste{},
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -90,7 +90,7 @@ func TestWasteGetHandler(t *testing.T) {
 		{
 			desc: "returns one waste",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -100,7 +100,7 @@ func TestWasteGetHandler(t *testing.T) {
 				},
 			},
 
-			wasteService: &mock.MockWasteService{
+			wasteService: &mock.WasteService{
 				Wastes: []*goparent.Waste{
 					&goparent.Waste{ID: "1"},
 				},
@@ -329,7 +329,7 @@ func TestWasteNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -338,8 +338,8 @@ func TestWasteNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			wasteService:  &mock.MockWasteService{},
+			familyService: &mock.FamilyService{},
+			wasteService:  &mock.WasteService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusOK,
@@ -356,11 +356,11 @@ func TestWasteNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
-			familyService: &mock.MockFamilyService{},
-			wasteService:  &mock.MockWasteService{},
+			familyService: &mock.FamilyService{},
+			wasteService:  &mock.WasteService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,
@@ -376,7 +376,7 @@ func TestWasteNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -385,8 +385,8 @@ func TestWasteNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			wasteService: &mock.MockWasteService{
+			familyService: &mock.FamilyService{},
+			wasteService: &mock.WasteService{
 				GetErr: errors.New("unknown waste error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -404,9 +404,9 @@ func TestWasteNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			wasteService:  &mock.MockWasteService{},
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			wasteService:  &mock.WasteService{},
 			contextUser:   &goparent.User{},
 			contextError:  true,
 			responseCode:  http.StatusUnauthorized,
@@ -414,7 +414,7 @@ func TestWasteNewHandler(t *testing.T) {
 		{
 			desc: "decode input error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -423,8 +423,8 @@ func TestWasteNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			wasteService:  &mock.MockWasteService{},
+			familyService: &mock.FamilyService{},
+			wasteService:  &mock.WasteService{},
 			contextUser:   &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:  false,
 			responseCode:  http.StatusInternalServerError,

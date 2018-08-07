@@ -6,7 +6,8 @@ import (
 	"github.com/sasimpson/goparent"
 )
 
-type MockUserInvitationService struct {
+//UserInvitationService -
+type UserInvitationService struct {
 	GetSentInvites  []*goparent.UserInvitation
 	GetInvites      []*goparent.UserInvitation
 	GetInvite       *goparent.UserInvitation
@@ -18,21 +19,24 @@ type MockUserInvitationService struct {
 	DeleteErr       error
 }
 
-func (m *MockUserInvitationService) InviteParent(*goparent.User, string, time.Time) error {
+//InviteParent -
+func (m *UserInvitationService) InviteParent(*goparent.User, string, time.Time) error {
 	if m.InviteParentErr != nil {
 		return m.InviteParentErr
 	}
 	return nil
 }
 
-func (m *MockUserInvitationService) SentInvites(*goparent.User) ([]*goparent.UserInvitation, error) {
+//SentInvites -
+func (m *UserInvitationService) SentInvites(*goparent.User) ([]*goparent.UserInvitation, error) {
 	if m.SentInvitesErr != nil {
 		return nil, m.SentInvitesErr
 	}
 	return nil, nil
 }
 
-func (m *MockUserInvitationService) Invite(string) (*goparent.UserInvitation, error) {
+//Invite -
+func (m *UserInvitationService) Invite(string) (*goparent.UserInvitation, error) {
 	if m.InviteErr != nil {
 		return nil, m.InviteErr
 	}
@@ -42,7 +46,8 @@ func (m *MockUserInvitationService) Invite(string) (*goparent.UserInvitation, er
 	return nil, nil
 }
 
-func (m *MockUserInvitationService) Invites(*goparent.User) ([]*goparent.UserInvitation, error) {
+//Invites -
+func (m *UserInvitationService) Invites(*goparent.User) ([]*goparent.UserInvitation, error) {
 	if m.InvitesErr != nil {
 		return nil, m.InvitesErr
 	}
@@ -54,14 +59,16 @@ func (m *MockUserInvitationService) Invites(*goparent.User) ([]*goparent.UserInv
 	return nil, nil
 }
 
-func (m *MockUserInvitationService) Accept(*goparent.User, string) error {
+//Accept -
+func (m *UserInvitationService) Accept(*goparent.User, string) error {
 	if m.AcceptErr != nil {
 		return m.AcceptErr
 	}
 	return nil
 }
 
-func (m *MockUserInvitationService) Delete(*goparent.UserInvitation) error {
+//Delete -
+func (m *UserInvitationService) Delete(*goparent.UserInvitation) error {
 	if m.DeleteErr != nil {
 		return m.DeleteErr
 	}

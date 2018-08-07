@@ -5,7 +5,8 @@ import (
 	"github.com/sasimpson/goparent/config"
 )
 
-type MockFeedingService struct {
+//FeedingService -
+type FeedingService struct {
 	Env      *config.Env
 	Feedings []*goparent.Feeding
 	Stat     *goparent.FeedingSummary
@@ -15,14 +16,16 @@ type MockFeedingService struct {
 	GraphErr error
 }
 
-func (m *MockFeedingService) Save(feeding *goparent.Feeding) error {
+//Save -
+func (m *FeedingService) Save(feeding *goparent.Feeding) error {
 	if m.GetErr != nil {
 		return m.GetErr
 	}
 	return nil
 }
 
-func (m *MockFeedingService) Feeding(family *goparent.Family) ([]*goparent.Feeding, error) {
+//Feeding -
+func (m *FeedingService) Feeding(family *goparent.Family, days uint64) ([]*goparent.Feeding, error) {
 	if m.GetErr != nil {
 		return nil, m.GetErr
 	}
@@ -33,7 +36,8 @@ func (m *MockFeedingService) Feeding(family *goparent.Family) ([]*goparent.Feedi
 	return nil, nil
 }
 
-func (m *MockFeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary, error) {
+//Stats -
+func (m *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary, error) {
 	if m.StatErr != nil {
 		return nil, m.StatErr
 	}
@@ -44,7 +48,8 @@ func (m *MockFeedingService) Stats(child *goparent.Child) (*goparent.FeedingSumm
 	return nil, nil
 }
 
-func (m *MockFeedingService) GraphData(*goparent.Child) (*goparent.FeedingChartData, error) {
+//GraphData -
+func (m *FeedingService) GraphData(*goparent.Child) (*goparent.FeedingChartData, error) {
 	if m.GraphErr != nil {
 		return nil, m.GraphErr
 	}

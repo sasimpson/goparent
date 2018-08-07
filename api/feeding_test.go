@@ -32,7 +32,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		{
 			desc: "returns no feedings",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -41,8 +41,8 @@ func TestFeedingGetHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{
+			familyService: &mock.FamilyService{},
+			feedingService: &mock.FeedingService{
 				Feedings: []*goparent.Feeding{},
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -53,7 +53,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		{
 			desc: "returns some feedings",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -62,8 +62,8 @@ func TestFeedingGetHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{
+			familyService: &mock.FamilyService{},
+			feedingService: &mock.FeedingService{
 				Feedings: []*goparent.Feeding{
 					&goparent.Feeding{ID: "1", Type: "bottle", Amount: 4.5, UserID: "1", FamilyID: "1", TimeStamp: time.Now(), ChildID: "1"},
 					&goparent.Feeding{ID: "2", Type: "bottle", Amount: 5.5, UserID: "1", FamilyID: "1", TimeStamp: time.Now().Add(time.Hour), ChildID: "1"},
@@ -77,11 +77,11 @@ func TestFeedingGetHandler(t *testing.T) {
 		{
 			desc: "returns no family error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
-			familyService:  &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{},
+			familyService:  &mock.FamilyService{},
+			feedingService: &mock.FeedingService{},
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:   false,
 			responseCode:   http.StatusInternalServerError,
@@ -89,9 +89,9 @@ func TestFeedingGetHandler(t *testing.T) {
 		{
 			desc:          "returns feeding error",
 			env:           &config.Env{},
-			userService:   &mock.MockUserService{},
-			familyService: &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{
+			userService:   &mock.UserService{},
+			familyService: &mock.FamilyService{},
+			feedingService: &mock.FeedingService{
 				GetErr: errors.New("unknown feeding error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -101,9 +101,9 @@ func TestFeedingGetHandler(t *testing.T) {
 		{
 			desc:           "returns auth error",
 			env:            &config.Env{},
-			userService:    &mock.MockUserService{},
-			familyService:  &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{},
+			userService:    &mock.UserService{},
+			familyService:  &mock.FamilyService{},
+			feedingService: &mock.FeedingService{},
 			contextUser:    &goparent.User{},
 			contextError:   true,
 			responseCode:   http.StatusUnauthorized,
@@ -173,7 +173,7 @@ func TestFeedingNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -182,8 +182,8 @@ func TestFeedingNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService:  &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{},
+			familyService:  &mock.FamilyService{},
+			feedingService: &mock.FeedingService{},
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:   false,
 			responseCode:   http.StatusOK,
@@ -201,11 +201,11 @@ func TestFeedingNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
-			familyService:  &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{},
+			familyService:  &mock.FamilyService{},
+			feedingService: &mock.FeedingService{},
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:   false,
 			responseCode:   http.StatusInternalServerError,
@@ -222,7 +222,7 @@ func TestFeedingNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -231,8 +231,8 @@ func TestFeedingNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService: &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{
+			familyService: &mock.FamilyService{},
+			feedingService: &mock.FeedingService{
 				GetErr: errors.New("unknown feeding error"),
 			},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -251,9 +251,9 @@ func TestFeedingNewHandler(t *testing.T) {
 					ChildID:   "1",
 					FamilyID:  "1",
 					TimeStamp: timestamp}},
-			userService:    &mock.MockUserService{},
-			familyService:  &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{},
+			userService:    &mock.UserService{},
+			familyService:  &mock.FamilyService{},
+			feedingService: &mock.FeedingService{},
 			contextUser:    &goparent.User{},
 			contextError:   true,
 			responseCode:   http.StatusUnauthorized,
@@ -261,7 +261,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		{
 			desc: "decode input error",
 			env:  &config.Env{},
-			userService: &mock.MockUserService{
+			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
 					Admin:       "1",
@@ -270,8 +270,8 @@ func TestFeedingNewHandler(t *testing.T) {
 					LastUpdated: time.Now(),
 				},
 			},
-			familyService:  &mock.MockFamilyService{},
-			feedingService: &mock.MockFeedingService{},
+			familyService:  &mock.FamilyService{},
+			feedingService: &mock.FeedingService{},
 			contextUser:    &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			contextError:   false,
 			responseCode:   http.StatusInternalServerError,
@@ -320,7 +320,7 @@ func TestFeedingViewHandler(t *testing.T) {
 
 	mockHandler := Handler{
 		Env: &config.Env{},
-		UserService: &mock.MockUserService{
+		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
 				Admin:       "1",
@@ -329,8 +329,8 @@ func TestFeedingViewHandler(t *testing.T) {
 				LastUpdated: time.Now(),
 			},
 		},
-		FamilyService:  &mock.MockFamilyService{},
-		FeedingService: &mock.MockFeedingService{},
+		FamilyService:  &mock.FamilyService{},
+		FeedingService: &mock.FeedingService{},
 	}
 
 	req, err := http.NewRequest("GET", "/feeding/1", nil)
@@ -358,7 +358,7 @@ func TestFeedingViewHandler(t *testing.T) {
 func TestFeedingEditHandler(t *testing.T) {
 	mockHandler := Handler{
 		Env: &config.Env{},
-		UserService: &mock.MockUserService{
+		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
 				Admin:       "1",
@@ -367,8 +367,8 @@ func TestFeedingEditHandler(t *testing.T) {
 				LastUpdated: time.Now(),
 			},
 		},
-		FamilyService:  &mock.MockFamilyService{},
-		FeedingService: &mock.MockFeedingService{},
+		FamilyService:  &mock.FamilyService{},
+		FeedingService: &mock.FeedingService{},
 	}
 
 	req, err := http.NewRequest("GET", "/feeding/1", nil)
@@ -395,7 +395,7 @@ func TestFeedingEditHandler(t *testing.T) {
 func TestFeedingDeleteHandler(t *testing.T) {
 	mockHandler := Handler{
 		Env: &config.Env{},
-		UserService: &mock.MockUserService{
+		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
 				Admin:       "1",
@@ -404,8 +404,8 @@ func TestFeedingDeleteHandler(t *testing.T) {
 				LastUpdated: time.Now(),
 			},
 		},
-		FamilyService:  &mock.MockFamilyService{},
-		FeedingService: &mock.MockFeedingService{},
+		FamilyService:  &mock.FamilyService{},
+		FeedingService: &mock.FeedingService{},
 	}
 
 	req, err := http.NewRequest("DELETE", "/feeding/1", nil)
