@@ -23,7 +23,7 @@ func (m *SleepService) Save(*goparent.Sleep) error {
 }
 
 //Sleep -
-func (m *SleepService) Sleep(*goparent.Family) ([]*goparent.Sleep, error) {
+func (m *SleepService) Sleep(*goparent.Family, uint64) ([]*goparent.Sleep, error) {
 	if m.GetErr != nil {
 		return nil, m.GetErr
 	}

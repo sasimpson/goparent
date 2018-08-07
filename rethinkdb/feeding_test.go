@@ -24,10 +24,7 @@ func TestGetFeedings(t *testing.T) {
 			desc: "return 1 feeding",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("feeding").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("timestamp")),
+				r.Table("feeding").MockAnything(),
 			).
 				Return([]interface{}{
 					map[string]interface{}{
@@ -47,10 +44,7 @@ func TestGetFeedings(t *testing.T) {
 			desc: "return 0 feeding",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("feeding").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("timestamp")),
+				r.Table("feeding").MockAnything(),
 			).
 				Return([]interface{}{}, nil),
 			family:       &goparent.Family{ID: "1"},
@@ -61,10 +55,7 @@ func TestGetFeedings(t *testing.T) {
 			desc: "return 0 feeding",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("feeding").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("timestamp")),
+				r.Table("feeding").MockAnything(),
 			).
 				Return([]interface{}{}, errors.New("unknown error")),
 			family:       &goparent.Family{ID: "1"},

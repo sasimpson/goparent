@@ -46,7 +46,7 @@ func (h *Handler) sleepGetHandler() http.Handler {
 			return
 		}
 
-		sleepData, err := h.SleepService.Sleep(family)
+		sleepData, err := h.SleepService.Sleep(family, 7)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -212,5 +212,45 @@ func (h *Handler) sleepToggleStatus() http.Handler {
 		// return
 		http.Error(w, "not implemented", http.StatusNotImplemented)
 
+	})
+}
+
+func (h *Handler) sleepGraphData() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET sleep graph data")
+		user, err := UserFromContext(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		childID := mux.Vars(r)["id"]
+
+		family, err := h.UserService.GetFamily(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		child, err := h.ChildService.Child(childID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		//child needs to belong to the user's family.
+		if child.FamilyID != family.ID {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
+		sleepGraphData, err := h.SleepService.GraphData(child)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", jsonContentType)
+		json.NewEncoder(w).Encode(sleepGraphData)
 	})
 }

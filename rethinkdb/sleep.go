@@ -100,16 +100,18 @@ func (ss *SleepService) Save(sleep *goparent.Sleep) error {
 }
 
 //Sleep - get all sleeps for a user (parent)
-func (ss *SleepService) Sleep(family *goparent.Family) ([]*goparent.Sleep, error) {
+func (ss *SleepService) Sleep(family *goparent.Family, days uint64) ([]*goparent.Sleep, error) {
 	session, err := ss.Env.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
+	daysBack := int(0 - days)
 	res, err := gorethink.Table("sleep").
 		Filter(map[string]interface{}{
 			"familyID": family.ID,
 		}).
+		Filter(gorethink.Row.Field("timestamp").During(time.Now().AddDate(0, 0, daysBack), time.Now())).
 		OrderBy(gorethink.Desc("end")).
 		Run(session)
 	if err != nil {
@@ -168,5 +170,20 @@ func (ss *SleepService) Stats(child *goparent.Child) (*goparent.SleepSummary, er
 
 //GraphData -
 func (ss *SleepService) GraphData(child *goparent.Child) (*goparent.SleepChartData, error) {
+	// session, err := ss.Env.DB.GetConnection()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// end := time.Now()
+	// start := end.AddDate(0, 0, -7)
+
+	// res, err := gorethink.Table("sleep").
+	// 	Filter(gorethink.Row.Field("timestamp").During(start, end)).OrderBy("timestamp").
+	// 	Group(
+	// 		gorethink.Row.Field("timestamp").Year(),
+	// 		gorethink.Row.Field("timestamp").Month(),
+	// 		gorethink.Row.Field("timestamp").Day(),
+	// 	).Run(session)
 	return nil, nil
 }

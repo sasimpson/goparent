@@ -173,7 +173,7 @@ type SleepChartDataset struct {
 //SleepService -
 type SleepService interface {
 	Save(*Sleep) error
-	Sleep(*Family) ([]*Sleep, error)
+	Sleep(*Family, uint64) ([]*Sleep, error)
 	Stats(*Child) (*SleepSummary, error)
 	Status(*Family, *Child) (bool, error)
 	Start(*Sleep, *Family, *Child) error

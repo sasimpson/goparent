@@ -79,7 +79,7 @@ func TestGetSleep(t *testing.T) {
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			tC.env.DB = config.DBEnv{Session: mock}
 			fs := SleepService{Env: tC.env}
-			sleepResult, err := fs.Sleep(tC.family)
+			sleepResult, err := fs.Sleep(tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {
