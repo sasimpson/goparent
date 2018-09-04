@@ -17,7 +17,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/config"
+	"github.com/sasimpson/goparent/datastore"
 	"github.com/sasimpson/goparent/rethinkdb"
+	"google.golang.org/appengine"
 )
 
 type contextKey string
@@ -82,6 +84,34 @@ func RunService(env *config.Env) {
 		Env:                   env,
 	}
 
+	r := buildAPIRouting()
+
+	log.Printf("starting service on 8000")
+	http.Handle("/", r)
+	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(r))
+}
+
+//RunAppEngineService - runs service in appengine
+func RunAppEngineService(env *config.Env) {
+	serviceHandler := Handler{
+		Env:                   env,
+		UserService:           &datastore.UserService{Env: env},
+		UserInvitationService: &datastore.UserInviteService{Env: env},
+		FamilyService:         &datastore.FamilyService{Env: env},
+		ChildService:          &datastore.ChildService{Env: env},
+		FeedingService:        &datastore.FeedingService{Env: env},
+		SleepService:          &datastore.SleepService{Env: env},
+		WasteService:          &datastore.WasteService{Env: env},
+	}
+
+	r := buildAPIRouting()
+	log.Printf("starting appengine service...")
+	http.Handle("/", r)
+	appengine.Main()
+}
+
+//buildAPIRouting - common api routing here
+func buildAPIRouting() *mux.Router {
 	r := mux.NewRouter()
 	a := r.PathPrefix("/api").Subrouter()
 	a.HandleFunc("/", apiHandler)
@@ -96,10 +126,6 @@ func RunService(env *config.Env) {
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
-
-	log.Printf("starting service on 8000")
-	http.Handle("/", r)
-	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {

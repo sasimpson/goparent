@@ -1,9 +1,24 @@
 package datastore
 
-import "github.com/sasimpson/goparent"
+import (
+	"github.com/dgrijalva/jwt-go"
+	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/rateup/config"
+)
 
 //UserService -
 type UserService struct {
+	Env *config.Env
+}
+
+//UserClaims -
+type UserClaims struct {
+	ID       string
+	Name     string
+	Email    string
+	Username string
+	Password string
+	jwt.StandardClaims
 }
 
 //User -

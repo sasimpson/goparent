@@ -1,32 +1,34 @@
 module github.com/sasimpson/goparent
 
 require (
-	github.com/cenkalti/backoff v1.1.0
-	github.com/davecgh/go-spew v1.1.0
+	github.com/cenkalti/backoff v2.0.0+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/golang/protobuf v1.0.0
-	github.com/gorilla/context v0.0.0-20160226214623-1ea25387ff6f
-	github.com/gorilla/handlers v1.3.0
-	github.com/gorilla/mux v1.6.1
+	github.com/golang/protobuf v1.2.0
+	github.com/gorilla/context v1.1.1
+	github.com/gorilla/handlers v1.4.0
+	github.com/gorilla/mux v1.6.2
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed
-	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb
-	github.com/magiconair/properties v1.7.6
-	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
-	github.com/pelletier/go-toml v1.1.0
+	github.com/hashicorp/hcl v1.0.0
+	github.com/magiconair/properties v1.8.0
+	github.com/mitchellh/mapstructure v1.0.0
+	github.com/pelletier/go-toml v1.2.0
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/sirupsen/logrus v1.0.5
-	github.com/spf13/afero v1.0.2
+	github.com/sirupsen/logrus v1.0.6
+	github.com/spf13/afero v1.1.1
 	github.com/spf13/cast v1.2.0
-	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
-	github.com/spf13/pflag v1.0.0
-	github.com/spf13/viper v1.0.0
-	github.com/stretchr/testify v1.2.1
-	golang.org/x/crypto v0.0.0-20180315204335-b4956d363a8b
-	golang.org/x/net v0.0.0-20180314180242-e0c57d8f86c1
-	golang.org/x/sys v0.0.0-20180315095008-cc7307a45468
+	github.com/spf13/jwalterweatherman v0.0.0-20180814060501-14d3d4c51834
+	github.com/spf13/pflag v1.0.2
+	github.com/spf13/viper v1.1.0
+	github.com/stretchr/testify v1.2.2
+	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
+	golang.org/x/net v0.0.0-20180826012351-8a410e7b638d
+	golang.org/x/sys v0.0.0-20180903190138-2b024373dcd9
 	golang.org/x/text v0.3.0
+	google.golang.org/appengine v1.1.0
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/fatih/pool.v2 v2.0.0
 	gopkg.in/gorethink/gorethink.v3 v3.0.5
-	gopkg.in/yaml.v2 v2.1.1
+	gopkg.in/yaml.v2 v2.2.1
 )
