@@ -25,10 +25,7 @@ func TestGetSleep(t *testing.T) {
 			desc: "return 1 sleep",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("sleep").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("end")),
+				r.Table("sleep").MockAnything(),
 			).
 				Return([]interface{}{
 					map[string]interface{}{
@@ -48,10 +45,7 @@ func TestGetSleep(t *testing.T) {
 			desc: "return 0 sleep",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("sleep").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("end")),
+				r.Table("sleep").MockAnything(),
 			).
 				Return([]interface{}{}, nil),
 			family:       &goparent.Family{ID: "1"},
@@ -62,10 +56,7 @@ func TestGetSleep(t *testing.T) {
 			desc: "return sleep error",
 			env:  &config.Env{},
 			query: (&r.Mock{}).On(
-				r.Table("sleep").Filter(
-					map[string]interface{}{
-						"familyID": "1",
-					}).OrderBy(r.Desc("end")),
+				r.Table("sleep").MockAnything(),
 			).
 				Return([]interface{}{}, errors.New("unknown error")),
 			family:       &goparent.Family{ID: "1"},
