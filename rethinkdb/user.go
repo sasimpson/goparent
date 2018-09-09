@@ -7,13 +7,13 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
 //UserService -
 type UserService struct {
-	Env *config.Env
+	Env *goparent.Env
+	DB  *DBEnv
 }
 
 //UserClaims - structure for inserting claims into a jwt auth token
@@ -28,11 +28,11 @@ type UserClaims struct {
 
 //User - gets the user data based on the id string
 func (us *UserService) User(id string) (*goparent.User, error) {
-	session, err := us.Env.DB.GetConnection()
+	err := us.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
-	res, err := gorethink.Table("users").Get(id).Run(session)
+	res, err := gorethink.Table("users").Get(id).Run(us.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -50,14 +50,14 @@ func (us *UserService) User(id string) (*goparent.User, error) {
 //UserByLogin - gets a user by their username and password
 func (us *UserService) UserByLogin(username string, password string) (*goparent.User, error) {
 	//TODO: need to hash the password
-	session, err := us.Env.DB.GetConnection()
+	err := us.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := gorethink.Table("users").Filter(map[string]interface{}{
 		"email":    username,
-		"password": password}).Run(session)
+		"password": password}).Run(us.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (us *UserService) UserByLogin(username string, password string) (*goparent.
 
 //Save - saves the user. creates it if it doesn't exist.  upsert only works if there is an id and that email exists.
 func (us *UserService) Save(user *goparent.User) error {
-	session, err := us.Env.DB.GetConnection()
+	err := us.DB.GetConnection()
 	if err != nil {
 		return err
 	}
@@ -85,14 +85,14 @@ func (us *UserService) Save(user *goparent.User) error {
 	//check to see if a user with that email exists already
 	res, err := gorethink.Table("users").Filter(map[string]interface{}{
 		"email": user.Email,
-	}).Run(session)
+	}).Run(us.DB.Session)
 	if err != nil {
 		return err
 	}
 	defer res.Close()
 
 	var family *goparent.Family
-	fs := &FamilyService{Env: us.Env}
+	fs := &FamilyService{Env: us.Env, DB: us.DB}
 	//if the user doesn't have a current family
 	if user.CurrentFamily == "" && user.ID != "" {
 		//get the family for which the user is the admin.
@@ -119,7 +119,7 @@ func (us *UserService) Save(user *goparent.User) error {
 
 	//if the user doesn't exist in the db OR the ID exists, save to db
 	if res.IsNil() || user.ID != "" {
-		res2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+		res2, err := gorethink.Table("users").Insert(user, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(us.DB.Session)
 		if err != nil {
 			return err
 		}
@@ -182,7 +182,7 @@ func (us *UserService) GetFamily(user *goparent.User) (*goparent.Family, error) 
 		return nil, errors.New("user has no current family")
 	}
 
-	fs := FamilyService{Env: us.Env}
+	fs := FamilyService{Env: us.Env, DB: us.DB}
 	family, err := fs.Family(user.CurrentFamily)
 	if err != nil {
 		return nil, err
@@ -192,7 +192,7 @@ func (us *UserService) GetFamily(user *goparent.User) (*goparent.Family, error) 
 
 //GetAllFamily - return the family for a user. used for lookups
 func (us *UserService) GetAllFamily(user *goparent.User) ([]*goparent.Family, error) {
-	session, err := us.Env.DB.GetConnection()
+	err := us.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (us *UserService) GetAllFamily(user *goparent.User) ([]*goparent.Family, er
 				return row.Field("members").Contains(user.ID)
 			},
 		).
-		Run(session)
+		Run(us.DB.Session)
 	if err != nil {
 		return nil, err
 	}

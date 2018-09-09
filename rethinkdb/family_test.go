@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/stretchr/testify/assert"
 
 	r "gopkg.in/gorethink/gorethink.v3"
@@ -17,7 +16,7 @@ func TestFamilySave(t *testing.T) {
 		desc        string
 		family      *goparent.Family
 		query       *r.MockQuery
-		env         *config.Env
+		env         *goparent.Env
 		returnError error
 	}{
 		{
@@ -35,7 +34,7 @@ func TestFamilySave(t *testing.T) {
 					Errors:        0,
 					GeneratedKeys: []string{"1"},
 				}, nil),
-			env:         &config.Env{},
+			env:         &goparent.Env{},
 			returnError: nil,
 		},
 		{
@@ -54,7 +53,7 @@ func TestFamilySave(t *testing.T) {
 					Inserted:      0,
 					Errors:        0,
 					GeneratedKeys: []string{"1"}}, nil),
-			env:         &config.Env{},
+			env:         &goparent.Env{},
 			returnError: nil,
 		},
 		{
@@ -73,7 +72,7 @@ func TestFamilySave(t *testing.T) {
 					Inserted:      0,
 					Errors:        1,
 					GeneratedKeys: []string{"1"}}, errors.New("test error")),
-			env:         &config.Env{},
+			env:         &goparent.Env{},
 			returnError: errors.New("test error"),
 		},
 	}
@@ -82,8 +81,7 @@ func TestFamilySave(t *testing.T) {
 
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := FamilyService{Env: tC.env}
+			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.Save(tC.family)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
@@ -98,7 +96,7 @@ func TestFamily(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		id          string
 		family      *goparent.Family
 		query       *r.MockQuery
@@ -106,7 +104,7 @@ func TestFamily(t *testing.T) {
 	}{
 		{
 			desc: "return family",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			id:   "family-1",
 			family: &goparent.Family{
 				ID:          "family-1",
@@ -128,7 +126,7 @@ func TestFamily(t *testing.T) {
 		},
 		{
 			desc: "return error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			id:   "family-1",
 			family: &goparent.Family{
 				ID:          "family-1",
@@ -148,8 +146,7 @@ func TestFamily(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := FamilyService{Env: tC.env}
+			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			family, err := fs.Family(tC.id)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
@@ -165,7 +162,7 @@ func TestChildren(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		family       *goparent.Family
 		query        *r.MockQuery
 		resultLength int
@@ -173,7 +170,7 @@ func TestChildren(t *testing.T) {
 	}{
 		{
 			desc: "get some children",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -206,7 +203,7 @@ func TestChildren(t *testing.T) {
 		},
 		{
 			desc: "get error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -227,8 +224,7 @@ func TestChildren(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := FamilyService{Env: tC.env}
+			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			children, err := fs.Children(tC.family)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
@@ -244,7 +240,7 @@ func TestAddMember(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		family      *goparent.Family
 		user        *goparent.User
 		query       *r.MockQuery
@@ -252,7 +248,7 @@ func TestAddMember(t *testing.T) {
 	}{
 		{
 			desc: "add member",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -271,7 +267,7 @@ func TestAddMember(t *testing.T) {
 		},
 		{
 			desc: "add member fail",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -291,7 +287,7 @@ func TestAddMember(t *testing.T) {
 		},
 		{
 			desc: "add member db error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -314,8 +310,7 @@ func TestAddMember(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := FamilyService{Env: tC.env}
+			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.AddMember(tC.family, tC.user)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
@@ -330,7 +325,7 @@ func TestGetAdminFamily(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		user        *goparent.User
 		family      *goparent.Family
 		query       *r.MockQuery
@@ -338,7 +333,7 @@ func TestGetAdminFamily(t *testing.T) {
 	}{
 		{
 			desc: "valid call",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{
 				ID: "user-1",
 			},
@@ -361,7 +356,7 @@ func TestGetAdminFamily(t *testing.T) {
 		},
 		{
 			desc: "nothing returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{
 				ID: "user-1",
 			},
@@ -382,8 +377,7 @@ func TestGetAdminFamily(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := FamilyService{Env: tC.env}
+			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			family, err := fs.GetAdminFamily(tC.user)
 			t.Logf("%#v %#v", family, err)
 			if tC.returnError != nil {

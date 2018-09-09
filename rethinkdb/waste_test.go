@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
@@ -14,7 +13,7 @@ import (
 func TestGetWastes(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		query        *r.MockQuery
 		family       *goparent.Family
 		resultLength int
@@ -22,7 +21,7 @@ func TestGetWastes(t *testing.T) {
 	}{
 		{
 			desc: "return 1 waste",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 				// Filter(
@@ -47,7 +46,7 @@ func TestGetWastes(t *testing.T) {
 		},
 		{
 			desc: "return 0 waste",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 				// r.Table("waste").Filter(
@@ -62,7 +61,7 @@ func TestGetWastes(t *testing.T) {
 		},
 		{
 			desc: "return 0 waste",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 				// r.Table("waste").Filter(
@@ -80,8 +79,7 @@ func TestGetWastes(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := WasteService{Env: tC.env}
+			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			wasteResult, err := fs.Waste(tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
@@ -99,7 +97,7 @@ func TestWasteSave(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		id          string
 		query       *r.MockQuery
 		timestamp   time.Time
@@ -108,7 +106,7 @@ func TestWasteSave(t *testing.T) {
 	}{
 		{
 			desc:      "save data",
-			env:       &config.Env{},
+			env:       &goparent.Env{},
 			id:        "1",
 			timestamp: timestamp.Add(time.Hour),
 			query: (&r.Mock{}).On(
@@ -131,7 +129,7 @@ func TestWasteSave(t *testing.T) {
 		},
 		{
 			desc:      "save data error",
-			env:       &config.Env{},
+			env:       &goparent.Env{},
 			timestamp: timestamp.Add(time.Hour),
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
@@ -152,8 +150,7 @@ func TestWasteSave(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := WasteService{Env: tC.env}
+			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.Save(&tC.data)
 			if tC.returnError != nil {
 				assert.Error(t, err, tC.returnError)
@@ -168,14 +165,14 @@ func TestWasteSave(t *testing.T) {
 func TestStats(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		query       *r.MockQuery
 		child       *goparent.Child
 		returnError error
 	}{
 		{
 			desc: "get stats",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 			).Return([]map[string]interface{}{
@@ -190,8 +187,7 @@ func TestStats(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := WasteService{Env: tC.env}
+			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			statsData, err := fs.Stats(tC.child)
 			if tC.returnError != nil {
 				assert.Error(t, err, tC.returnError)
@@ -206,14 +202,14 @@ func TestStats(t *testing.T) {
 func TestWasteGraph(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		query       *r.MockQuery
 		child       *goparent.Child
 		returnError *error
 	}{
 		{
 			desc: "get graph data",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 			).Return([]map[string]interface{}{
@@ -227,8 +223,7 @@ func TestWasteGraph(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			fs := WasteService{Env: tC.env}
+			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			chartData, err := fs.GraphData(tC.child)
 			if tC.returnError != nil {
 				assert.Error(t, err, tC.returnError)

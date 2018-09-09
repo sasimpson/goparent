@@ -13,7 +13,6 @@ import (
 	"github.com/sasimpson/goparent"
 
 	"github.com/gorilla/mux"
-	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +20,7 @@ import (
 func TestSleepGetHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		userService   goparent.UserService
 		familyService goparent.FamilyService
 		sleepService  goparent.SleepService
@@ -31,7 +30,7 @@ func TestSleepGetHandler(t *testing.T) {
 	}{
 		{
 			desc:          "returns auth error",
-			env:           &config.Env{},
+			env:           &goparent.Env{},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			sleepService:  &mock.SleepService{},
@@ -40,7 +39,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
@@ -51,7 +50,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns sleep error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -70,7 +69,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no sleep",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -90,7 +89,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns one sleep",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -153,7 +152,7 @@ func TestSleepNewHandler(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		sleepRequest  SleepRequest
 		userService   goparent.UserService
 		familyService goparent.FamilyService
@@ -165,7 +164,7 @@ func TestSleepNewHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit sleep",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -191,7 +190,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -210,7 +209,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns sleep error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -237,7 +236,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -254,7 +253,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -313,7 +312,7 @@ func TestSleepNewHandler(t *testing.T) {
 func TestSleepViewHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -321,7 +320,7 @@ func TestSleepViewHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepViewHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/1",
 			method:       "GET",
 			responseCode: http.StatusUnauthorized,
@@ -329,7 +328,7 @@ func TestSleepViewHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepViewHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/1",
 			method:       "GET",
 			responseCode: http.StatusNotImplemented,
@@ -365,7 +364,7 @@ func TestSleepViewHandler(t *testing.T) {
 func TestSleepEditHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -373,7 +372,7 @@ func TestSleepEditHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepEditHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/1",
 			method:       "PUT",
 			responseCode: http.StatusUnauthorized,
@@ -381,7 +380,7 @@ func TestSleepEditHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepEditHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/1",
 			method:       "PUT",
 			responseCode: http.StatusNotImplemented,
@@ -417,7 +416,7 @@ func TestSleepEditHandler(t *testing.T) {
 func TestSleepDeleteHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -425,7 +424,7 @@ func TestSleepDeleteHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepDeleteHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/1",
 			method:       "DELETE",
 			responseCode: http.StatusUnauthorized,
@@ -433,7 +432,7 @@ func TestSleepDeleteHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepDeleteHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/1",
 			method:       "DELETE",
 			responseCode: http.StatusNotImplemented,
@@ -469,7 +468,7 @@ func TestSleepDeleteHandler(t *testing.T) {
 func TestSleepStartHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -477,7 +476,7 @@ func TestSleepStartHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepStartHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/start",
 			method:       "POST",
 			responseCode: http.StatusUnauthorized,
@@ -485,7 +484,7 @@ func TestSleepStartHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepStartHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/start",
 			method:       "POST",
 			responseCode: http.StatusNotImplemented,
@@ -521,7 +520,7 @@ func TestSleepStartHandler(t *testing.T) {
 func TestSleepEndHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -529,7 +528,7 @@ func TestSleepEndHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepStartHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/end",
 			method:       "POST",
 			responseCode: http.StatusUnauthorized,
@@ -537,7 +536,7 @@ func TestSleepEndHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepStartHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/end",
 			method:       "POST",
 			responseCode: http.StatusNotImplemented,
@@ -573,7 +572,7 @@ func TestSleepEndHandler(t *testing.T) {
 func TestSleepToggleStatusHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -581,7 +580,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepToggleStatusHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/status",
 			method:       "GET",
 			responseCode: http.StatusUnauthorized,
@@ -589,7 +588,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepToggleStatusHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/sleep/status",
 			method:       "GET",
 			responseCode: http.StatusNotImplemented,
@@ -679,7 +678,7 @@ func TestInitSleepHandlers(t *testing.T) {
 		},
 	}
 
-	var testEnv config.Env
+	var testEnv goparent.Env
 	h := Handler{Env: &testEnv}
 	routes := mux.NewRouter()
 	h.initSleepHandlers(routes)

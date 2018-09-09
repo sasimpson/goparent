@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"gopkg.in/gorethink/gorethink.v3"
 )
 
 //SleepService - struct for implementing the interface
 type SleepService struct {
-	Env *config.Env
+	Env *goparent.Env
+	DB  *DBEnv
 }
 
 //ErrExistingStart - already have a start for that sleep record
@@ -22,7 +22,7 @@ var ErrNoExistingSession = errors.New("no existing sleep session to end")
 
 //Status - return the current status for a sleep session
 func (ss *SleepService) Status(family *goparent.Family, child *goparent.Child) (bool, error) {
-	session, err := ss.Env.DB.GetConnection()
+	err := ss.DB.GetConnection()
 	if err != nil {
 		return false, err
 	}
@@ -32,7 +32,7 @@ func (ss *SleepService) Status(family *goparent.Family, child *goparent.Child) (
 		"end":      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
 		"familyID": family.ID,
 		"childID":  child.ID,
-	}).Run(session)
+	}).Run(ss.DB.Session)
 	if err != nil {
 		if err == gorethink.ErrEmptyResult {
 			return false, nil
@@ -83,12 +83,12 @@ func (ss *SleepService) End(sleep *goparent.Sleep, family *goparent.Family, chil
 
 //Save - creates/saves the record.  saves if there is an id filled in.
 func (ss *SleepService) Save(sleep *goparent.Sleep) error {
-	session, err := ss.Env.DB.GetConnection()
+	err := ss.DB.GetConnection()
 	if err != nil {
 		return err
 	}
 
-	resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	resp, err := gorethink.Table("sleep").Insert(sleep, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(ss.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (ss *SleepService) Save(sleep *goparent.Sleep) error {
 
 //Sleep - get all sleeps for a user (parent)
 func (ss *SleepService) Sleep(family *goparent.Family, days uint64) ([]*goparent.Sleep, error) {
-	session, err := ss.Env.DB.GetConnection()
+	err := ss.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (ss *SleepService) Sleep(family *goparent.Family, days uint64) ([]*goparent
 		}).
 		Filter(gorethink.Row.Field("timestamp").During(time.Now().AddDate(0, 0, daysBack), time.Now())).
 		OrderBy(gorethink.Desc("end")).
-		Run(session)
+		Run(ss.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (ss *SleepService) Sleep(family *goparent.Family, days uint64) ([]*goparent
 
 //Stats - get sleep stats for one child for the last 24 hours.
 func (ss *SleepService) Stats(child *goparent.Child) (*goparent.SleepSummary, error) {
-	session, err := ss.Env.DB.GetConnection()
+	err := ss.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (ss *SleepService) Stats(child *goparent.Child) (*goparent.SleepSummary, er
 		}).
 		Filter(gorethink.Row.Field("start").During(start, end)).
 		OrderBy(gorethink.Desc("start")).
-		Run(session)
+		Run(ss.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (ss *SleepService) Stats(child *goparent.Child) (*goparent.SleepSummary, er
 
 //GraphData -
 func (ss *SleepService) GraphData(child *goparent.Child) (*goparent.SleepChartData, error) {
-	// session, err := ss.Env.DB.GetConnection()
+	// err := ss.DB.GetConnection()
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -184,6 +184,6 @@ func (ss *SleepService) GraphData(child *goparent.Child) (*goparent.SleepChartDa
 	// 		gorethink.Row.Field("timestamp").Year(),
 	// 		gorethink.Row.Field("timestamp").Month(),
 	// 		gorethink.Row.Field("timestamp").Day(),
-	// 	).Run(session)
+	// 	).Run(ss.DB.Session)
 	return nil, nil
 }

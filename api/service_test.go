@@ -11,7 +11,6 @@ import (
 	"github.com/sasimpson/goparent"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/sasimpson/goparent/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -87,13 +86,13 @@ func TestAuthRequiredMiddleware(t *testing.T) {
 	t.Skip()
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		user         *goparent.User
 		responseCode int
 	}{
 		// {
 		// 	desc: "no auth",
-		// 	env: &config.Env{
+		// 	env: &goparent.Env{
 		// 		Auth: config.Authentication{
 		// 			SigningKey: []byte("testkey"),
 		// 		},
@@ -109,8 +108,8 @@ func TestAuthRequiredMiddleware(t *testing.T) {
 		// },
 		{
 			desc: "with token",
-			env: &config.Env{
-				Auth: config.Authentication{
+			env: &goparent.Env{
+				Auth: goparent.Authentication{
 					SigningKey: []byte("testkey"),
 				},
 			},

@@ -12,7 +12,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +19,7 @@ import (
 func TestFeedingGetHandler(t *testing.T) {
 	testCases := []struct {
 		desc           string
-		env            *config.Env
+		env            *goparent.Env
 		userService    goparent.UserService
 		familyService  goparent.FamilyService
 		feedingService goparent.FeedingService
@@ -31,7 +30,7 @@ func TestFeedingGetHandler(t *testing.T) {
 	}{
 		{
 			desc: "returns no feedings",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -52,7 +51,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns some feedings",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -76,7 +75,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
@@ -88,7 +87,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc:          "returns feeding error",
-			env:           &config.Env{},
+			env:           &goparent.Env{},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			feedingService: &mock.FeedingService{
@@ -100,7 +99,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc:           "returns auth error",
-			env:            &config.Env{},
+			env:            &goparent.Env{},
 			userService:    &mock.UserService{},
 			familyService:  &mock.FamilyService{},
 			feedingService: &mock.FeedingService{},
@@ -151,7 +150,7 @@ func TestFeedingNewHandler(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc           string
-		env            *config.Env
+		env            *goparent.Env
 		feedingRequest FeedingRequest
 		userService    goparent.UserService
 		familyService  goparent.FamilyService
@@ -163,7 +162,7 @@ func TestFeedingNewHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit feeding",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -191,7 +190,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -212,7 +211,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns feeding error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -241,7 +240,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -260,7 +259,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -319,7 +318,7 @@ func TestFeedingNewHandler(t *testing.T) {
 func TestFeedingViewHandler(t *testing.T) {
 
 	mockHandler := Handler{
-		Env: &config.Env{},
+		Env: &goparent.Env{},
 		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
@@ -357,7 +356,7 @@ func TestFeedingViewHandler(t *testing.T) {
 
 func TestFeedingEditHandler(t *testing.T) {
 	mockHandler := Handler{
-		Env: &config.Env{},
+		Env: &goparent.Env{},
 		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
@@ -394,7 +393,7 @@ func TestFeedingEditHandler(t *testing.T) {
 
 func TestFeedingDeleteHandler(t *testing.T) {
 	mockHandler := Handler{
-		Env: &config.Env{},
+		Env: &goparent.Env{},
 		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
@@ -468,7 +467,7 @@ func TestInitFeedingHandlers(t *testing.T) {
 		},
 	}
 
-	var testEnv *config.Env
+	var testEnv *goparent.Env
 	h := Handler{Env: testEnv}
 	routes := mux.NewRouter()
 	h.initFeedingHandlers(routes)

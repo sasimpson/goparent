@@ -4,8 +4,43 @@ import (
 	"errors"
 	"time"
 
+	"gopkg.in/gorethink/gorethink.v3"
+
 	jwt "github.com/dgrijalva/jwt-go"
 )
+
+//Env - container for all environment configuraitons
+type Env struct {
+	Service Service
+	DB      Datastore
+	Auth    Authentication
+}
+
+//Service - structure for service configurations
+type Service struct {
+	Host string
+	Port int
+}
+
+//Authentication - structure for authentication configurations
+type Authentication struct {
+	SigningKey []byte
+}
+
+//DBEnv - Environment for DB settings
+type DBEnv struct {
+	Host     string
+	Port     int
+	Database string
+	Username string
+	Password string
+	Session  gorethink.QueryExecutor
+}
+
+//Datastore -
+type Datastore interface {
+	GetConnection() error
+}
 
 //ErrExistingInvitation -
 var ErrExistingInvitation = errors.New("invitation already exists for that parent")

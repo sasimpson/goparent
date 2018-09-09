@@ -12,7 +12,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +19,7 @@ import (
 func TestWasteGetHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		userService   goparent.UserService
 		familyService goparent.FamilyService
 		wasteService  goparent.WasteService
@@ -30,7 +29,7 @@ func TestWasteGetHandler(t *testing.T) {
 	}{
 		{
 			desc:          "returns auth error",
-			env:           &config.Env{},
+			env:           &goparent.Env{},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			wasteService:  &mock.WasteService{},
@@ -39,7 +38,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
@@ -50,7 +49,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns waste error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -69,7 +68,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no waste",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -89,7 +88,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns one waste",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -151,7 +150,7 @@ func TestWasteGetHandler(t *testing.T) {
 func TestWasteViewHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -159,7 +158,7 @@ func TestWasteViewHandler(t *testing.T) {
 	}{
 		{
 			desc:         "wasteViewHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/waste/1",
 			method:       "GET",
 			responseCode: http.StatusUnauthorized,
@@ -167,7 +166,7 @@ func TestWasteViewHandler(t *testing.T) {
 		},
 		{
 			desc:         "wasteViewHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/waste/1",
 			method:       "GET",
 			responseCode: http.StatusNotImplemented,
@@ -203,7 +202,7 @@ func TestWasteViewHandler(t *testing.T) {
 func TestWasteEditHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -211,7 +210,7 @@ func TestWasteEditHandler(t *testing.T) {
 	}{
 		{
 			desc:         "wasteEditHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/waste/1",
 			method:       "PUT",
 			responseCode: http.StatusUnauthorized,
@@ -219,7 +218,7 @@ func TestWasteEditHandler(t *testing.T) {
 		},
 		{
 			desc:         "wasteEditHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/waste/1",
 			method:       "PUT",
 			responseCode: http.StatusNotImplemented,
@@ -255,7 +254,7 @@ func TestWasteEditHandler(t *testing.T) {
 func TestWasteDeleteHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		route        string
 		method       string
 		responseCode int
@@ -263,7 +262,7 @@ func TestWasteDeleteHandler(t *testing.T) {
 	}{
 		{
 			desc:         "wasteDeleteHandler unauthorized",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/waste/1",
 			method:       "DELETE",
 			responseCode: http.StatusUnauthorized,
@@ -271,7 +270,7 @@ func TestWasteDeleteHandler(t *testing.T) {
 		},
 		{
 			desc:         "wasteDeleteHandler not impl",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			route:        "/waste/1",
 			method:       "DELETE",
 			responseCode: http.StatusNotImplemented,
@@ -308,7 +307,7 @@ func TestWasteNewHandler(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		wasteRequest  WasteRequest
 		userService   goparent.UserService
 		familyService goparent.FamilyService
@@ -320,7 +319,7 @@ func TestWasteNewHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit waste",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -347,7 +346,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -367,7 +366,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns waste error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -395,7 +394,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -413,7 +412,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -514,7 +513,7 @@ func TestInitWasteHandler(t *testing.T) {
 		},
 	}
 
-	var testEnv config.Env
+	var testEnv goparent.Env
 	h := Handler{Env: &testEnv}
 	routes := mux.NewRouter()
 	h.initWasteHandlers(routes)

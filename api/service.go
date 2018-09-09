@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,13 +12,8 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
-	"github.com/sasimpson/goparent/datastore"
-	"github.com/sasimpson/goparent/rethinkdb"
-	"google.golang.org/appengine"
 )
 
 type contextKey string
@@ -44,7 +38,7 @@ type Handler struct {
 	FeedingService        goparent.FeedingService
 	SleepService          goparent.SleepService
 	WasteService          goparent.WasteService
-	Env                   *config.Env
+	Env                   *goparent.Env
 }
 
 //ServiceInfo - return data about the service
@@ -69,49 +63,8 @@ type ErrService struct {
 	} `json:"error"`
 }
 
-//RunService - Runs service interfaces for app
-func RunService(env *config.Env) {
-	log.SetOutput(os.Stdout)
-
-	serviceHandler := Handler{
-		UserService:           &rethinkdb.UserService{Env: env},
-		UserInvitationService: &rethinkdb.UserInviteService{Env: env},
-		FamilyService:         &rethinkdb.FamilyService{Env: env},
-		ChildService:          &rethinkdb.ChildService{Env: env},
-		FeedingService:        &rethinkdb.FeedingService{Env: env},
-		SleepService:          &rethinkdb.SleepService{Env: env},
-		WasteService:          &rethinkdb.WasteService{Env: env},
-		Env:                   env,
-	}
-
-	r := buildAPIRouting()
-
-	log.Printf("starting service on 8000")
-	http.Handle("/", r)
-	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(r))
-}
-
-//RunAppEngineService - runs service in appengine
-func RunAppEngineService(env *config.Env) {
-	serviceHandler := Handler{
-		Env:                   env,
-		UserService:           &datastore.UserService{Env: env},
-		UserInvitationService: &datastore.UserInviteService{Env: env},
-		FamilyService:         &datastore.FamilyService{Env: env},
-		ChildService:          &datastore.ChildService{Env: env},
-		FeedingService:        &datastore.FeedingService{Env: env},
-		SleepService:          &datastore.SleepService{Env: env},
-		WasteService:          &datastore.WasteService{Env: env},
-	}
-
-	r := buildAPIRouting()
-	log.Printf("starting appengine service...")
-	http.Handle("/", r)
-	appengine.Main()
-}
-
-//buildAPIRouting - common api routing here
-func buildAPIRouting() *mux.Router {
+//BuildAPIRouting - common api routing here if passed a handler
+func BuildAPIRouting(serviceHandler *Handler) *mux.Router {
 	r := mux.NewRouter()
 	a := r.PathPrefix("/api").Subrouter()
 	a.HandleFunc("/", apiHandler)
@@ -122,10 +75,7 @@ func buildAPIRouting() *mux.Router {
 	serviceHandler.initFeedingHandlers(a)
 	serviceHandler.initSleepHandlers(a)
 	serviceHandler.initWasteHandlers(a)
-
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "Authorization"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
+	return r
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {

@@ -12,7 +12,6 @@ import (
 
 	mux "github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,7 +61,7 @@ func Test(t *testing.T) {
 		},
 	}
 
-	var testEnv *config.Env
+	var testEnv *goparent.Env
 	h := Handler{Env: testEnv}
 	routes := mux.NewRouter()
 	h.initChildrenHandlers(routes)
@@ -82,7 +81,7 @@ func Test(t *testing.T) {
 func TestChildSummary(t *testing.T) {
 	testCases := []struct {
 		desc           string
-		env            *config.Env
+		env            *goparent.Env
 		userService    goparent.UserService
 		childService   goparent.ChildService
 		feedingService goparent.FeedingService
@@ -95,7 +94,7 @@ func TestChildSummary(t *testing.T) {
 	}{
 		{
 			desc: "get child summary",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -148,7 +147,7 @@ func TestChildSummary(t *testing.T) {
 		},
 		{
 			desc:           "get child summary, fail auth",
-			env:            &config.Env{},
+			env:            &goparent.Env{},
 			userService:    &mock.UserService{},
 			childService:   &mock.ChildService{},
 			feedingService: &mock.FeedingService{},
@@ -160,7 +159,7 @@ func TestChildSummary(t *testing.T) {
 		},
 		{
 			desc: "get child summary, fail get family",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
@@ -173,7 +172,7 @@ func TestChildSummary(t *testing.T) {
 		},
 		{
 			desc: "get child summary, fail get child",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -194,7 +193,7 @@ func TestChildSummary(t *testing.T) {
 		},
 		{
 			desc: "get child summary, fail child/family match",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "2",
@@ -219,7 +218,7 @@ func TestChildSummary(t *testing.T) {
 		},
 		{
 			desc: "get child summary, fail feeding",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -246,7 +245,7 @@ func TestChildSummary(t *testing.T) {
 		},
 		{
 			desc: "get child summary, fail sleep",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -275,7 +274,7 @@ func TestChildSummary(t *testing.T) {
 		},
 		{
 			desc: "get child summary, fail waste",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -341,7 +340,7 @@ func TestChildSummary(t *testing.T) {
 func TestChildrenGetHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		userService   goparent.UserService
 		familyService goparent.FamilyService
 		childService  goparent.ChildService
@@ -352,7 +351,7 @@ func TestChildrenGetHandler(t *testing.T) {
 	}{
 		{
 			desc:          "returns auth error",
-			env:           &config.Env{},
+			env:           &goparent.Env{},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			childService:  &mock.ChildService{},
@@ -362,7 +361,7 @@ func TestChildrenGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
@@ -374,7 +373,7 @@ func TestChildrenGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns children error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -394,7 +393,7 @@ func TestChildrenGetHandler(t *testing.T) {
 		},
 		{
 			desc: "return no children",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -455,7 +454,7 @@ func TestChildrenGetHandler(t *testing.T) {
 func TestChildrenNewHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		userService   goparent.UserService
 		familyService goparent.FamilyService
 		childService  goparent.ChildService
@@ -467,7 +466,7 @@ func TestChildrenNewHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit child",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -492,7 +491,7 @@ func TestChildrenNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -510,7 +509,7 @@ func TestChildrenNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns child error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -536,7 +535,7 @@ func TestChildrenNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					ID:       "1",
@@ -552,7 +551,7 @@ func TestChildrenNewHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -608,7 +607,7 @@ func TestChildrenNewHandler(t *testing.T) {
 func TestChildViewHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		userService   goparent.UserService
 		familyService goparent.FamilyService
 		childService  goparent.ChildService
@@ -619,7 +618,7 @@ func TestChildViewHandler(t *testing.T) {
 		{
 
 			desc: "get child",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -642,7 +641,7 @@ func TestChildViewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
@@ -653,7 +652,7 @@ func TestChildViewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns child error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -672,7 +671,7 @@ func TestChildViewHandler(t *testing.T) {
 		},
 		{
 			desc:          "returns auth error",
-			env:           &config.Env{},
+			env:           &goparent.Env{},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			childService:  &mock.ChildService{},
@@ -683,7 +682,7 @@ func TestChildViewHandler(t *testing.T) {
 		{
 
 			desc: "get not user's child",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "2",
@@ -736,7 +735,7 @@ func TestChildViewHandler(t *testing.T) {
 func TestChildEditHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		userService   goparent.UserService
 		familyService goparent.FamilyService
 		childService  goparent.ChildService
@@ -747,7 +746,7 @@ func TestChildEditHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit child",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -776,7 +775,7 @@ func TestChildEditHandler(t *testing.T) {
 		},
 		{
 			desc: "submit child not in family",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -805,7 +804,7 @@ func TestChildEditHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -823,7 +822,7 @@ func TestChildEditHandler(t *testing.T) {
 		},
 		{
 			desc: "returns child error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -849,7 +848,7 @@ func TestChildEditHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					ID:       "1",
@@ -865,7 +864,7 @@ func TestChildEditHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -921,7 +920,7 @@ func TestChildEditHandler(t *testing.T) {
 func TestChildDeleteHandler(t *testing.T) {
 	testCases := []struct {
 		desc          string
-		env           *config.Env
+		env           *goparent.Env
 		userService   goparent.UserService
 		familyService goparent.FamilyService
 		childService  goparent.ChildService
@@ -932,7 +931,7 @@ func TestChildDeleteHandler(t *testing.T) {
 	}{
 		{
 			desc: "delete child",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -962,7 +961,7 @@ func TestChildDeleteHandler(t *testing.T) {
 		},
 		{
 			desc: "delete child, get child error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -993,7 +992,7 @@ func TestChildDeleteHandler(t *testing.T) {
 		},
 		{
 			desc: "delete child incorrect family",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -1023,7 +1022,7 @@ func TestChildDeleteHandler(t *testing.T) {
 		},
 		{
 			desc: "delete child, get delete error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					Name:     "test child",
@@ -1054,7 +1053,7 @@ func TestChildDeleteHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			childRequest: ChildRequest{
 				ChildData: goparent.Child{
 					ID:       "1",

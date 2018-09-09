@@ -3,12 +3,11 @@ package datastore
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/rateup/config"
 )
 
 //UserService -
 type UserService struct {
-	Env *config.Env
+	Env *goparent.Env
 }
 
 //UserClaims -

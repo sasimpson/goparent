@@ -1,13 +1,10 @@
 package mock
 
-import (
-	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
-)
+import "github.com/sasimpson/goparent"
 
 //ChildService -
 type ChildService struct {
-	Env       *config.Env
+	Env       *goparent.Env
 	Kid       *goparent.Child
 	Deleted   int
 	GetErr    error

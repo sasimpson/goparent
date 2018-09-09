@@ -4,21 +4,18 @@ import (
 	"testing"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
 func TestGetNoUser(t *testing.T) {
-	var testEnv config.Env
+	var testEnv goparent.Env
 	mock := r.NewMock()
 	mock.On(
 		r.Table("users").Get("1"),
 	).Return([]interface{}{}, nil)
 
-	testEnv.DB = config.DBEnv{Session: mock}
-
-	us := UserService{Env: &testEnv}
+	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
 	user, err := us.User("1")
 	mock.AssertExpectations(t)
 	assert.EqualError(t, err, "no result for that id")
@@ -26,7 +23,7 @@ func TestGetNoUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	var testEnv config.Env
+	var testEnv goparent.Env
 	mock := r.NewMock()
 	mock.On(
 		r.Table("users").Get("1"),
@@ -39,9 +36,7 @@ func TestGetUser(t *testing.T) {
 		"currentFamily": "1",
 	}}, nil)
 
-	testEnv.DB = config.DBEnv{Session: mock}
-
-	us := UserService{Env: &testEnv}
+	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
 	user, err := us.User("1")
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
@@ -49,7 +44,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestGetUserByLogin(t *testing.T) {
-	var testEnv config.Env
+	var testEnv goparent.Env
 	mock := r.NewMock()
 	mock.On(
 		r.Table("users").Filter(map[string]interface{}{
@@ -65,9 +60,7 @@ func TestGetUserByLogin(t *testing.T) {
 		"currentFamily": "1",
 	}}, nil)
 
-	testEnv.DB = config.DBEnv{Session: mock}
-
-	us := UserService{Env: &testEnv}
+	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
 	user, err := us.UserByLogin("testuser@test.com", "testpassword")
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
@@ -76,7 +69,7 @@ func TestGetUserByLogin(t *testing.T) {
 }
 
 func TestGetUserByLoginError(t *testing.T) {
-	var testEnv config.Env
+	var testEnv goparent.Env
 	mock := r.NewMock()
 	mock.On(
 		r.Table("users").Filter(map[string]interface{}{
@@ -85,8 +78,7 @@ func TestGetUserByLoginError(t *testing.T) {
 		}),
 	).Return([]interface{}{}, nil)
 
-	testEnv.DB = config.DBEnv{Session: mock}
-	us := UserService{Env: &testEnv}
+	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
 	user, err := us.UserByLogin("testuser@test.com", "testpassword")
 	mock.AssertExpectations(t)
 	assert.EqualError(t, err, "no result for that username password combo")
@@ -94,7 +86,7 @@ func TestGetUserByLoginError(t *testing.T) {
 }
 
 func TestNewUserSave(t *testing.T) {
-	var testEnv config.Env
+	var testEnv goparent.Env
 	mock := r.NewMock()
 	mock.On(
 		r.Table("users").Filter(map[string]interface{}{
@@ -135,8 +127,6 @@ func TestNewUserSave(t *testing.T) {
 				Updated: 1,
 			}, nil)
 
-	testEnv.DB = config.DBEnv{Session: mock}
-
 	user := goparent.User{
 		Name:     "test user",
 		Email:    "testuser@test.com",
@@ -144,7 +134,7 @@ func TestNewUserSave(t *testing.T) {
 		Password: "testpassword",
 	}
 
-	us := UserService{Env: &testEnv}
+	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
 	err := us.Save(&user)
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
@@ -152,7 +142,7 @@ func TestNewUserSave(t *testing.T) {
 }
 
 func TestUserSave(t *testing.T) {
-	var testEnv config.Env
+	var testEnv goparent.Env
 	mock := r.NewMock()
 	mock.On(
 		r.Table("users").Filter(map[string]interface{}{
@@ -195,8 +185,6 @@ func TestUserSave(t *testing.T) {
 		// 		Updated: 1,
 		// 	}, nil)
 
-	testEnv.DB = config.DBEnv{Session: mock}
-
 	user := goparent.User{
 		ID:       "1",
 		Name:     "test user",
@@ -205,7 +193,7 @@ func TestUserSave(t *testing.T) {
 		Password: "testpassword",
 	}
 
-	us := UserService{Env: &testEnv}
+	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
 	err := us.Save(&user)
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
@@ -213,7 +201,7 @@ func TestUserSave(t *testing.T) {
 }
 
 func TestTokens(t *testing.T) {
-	var testEnv config.Env
+	var testEnv goparent.Env
 	u := goparent.User{
 		ID:            "1",
 		Name:          "test user",
@@ -241,7 +229,7 @@ func TestTokens(t *testing.T) {
 		"password":      "testpassword",
 		"currentFamily": "1",
 	}}, nil)
-	testEnv.DB.Session = mock
+	us.DB = &DBEnv{Session: mock}
 
 	user, ok, err := us.ValidateToken(token)
 	mock.AssertExpectations(t)
@@ -253,7 +241,7 @@ func TestTokens(t *testing.T) {
 func TestGetAllFamily(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		query       *r.MockQuery
 		user        *goparent.User
 		resultSize  int
@@ -261,7 +249,7 @@ func TestGetAllFamily(t *testing.T) {
 	}{
 		{
 			desc: "get all families",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("family").Filter(
 					func(row r.Term) r.Term {
@@ -280,8 +268,7 @@ func TestGetAllFamily(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			us := UserService{Env: tC.env}
+			us := UserService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			families, err := us.GetAllFamily(tC.user)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())

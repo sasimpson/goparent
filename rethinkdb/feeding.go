@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
 //FeedingService - struct for implementing interface
 type FeedingService struct {
-	Env *config.Env
+	Env *goparent.Env
+	DB  *DBEnv
 }
 
 type feedingReductionData struct {
@@ -23,12 +23,12 @@ type feedingReductionData struct {
 
 //Save - save the structure to the datastore
 func (fs *FeedingService) Save(feeding *goparent.Feeding) error {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return err
 	}
 
-	res, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	res, err := gorethink.Table("feeding").Insert(feeding, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(fs.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (fs *FeedingService) Save(feeding *goparent.Feeding) error {
 
 //Feeding - get all records for a user from the datastore
 func (fs *FeedingService) Feeding(family *goparent.Family, days uint64) ([]*goparent.Feeding, error) {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (fs *FeedingService) Feeding(family *goparent.Family, days uint64) ([]*gopa
 		}).
 		Filter(gorethink.Row.Field("timestamp").During(time.Now().AddDate(0, 0, daysBack), time.Now())).
 		OrderBy(gorethink.Desc("timestamp")).
-		Run(session)
+		Run(fs.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (fs *FeedingService) Feeding(family *goparent.Family, days uint64) ([]*gopa
 
 //Stats - get feeding stats for one child for the last 24 hours.
 func (fs *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary, error) {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (fs *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary
 			gorethink.Row.Field("timestamp").During(start, end),
 		).
 		OrderBy(gorethink.Desc("timestamp")).
-		Run(session)
+		Run(fs.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (fs *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary
 
 //GraphData -
 func (fs *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingChartData, error) {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (fs *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingCha
 			gorethink.Row.Field("feedingType"),
 		).
 		Pluck("feedingAmount").
-		Run(session)
+		Run(fs.DB.Session)
 	if err != nil {
 		return nil, err
 	}

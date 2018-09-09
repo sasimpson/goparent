@@ -1,13 +1,10 @@
 package mock
 
-import (
-	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
-)
+import "github.com/sasimpson/goparent"
 
 //UserService -
 type UserService struct {
-	Env          *config.Env
+	Env          *goparent.Env
 	Family       *goparent.Family
 	ReturnedUser *goparent.User
 	Token        string

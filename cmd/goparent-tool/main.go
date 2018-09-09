@@ -9,12 +9,11 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/rethinkdb"
 )
 
 var (
-	env        *config.Env
+	env        *goparent.Env
 	createFlag bool
 	genFlag    bool
 	childID    string
@@ -25,7 +24,7 @@ var (
 )
 
 func main() {
-	env = config.InitConfig()
+	env, dbenv := InitRethinkDBConfig()
 
 	flag.BoolVar(&createFlag, "createTables", false, "create all the needed tables")
 	flag.BoolVar(&genFlag, "generate", false, "generate test data")
@@ -39,7 +38,7 @@ func main() {
 	//create tables in the database
 	if createFlag {
 		log.Println("creating tables")
-		config.CreateTables(env)
+		rethinkdb.CreateTables(dbenv)
 		os.Exit(0)
 	}
 
@@ -80,7 +79,7 @@ func main() {
 	}
 }
 
-func generateRandomData(env *config.Env, childID string, userID string, dateString string) error {
+func generateRandomData(env *goparent.Env, childID string, userID string, dateString string) error {
 	var children []*goparent.Child
 	var child *goparent.Child
 	var user *goparent.User
@@ -132,7 +131,7 @@ func generateRandomData(env *config.Env, childID string, userID string, dateStri
 	return nil
 }
 
-func generateRandomDiaper(env *config.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
+func generateRandomDiaper(env *goparent.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
 	wasteService := rethinkdb.WasteService{Env: env}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = r.Intn(7) + 7
@@ -151,7 +150,7 @@ func generateRandomDiaper(env *config.Env, child *goparent.Child, user *goparent
 	}
 }
 
-func generateRandomSleep(env *config.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
+func generateRandomSleep(env *goparent.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
 	sleepService := rethinkdb.SleepService{Env: env}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = 8
@@ -175,7 +174,7 @@ func generateRandomSleep(env *config.Env, child *goparent.Child, user *goparent.
 	}
 }
 
-func generateRandomFeeding(env *config.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
+func generateRandomFeeding(env *goparent.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
 	feedingService := rethinkdb.FeedingService{Env: env}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = 6 + r.Intn(4)

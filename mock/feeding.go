@@ -1,13 +1,10 @@
 package mock
 
-import (
-	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
-)
+import "github.com/sasimpson/goparent"
 
 //FeedingService -
 type FeedingService struct {
-	Env      *config.Env
+	Env      *goparent.Env
 	Feedings []*goparent.Feeding
 	Stat     *goparent.FeedingSummary
 	Graph    *goparent.FeedingChartData

@@ -1,13 +1,10 @@
 package mock
 
-import (
-	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
-)
+import "github.com/sasimpson/goparent"
 
 //SleepService -
 type SleepService struct {
-	Env     *config.Env
+	Env     *goparent.Env
 	Sleeps  []*goparent.Sleep
 	Stat    *goparent.SleepSummary
 	GetErr  error

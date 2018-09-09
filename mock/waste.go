@@ -1,13 +1,10 @@
 package mock
 
-import (
-	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
-)
+import "github.com/sasimpson/goparent"
 
 //WasteService -
 type WasteService struct {
-	Env      *config.Env
+	Env      *goparent.Env
 	Wastes   []*goparent.Waste
 	Stat     *goparent.WasteSummary
 	Graph    *goparent.WasteChartData

@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
 //WasteService - struct for implmenting the interface
 type WasteService struct {
-	Env *config.Env
+	Env *goparent.Env
+	DB  *DBEnv
 }
 
 type reductionData struct {
@@ -21,12 +21,12 @@ type reductionData struct {
 
 //Save - save waste data
 func (ws *WasteService) Save(waste *goparent.Waste) error {
-	session, err := ws.Env.DB.GetConnection()
+	err := ws.DB.GetConnection()
 	if err != nil {
 		return err
 	}
 
-	res, err := gorethink.Table("waste").Insert(waste, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	res, err := gorethink.Table("waste").Insert(waste, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(ws.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (ws *WasteService) Save(waste *goparent.Waste) error {
 
 //Waste - get all waste by user and child id.
 func (ws *WasteService) Waste(family *goparent.Family, days uint64) ([]*goparent.Waste, error) {
-	session, err := ws.Env.DB.GetConnection()
+	err := ws.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (ws *WasteService) Waste(family *goparent.Family, days uint64) ([]*goparent
 				"familyID": family.ID,
 			}).
 		Filter(gorethink.Row.Field("timestamp").During(time.Now().AddDate(0, 0, daysBack), time.Now())).
-		OrderBy(gorethink.Desc("timestamp")).Run(session)
+		OrderBy(gorethink.Desc("timestamp")).Run(ws.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (ws *WasteService) Waste(family *goparent.Family, days uint64) ([]*goparent
 
 //Stats - get waste stats for one child for the last 24 hours.
 func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, error) {
-	session, err := ws.Env.DB.GetConnection()
+	err := ws.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, er
 		}).
 		Filter(gorethink.Row.Field("timestamp").During(start, end)).
 		OrderBy(gorethink.Desc("timestamp")).
-		Run(session)
+		Run(ws.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, er
 
 //GraphData -
 func (ws *WasteService) GraphData(child *goparent.Child) (*goparent.WasteChartData, error) {
-	session, err := ws.Env.DB.GetConnection()
+	err := ws.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (ws *WasteService) GraphData(child *goparent.Child) (*goparent.WasteChartDa
 			gorethink.Row.Field("timestamp").Day(),
 			gorethink.Row.Field("wasteType"),
 		).Count().
-		Run(session)
+		Run(ws.DB.Session)
 	if err != nil {
 		return nil, err
 	}

@@ -1,13 +1,10 @@
 package mock
 
-import (
-	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
-)
+import "github.com/sasimpson/goparent"
 
 //FamilyService -
 type FamilyService struct {
-	Env    *config.Env
+	Env    *goparent.Env
 	Kids   []*goparent.Child
 	GetErr error
 }

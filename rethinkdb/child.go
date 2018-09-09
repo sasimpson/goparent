@@ -2,23 +2,23 @@ package rethinkdb
 
 import (
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
 //ChildService - service for implementing the interface
 type ChildService struct {
-	Env *config.Env
+	Env *goparent.Env
+	DB  *DBEnv
 }
 
 //Save - Create or update child record
 func (cs *ChildService) Save(child *goparent.Child) error {
-	session, err := cs.Env.DB.GetConnection()
+	err := cs.DB.GetConnection()
 	if err != nil {
 		return err
 	}
 
-	res, err := gorethink.Table("children").Insert(child, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	res, err := gorethink.Table("children").Insert(child, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(cs.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -32,12 +32,12 @@ func (cs *ChildService) Save(child *goparent.Child) error {
 //Child - return a child for an ID
 func (cs *ChildService) Child(id string) (*goparent.Child, error) {
 
-	session, err := cs.Env.DB.GetConnection()
+	err := cs.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := gorethink.Table("children").Get(id).Run(session)
+	res, err := gorethink.Table("children").Get(id).Run(cs.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +53,12 @@ func (cs *ChildService) Child(id string) (*goparent.Child, error) {
 
 //Delete - delete a passed child record from the datastore
 func (cs *ChildService) Delete(child *goparent.Child) (int, error) {
-	session, err := cs.Env.DB.GetConnection()
+	err := cs.DB.GetConnection()
 	if err != nil {
 		return 0, err
 	}
 
-	res, err := gorethink.Table("children").Get(child.ID).Delete().RunWrite(session)
+	res, err := gorethink.Table("children").Get(child.ID).Delete().RunWrite(cs.DB.Session)
 	if err != nil {
 		return 0, err
 	}

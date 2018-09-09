@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
@@ -15,7 +14,7 @@ func TestInviteParent(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		query1      *r.MockQuery
 		query2      *r.MockQuery
 		inviteEmail string
@@ -24,7 +23,7 @@ func TestInviteParent(t *testing.T) {
 	}{
 		{
 			desc: "invite parent",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -45,7 +44,7 @@ func TestInviteParent(t *testing.T) {
 		},
 		{
 			desc: "invite parent existing invite",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -64,7 +63,7 @@ func TestInviteParent(t *testing.T) {
 		},
 		{
 			desc: "invite parent check error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -78,7 +77,7 @@ func TestInviteParent(t *testing.T) {
 		},
 		{
 			desc: "invite parent insert error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -106,8 +105,7 @@ func TestInviteParent(t *testing.T) {
 			if tC.query2 != nil {
 				mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query2)
 			}
-			tC.env.DB = config.DBEnv{Session: mock}
-			uis := UserInviteService{Env: tC.env}
+			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := uis.InviteParent(tC.user, tC.inviteEmail, timestamp)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
@@ -122,7 +120,7 @@ func TestInviteParent(t *testing.T) {
 func TestSentInvites(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		user         *goparent.User
 		query        *r.MockQuery
 		returnLength int
@@ -130,7 +128,7 @@ func TestSentInvites(t *testing.T) {
 	}{
 		{
 			desc: "nothing returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{ID: "1"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -141,7 +139,7 @@ func TestSentInvites(t *testing.T) {
 		},
 		{
 			desc: "nothing returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{ID: "1"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -153,7 +151,7 @@ func TestSentInvites(t *testing.T) {
 		},
 		{
 			desc: "two invites returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{ID: "1"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -180,8 +178,8 @@ func TestSentInvites(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			uis := UserInviteService{Env: tC.env}
+
+			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			invites, err := uis.SentInvites(tC.user)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
@@ -197,7 +195,7 @@ func TestInvite(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		query       *r.MockQuery
 		id          string
 		invite      *goparent.UserInvitation
@@ -205,7 +203,7 @@ func TestInvite(t *testing.T) {
 	}{
 		{
 			desc: "nothing returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Get("1"),
 			).Return(nil, nil),
@@ -214,7 +212,7 @@ func TestInvite(t *testing.T) {
 		},
 		{
 			desc: "invite returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Get("1"),
 			).Return(map[string]interface{}{
@@ -233,7 +231,7 @@ func TestInvite(t *testing.T) {
 		},
 		{
 			desc: "error returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Get("1"),
 			).Return(nil, errors.New("test error")),
@@ -245,8 +243,8 @@ func TestInvite(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			uis := UserInviteService{Env: tC.env}
+
+			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			invite, err := uis.Invite(tC.id)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
@@ -263,7 +261,7 @@ func TestInvite(t *testing.T) {
 func TestInvites(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		user         *goparent.User
 		query        *r.MockQuery
 		returnLength int
@@ -271,7 +269,7 @@ func TestInvites(t *testing.T) {
 	}{
 		{
 			desc: "nothing returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -282,7 +280,7 @@ func TestInvites(t *testing.T) {
 		},
 		{
 			desc: "nothing returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -294,7 +292,7 @@ func TestInvites(t *testing.T) {
 		},
 		{
 			desc: "two invites returned",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -321,8 +319,8 @@ func TestInvites(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-			tC.env.DB = config.DBEnv{Session: mock}
-			uis := UserInviteService{Env: tC.env}
+
+			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			invites, err := uis.Invites(tC.user)
 			t.Logf("invites: %#v len: %#v err: %#v", invites, len(invites), err)
 			if tC.returnError != nil {
@@ -340,7 +338,7 @@ func TestAcceptInvite(t *testing.T) {
 	timestamp := time.Now()
 	testCases := []struct {
 		desc           string
-		env            *config.Env
+		env            *goparent.Env
 		id             string
 		invitedUser    *goparent.User
 		inviteQuery    *r.MockQuery
@@ -352,7 +350,7 @@ func TestAcceptInvite(t *testing.T) {
 	}{
 		{
 			desc: "invite accepted, no errors",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			id:   "invite-1",
 			invitedUser: &goparent.User{
 				ID: "user-2", Email: "invitedUser@test.com",
@@ -403,8 +401,8 @@ func TestAcceptInvite(t *testing.T) {
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.familyQuery)
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.addMemberQuery)
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.deleteQuery)
-			tC.env.DB = config.DBEnv{Session: mock}
-			uis := UserInviteService{Env: tC.env}
+
+			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := uis.Accept(tC.invitedUser, tC.id)
 			if tC.returnError != nil {
 				assert.Error(t, err, tC.returnError)
@@ -418,14 +416,14 @@ func TestAcceptInvite(t *testing.T) {
 func TestDelete(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		env         *config.Env
+		env         *goparent.Env
 		invite      *goparent.UserInvitation
 		deleteQuery *r.MockQuery
 		returnError error
 	}{
 		{
 			desc: "valid delete",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			invite: &goparent.UserInvitation{
 				ID: "invite-1",
 			},
@@ -441,7 +439,7 @@ func TestDelete(t *testing.T) {
 		},
 		{
 			desc: "delete error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			invite: &goparent.UserInvitation{
 				ID: "invite-1",
 			},
@@ -457,7 +455,7 @@ func TestDelete(t *testing.T) {
 		},
 		{
 			desc: "nothing deleted",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			invite: &goparent.UserInvitation{
 				ID: "invite-1",
 			},
@@ -476,8 +474,8 @@ func TestDelete(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.deleteQuery)
-			tC.env.DB = config.DBEnv{Session: mock}
-			uis := UserInviteService{Env: tC.env}
+
+			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := uis.Delete(tC.invite)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)

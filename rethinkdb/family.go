@@ -5,18 +5,18 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"gopkg.in/gorethink/gorethink.v3"
 )
 
 //FamilyService - structure for replicating the interface
 type FamilyService struct {
-	Env *config.Env
+	Env *goparent.Env
+	DB  *DBEnv
 }
 
 //Save - Create or Update a family record
 func (fs *FamilyService) Save(family *goparent.Family) error {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func (fs *FamilyService) Save(family *goparent.Family) error {
 		family.CreatedAt = time.Now()
 	}
 
-	res, err := gorethink.Table("family").Insert(family, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(session)
+	res, err := gorethink.Table("family").Insert(family, gorethink.InsertOpts{Conflict: "replace"}).RunWrite(fs.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -39,12 +39,12 @@ func (fs *FamilyService) Save(family *goparent.Family) error {
 
 //Family - returns a family for an ID
 func (fs *FamilyService) Family(id string) (*goparent.Family, error) {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := gorethink.Table("family").Get(id).Run(session)
+	res, err := gorethink.Table("family").Get(id).Run(fs.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (fs *FamilyService) Family(id string) (*goparent.Family, error) {
 
 //Children - returns all the children for a family
 func (fs *FamilyService) Children(family *goparent.Family) ([]*goparent.Child, error) {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := gorethink.Table("children").Filter(map[string]interface{}{"familyID": family.ID}).OrderBy(gorethink.Desc("birthday")).Run(session)
+	res, err := gorethink.Table("children").Filter(map[string]interface{}{"familyID": family.ID}).OrderBy(gorethink.Desc("birthday")).Run(fs.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -100,14 +100,14 @@ func (fs *FamilyService) AddMember(family *goparent.Family, newMember *goparent.
 
 //GetAdminFamily - returns the family for which the user is the admin.
 func (fs *FamilyService) GetAdminFamily(user *goparent.User) (*goparent.Family, error) {
-	session, err := fs.Env.DB.GetConnection()
+	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := gorethink.Table("family").Filter(map[string]interface{}{
 		"admin": user.ID,
-	}).Run(session)
+	}).Run(fs.DB.Session)
 	if err != nil {
 		return nil, err
 	}

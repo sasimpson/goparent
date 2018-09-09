@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
@@ -14,19 +13,20 @@ const ErrExistingInvitation string = "existing invitation for that user"
 
 //UserInviteService - struct for implementing the interface
 type UserInviteService struct {
-	Env *config.Env
+	Env *goparent.Env
+	DB  *DBEnv
 }
 
 //InviteParent - add an invitation for another parent to join in on user's data.
 func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail string, timestamp time.Time) error {
-	session, err := uis.Env.DB.GetConnection()
+	err := uis.DB.GetConnection()
 	if err != nil {
 		return err
 	}
 
 	res, err := gorethink.Table("invites").Filter(map[string]interface{}{
 		"inviteEmail": inviteEmail,
-	}).Run(session)
+	}).Run(uis.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail stri
 		InviteEmail: inviteEmail,
 		Timestamp:   timestamp,
 	}
-	_, err = gorethink.Table("invites").Insert(inviteUser).Run(session)
+	_, err = gorethink.Table("invites").Insert(inviteUser).Run(uis.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail stri
 
 //SentInvites - return the current invites a user has sent out.
 func (uis *UserInviteService) SentInvites(user *goparent.User) ([]*goparent.UserInvitation, error) {
-	session, err := uis.Env.DB.GetConnection()
+	err := uis.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (uis *UserInviteService) SentInvites(user *goparent.User) ([]*goparent.User
 			"userID": user.ID,
 		}).
 		OrderBy(gorethink.Desc("timestamp")).
-		Run(session)
+		Run(uis.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +79,12 @@ func (uis *UserInviteService) SentInvites(user *goparent.User) ([]*goparent.User
 
 //Invite - return the invite by the id
 func (uis *UserInviteService) Invite(id string) (*goparent.UserInvitation, error) {
-	session, err := uis.Env.DB.GetConnection()
+	err := uis.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := gorethink.Table("invites").Get(id).Run(session)
+	res, err := gorethink.Table("invites").Get(id).Run(uis.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (uis *UserInviteService) Invite(id string) (*goparent.UserInvitation, error
 
 //Invites - return the invites that have been issued to a user based on the email.
 func (uis *UserInviteService) Invites(user *goparent.User) ([]*goparent.UserInvitation, error) {
-	session, err := uis.Env.DB.GetConnection()
+	err := uis.DB.GetConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (uis *UserInviteService) Invites(user *goparent.User) ([]*goparent.UserInvi
 			"inviteEmail": user.Email,
 		}).
 		OrderBy(gorethink.Desc("timestamp")).
-		Run(session)
+		Run(uis.DB.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (uis *UserInviteService) Invites(user *goparent.User) ([]*goparent.UserInvi
 //Accept - user can accept an invite, this will set their
 // CurrentFamily and add them as a member to that family.
 func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
-	session, err := uis.Env.DB.GetConnection()
+	err := uis.DB.GetConnection()
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 			"inviteEmail": user.Email,
 		}).
 		OrderBy(gorethink.Desc("timestamp")).
-		Run(session)
+		Run(uis.DB.Session)
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 	}
 
 	//get the user and family that is doing the inviting
-	us := UserService{Env: uis.Env}
+	us := UserService{Env: uis.Env, DB: uis.DB}
 	invitingUser, err := us.User(invite.UserID)
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 	if err != nil {
 		return err
 	}
-	fs := FamilyService{Env: uis.Env}
+	fs := FamilyService{Env: uis.Env, DB: uis.DB}
 	//add the user to the family of the inviting user
 	err = fs.AddMember(family, user)
 	if err != nil {
@@ -183,7 +183,7 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 
 //Delete - a user can delete invites they have sent.
 func (uis *UserInviteService) Delete(invite *goparent.UserInvitation) error {
-	session, err := uis.Env.DB.GetConnection()
+	err := uis.DB.GetConnection()
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (uis *UserInviteService) Delete(invite *goparent.UserInvitation) error {
 			"id": invite.ID,
 		}).
 		Delete().
-		Run(session)
+		Run(uis.DB.Session)
 	if err != nil {
 		return err
 	}

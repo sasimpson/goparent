@@ -14,7 +14,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sasimpson/goparent"
-	"github.com/sasimpson/goparent/config"
 	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +21,7 @@ import (
 func TestLoginHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		email        string
 		password     string
 		userService  goparent.UserService
@@ -30,7 +29,7 @@ func TestLoginHandler(t *testing.T) {
 	}{
 		{
 			desc:     "user logged in and token issued",
-			env:      &config.Env{},
+			env:      &goparent.Env{},
 			email:    "testuser@test.com",
 			password: "testpassword",
 			userService: &mock.UserService{
@@ -46,7 +45,7 @@ func TestLoginHandler(t *testing.T) {
 		},
 		{
 			desc:     "login error",
-			env:      &config.Env{},
+			env:      &goparent.Env{},
 			email:    "testuser@test.com",
 			password: "testpassword",
 			userService: &mock.UserService{
@@ -62,7 +61,7 @@ func TestLoginHandler(t *testing.T) {
 		},
 		{
 			desc:     "token issue error",
-			env:      &config.Env{},
+			env:      &goparent.Env{},
 			email:    "testuser@test.com",
 			password: "testpassword",
 			userService: &mock.UserService{
@@ -100,14 +99,14 @@ func TestLoginHandler(t *testing.T) {
 func TestUserGetHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		userService  goparent.UserService
 		contextUser  *goparent.User
 		responseCode int
 	}{
 		{
 			desc: "valid user",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -122,7 +121,7 @@ func TestUserGetHandler(t *testing.T) {
 		},
 		{
 			desc: "invalid user",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -137,7 +136,7 @@ func TestUserGetHandler(t *testing.T) {
 		},
 		{
 			desc: "family error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("family error"),
 			},
@@ -186,20 +185,20 @@ func TestUserGetHandler(t *testing.T) {
 func TestUserNewHandler(t *testing.T) {
 	testCases := []struct {
 		desc         string
-		env          *config.Env
+		env          *goparent.Env
 		userService  goparent.UserService
 		userRequest  *UserRequest
 		responseCode int
 	}{
 		{
 			desc:         "invalid json",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			userService:  &mock.UserService{},
 			responseCode: http.StatusInternalServerError,
 		},
 		{
 			desc: "invalid user save",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				SaveErr: errors.New("user exists"),
 			},
@@ -215,7 +214,7 @@ func TestUserNewHandler(t *testing.T) {
 		},
 		{
 			desc: "valid user save",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userService: &mock.UserService{
 				UserID: "1",
 			},
@@ -264,7 +263,7 @@ func TestUserNewHandler(t *testing.T) {
 func TestUserNewInviteHandler(t *testing.T) {
 	testCases := []struct {
 		desc              string
-		env               *config.Env
+		env               *goparent.Env
 		userInviteService goparent.UserInvitationService
 		inviteUser        string
 		contextUser       *goparent.User
@@ -273,25 +272,25 @@ func TestUserNewInviteHandler(t *testing.T) {
 	}{
 		{
 			desc:         "invite fails auth",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			responseCode: http.StatusUnauthorized,
 		},
 		{
 			desc:         "invite parse form error",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			formErr:      true,
 			responseCode: http.StatusInternalServerError,
 		},
 		{
 			desc:         "invite no email",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			responseCode: http.StatusBadRequest,
 		},
 		{
 			desc: "existing invite",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userInviteService: &mock.UserInvitationService{
 				InviteParentErr: goparent.ErrExistingInvitation,
 			},
@@ -301,7 +300,7 @@ func TestUserNewInviteHandler(t *testing.T) {
 		},
 		{
 			desc: "unknown invite error",
-			env:  &config.Env{},
+			env:  &goparent.Env{},
 			userInviteService: &mock.UserInvitationService{
 				InviteParentErr: errors.New("unknown error"),
 			},
@@ -311,7 +310,7 @@ func TestUserNewInviteHandler(t *testing.T) {
 		},
 		{
 			desc:              "successful invite",
-			env:               &config.Env{},
+			env:               &goparent.Env{},
 			userInviteService: &mock.UserInvitationService{},
 			inviteUser:        "invitedUser@test.com",
 			contextUser:       &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
@@ -356,7 +355,7 @@ func TestUserNewInviteHandler(t *testing.T) {
 func TestListInviteHandler(t *testing.T) {
 	testCases := []struct {
 		desc                  string
-		env                   *config.Env
+		env                   *goparent.Env
 		contextUser           *goparent.User
 		userInvitationService goparent.UserInvitationService
 		responseCode          int
@@ -440,19 +439,19 @@ func TestListInviteHandler(t *testing.T) {
 func TestAcceptInviteHandler(t *testing.T) {
 	testCases := []struct {
 		desc                  string
-		env                   *config.Env
+		env                   *goparent.Env
 		contextUser           *goparent.User
 		userInvitationService goparent.UserInvitationService
 		responseCode          int
 	}{
 		{
 			desc:         "bad auth",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			responseCode: http.StatusUnauthorized,
 		},
 		{
 			desc:        "accept fail",
-			env:         &config.Env{},
+			env:         &goparent.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			userInvitationService: &mock.UserInvitationService{
 				AcceptErr: errors.New("test error"),
@@ -461,7 +460,7 @@ func TestAcceptInviteHandler(t *testing.T) {
 		},
 		{
 			desc:                  "accept success",
-			env:                   &config.Env{},
+			env:                   &goparent.Env{},
 			contextUser:           &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			userInvitationService: &mock.UserInvitationService{},
 			responseCode:          http.StatusNoContent,
@@ -494,19 +493,19 @@ func TestAcceptInviteHandler(t *testing.T) {
 func TestDeleteInviteHandler(t *testing.T) {
 	testCases := []struct {
 		desc                  string
-		env                   *config.Env
+		env                   *goparent.Env
 		contextUser           *goparent.User
 		userInvitationService goparent.UserInvitationService
 		responseCode          int
 	}{
 		{
 			desc:         "bad auth",
-			env:          &config.Env{},
+			env:          &goparent.Env{},
 			responseCode: http.StatusUnauthorized,
 		},
 		{
 			desc:        "get invite fail",
-			env:         &config.Env{},
+			env:         &goparent.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			userInvitationService: &mock.UserInvitationService{
 				InviteErr: errors.New("not found"),
@@ -515,7 +514,7 @@ func TestDeleteInviteHandler(t *testing.T) {
 		},
 		{
 			desc:        "delete fail",
-			env:         &config.Env{},
+			env:         &goparent.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			userInvitationService: &mock.UserInvitationService{
 				GetInvite: &goparent.UserInvitation{
@@ -530,7 +529,7 @@ func TestDeleteInviteHandler(t *testing.T) {
 		},
 		{
 			desc:        "delete success",
-			env:         &config.Env{},
+			env:         &goparent.Env{},
 			contextUser: &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 			userInvitationService: &mock.UserInvitationService{
 				GetInvite: &goparent.UserInvitation{
@@ -589,7 +588,7 @@ func TestInitUsersHandlers(t *testing.T) {
 		},
 	}
 
-	var testEnv config.Env
+	var testEnv goparent.Env
 	h := Handler{Env: &testEnv}
 	routes := mux.NewRouter()
 	h.initUsersHandlers(routes)
