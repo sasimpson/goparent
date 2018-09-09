@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -27,7 +28,7 @@ type UserClaims struct {
 }
 
 //User - gets the user data based on the id string
-func (us *UserService) User(id string) (*goparent.User, error) {
+func (us *UserService) User(ctx *context.Context, id string) (*goparent.User, error) {
 	err := us.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -48,7 +49,7 @@ func (us *UserService) User(id string) (*goparent.User, error) {
 }
 
 //UserByLogin - gets a user by their username and password
-func (us *UserService) UserByLogin(username string, password string) (*goparent.User, error) {
+func (us *UserService) UserByLogin(ctx *context.Context, username string, password string) (*goparent.User, error) {
 	//TODO: need to hash the password
 	err := us.DB.GetConnection()
 	if err != nil {
@@ -155,7 +156,7 @@ func (us *UserService) GetToken(user *goparent.User) (string, error) {
 }
 
 //ValidateToken - validate token against signing method and populate user.
-func (us *UserService) ValidateToken(tokenString string) (*goparent.User, bool, error) {
+func (us *UserService) ValidateToken(ctx context.Context, tokenString string) (*goparent.User, bool, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -167,7 +168,7 @@ func (us *UserService) ValidateToken(tokenString string) (*goparent.User, bool, 
 	}
 
 	if claims, ok := token.Claims.(*UserClaims); ok && token.Valid {
-		user, err := us.User(claims.ID)
+		user, err := us.User(&ctx, claims.ID)
 		if err != nil {
 			return nil, false, err
 		}

@@ -27,6 +27,10 @@ const (
 	userContextKey  contextKey = "user"
 )
 
+type ServiceHandler interface {
+	GetContext(*http.Request) *context.Context
+}
+
 //Handler - this is the handler struct that contains all of the interfaces for
 // the api.  the implementation can be changed by inserting different implementations
 // of the interface
@@ -93,6 +97,7 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 //AuthRequired - handler to handle authentication of users tokens.
 func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := sh.Env.DB.GetContext(r)
 		token, err := request.ParseFromRequestWithClaims(r, request.AuthorizationHeaderExtractor, &goparent.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -106,7 +111,7 @@ func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 			return
 		}
 		if claims, ok := token.Claims.(*goparent.UserClaims); ok && token.Valid {
-			user, err := sh.UserService.User(claims.ID)
+			user, err := sh.UserService.User(ctx, claims.ID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

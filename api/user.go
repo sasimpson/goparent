@@ -61,7 +61,10 @@ func (h *Handler) loginHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		user, err := h.UserService.UserByLogin(username, password)
+		dbenv := h.Env.DB
+		ctx := dbenv.GetContext(r)
+
+		user, err := h.UserService.UserByLogin(ctx, username, password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return

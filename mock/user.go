@@ -1,6 +1,10 @@
 package mock
 
-import "github.com/sasimpson/goparent"
+import (
+	"context"
+
+	"github.com/sasimpson/goparent"
+)
 
 //UserService -
 type UserService struct {
@@ -54,7 +58,7 @@ func (m *UserService) GetToken(*goparent.User) (string, error) {
 }
 
 //ValidateToken -
-func (m *UserService) ValidateToken(string) (*goparent.User, bool, error) {
+func (m *UserService) ValidateToken(context.Context, string) (*goparent.User, bool, error) {
 	panic("not implemented")
 }
 

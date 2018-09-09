@@ -1,7 +1,9 @@
 package goparent
 
 import (
+	"context"
 	"errors"
+	"net/http"
 	"time"
 
 	"gopkg.in/gorethink/gorethink.v3"
@@ -40,6 +42,7 @@ type DBEnv struct {
 //Datastore -
 type Datastore interface {
 	GetConnection() error
+	GetContext(*http.Request) context.Context
 }
 
 //ErrExistingInvitation -
@@ -67,11 +70,11 @@ type UserClaims struct {
 
 //UserService -
 type UserService interface {
-	User(string) (*User, error)
-	UserByLogin(string, string) (*User, error)
+	User(context.Context, string) (*User, error)
+	UserByLogin(context.Context, string, string) (*User, error)
 	Save(*User) error
 	GetToken(*User) (string, error)
-	ValidateToken(string) (*User, bool, error)
+	ValidateToken(context.Context, string) (*User, bool, error)
 	GetFamily(*User) (*Family, error)
 	GetAllFamily(*User) ([]*Family, error)
 }

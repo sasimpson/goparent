@@ -20,7 +20,7 @@ func (s *SleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
 	panic("not implemented")
 }
 
-//Status-
+//Status -
 func (s *SleepService) Status(*goparent.Family, *goparent.Child) (bool, error) {
 	panic("not implemented")
 }

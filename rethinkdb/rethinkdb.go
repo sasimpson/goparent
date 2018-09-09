@@ -1,8 +1,10 @@
 package rethinkdb
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	"gopkg.in/gorethink/gorethink.v3"
 )
@@ -35,6 +37,10 @@ func (dbenv *DBEnv) GetConnection() error {
 	}
 	dbenv.Session = session
 	return nil
+}
+
+func (dbenv *DBEnv) GetContext(*http.Request) context.Context {
+	return context.Background()
 }
 
 //CreateTables - this will build out the database.
