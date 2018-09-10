@@ -3,7 +3,9 @@ package datastore
 import "github.com/sasimpson/goparent"
 
 //SleepService -
-type SleepService struct{}
+type SleepService struct {
+	Env *goparent.Env
+}
 
 //Save -
 func (s *SleepService) Save(*goparent.Sleep) error {

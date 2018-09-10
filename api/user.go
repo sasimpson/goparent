@@ -47,7 +47,7 @@ type InvitesResponse struct {
 
 func (h *Handler) initUsersHandlers(r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
-	// u.Handle("/{id}", AuthRequired(userGetHandler(env), env)).Methods("GET").Name("UserView")
+	u.Handle("/{id}", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserView")
 	u.Handle("/", h.userNewHandler()).Methods("POST").Name("UserNew")
 	u.Handle("/", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserGetData")
 	u.Handle("/login", h.loginHandler()).Methods("POST").Name("UserLogin")
@@ -61,8 +61,8 @@ func (h *Handler) loginHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		dbenv := h.Env.DB
-		ctx := dbenv.GetContext(r)
+		log.Printf("%s:%s", username, password)
+		ctx := h.Env.DB.GetContext(r)
 
 		user, err := h.UserService.UserByLogin(ctx, username, password)
 		if err != nil {
@@ -86,13 +86,15 @@ func (h *Handler) loginHandler() http.Handler {
 
 func (h *Handler) userGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -109,6 +111,7 @@ func (h *Handler) userGetHandler() http.Handler {
 
 func (h *Handler) userNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
 		decoder := json.NewDecoder(r.Body)
 		var newUserRequest NewUserRequest
 		err := decoder.Decode(&newUserRequest)
@@ -120,7 +123,7 @@ func (h *Handler) userNewHandler() http.Handler {
 		defer r.Body.Close()
 
 		w.Header().Set("Content-Type", jsonContentType)
-		err = h.UserService.Save(&userData)
+		err = h.UserService.Save(ctx, &userData)
 		if err != nil {
 			var errMsg ErrService
 			errMsg.ErrMessage.Body = err.Error()

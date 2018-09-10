@@ -8,6 +8,7 @@ import (
 
 //UserInviteService -
 type UserInviteService struct {
+	Env *goparent.Env
 }
 
 //InviteParent -

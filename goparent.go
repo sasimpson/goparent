@@ -72,10 +72,10 @@ type UserClaims struct {
 type UserService interface {
 	User(context.Context, string) (*User, error)
 	UserByLogin(context.Context, string, string) (*User, error)
-	Save(*User) error
+	Save(context.Context, *User) error
 	GetToken(*User) (string, error)
 	ValidateToken(context.Context, string) (*User, bool, error)
-	GetFamily(*User) (*Family, error)
+	GetFamily(context.Context, *User) (*Family, error)
 	GetAllFamily(*User) ([]*Family, error)
 }
 
@@ -108,11 +108,11 @@ type Family struct {
 
 //FamilyService -
 type FamilyService interface {
-	Save(*Family) error
-	Family(string) (*Family, error)
+	Save(context.Context, *Family) error
+	Family(context.Context, string) (*Family, error)
 	Children(*Family) ([]*Child, error)
 	AddMember(*Family, *User) error
-	GetAdminFamily(*User) (*Family, error)
+	GetAdminFamily(context.Context, *User) (*Family, error)
 	// Delete(*Family) (int, error)
 }
 

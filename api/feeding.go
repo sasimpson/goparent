@@ -31,6 +31,8 @@ func (h *Handler) initFeedingHandlers(r *mux.Router) {
 
 func (h *Handler) feedingGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -39,7 +41,7 @@ func (h *Handler) feedingGetHandler() http.Handler {
 
 		pagination := getPagination(r)
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -84,13 +86,15 @@ func (h *Handler) feedingEditHandler() http.Handler {
 
 func (h *Handler) feedingNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -129,6 +133,8 @@ func (h *Handler) feedingDeleteHandler() http.Handler {
 
 func (h *Handler) feedingGraphDataHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -137,7 +143,7 @@ func (h *Handler) feedingGraphDataHandler() http.Handler {
 
 		childID := mux.Vars(r)["id"]
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

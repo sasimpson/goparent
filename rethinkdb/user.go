@@ -77,7 +77,7 @@ func (us *UserService) UserByLogin(ctx *context.Context, username string, passwo
 }
 
 //Save - saves the user. creates it if it doesn't exist.  upsert only works if there is an id and that email exists.
-func (us *UserService) Save(user *goparent.User) error {
+func (us *UserService) Save(ctx context.Context, user *goparent.User) error {
 	err := us.DB.GetConnection()
 	if err != nil {
 		return err
@@ -97,12 +97,12 @@ func (us *UserService) Save(user *goparent.User) error {
 	//if the user doesn't have a current family
 	if user.CurrentFamily == "" && user.ID != "" {
 		//get the family for which the user is the admin.
-		family, err := fs.GetAdminFamily(user)
+		family, err := fs.GetAdminFamily(ctx, user)
 		if err != nil {
 			//if no result is returned, create a new family
 			if err == gorethink.ErrEmptyResult {
 				family = &goparent.Family{Admin: user.ID, Members: []string{user.ID}}
-				fs.Save(family)
+				fs.Save(ctx, family)
 			} else {
 				return err
 			}
@@ -114,7 +114,7 @@ func (us *UserService) Save(user *goparent.User) error {
 	//if the user has no current family and no id, then we need to create a family.
 	if user.CurrentFamily == "" && user.ID == "" {
 		family = &goparent.Family{}
-		fs.Save(family)
+		fs.Save(ctx, family)
 		user.CurrentFamily = family.ID
 	}
 
@@ -130,7 +130,7 @@ func (us *UserService) Save(user *goparent.User) error {
 			user.ID = res2.GeneratedKeys[0]
 			family.Admin = user.ID
 			family.Members = []string{user.ID}
-			fs.Save(family)
+			fs.Save(ctx, family)
 		}
 		return nil
 	}
@@ -178,13 +178,13 @@ func (us *UserService) ValidateToken(ctx context.Context, tokenString string) (*
 }
 
 //GetFamily - return the family for a user. used for lookups
-func (us *UserService) GetFamily(user *goparent.User) (*goparent.Family, error) {
+func (us *UserService) GetFamily(ctx context.Context, user *goparent.User) (*goparent.Family, error) {
 	if user.CurrentFamily == "" {
 		return nil, errors.New("user has no current family")
 	}
 
 	fs := FamilyService{Env: us.Env, DB: us.DB}
-	family, err := fs.Family(user.CurrentFamily)
+	family, err := fs.Family(ctx, user.CurrentFamily)
 	if err != nil {
 		return nil, err
 	}

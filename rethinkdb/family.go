@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -15,7 +16,7 @@ type FamilyService struct {
 }
 
 //Save - Create or Update a family record
-func (fs *FamilyService) Save(family *goparent.Family) error {
+func (fs *FamilyService) Save(ctx context.Context, family *goparent.Family) error {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return err
@@ -38,7 +39,7 @@ func (fs *FamilyService) Save(family *goparent.Family) error {
 }
 
 //Family - returns a family for an ID
-func (fs *FamilyService) Family(id string) (*goparent.Family, error) {
+func (fs *FamilyService) Family(ctx context.Context, id string) (*goparent.Family, error) {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -99,7 +100,7 @@ func (fs *FamilyService) AddMember(family *goparent.Family, newMember *goparent.
 }
 
 //GetAdminFamily - returns the family for which the user is the admin.
-func (fs *FamilyService) GetAdminFamily(user *goparent.User) (*goparent.Family, error) {
+func (fs *FamilyService) GetAdminFamily(ctx context.Context, user *goparent.User) (*goparent.Family, error) {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err

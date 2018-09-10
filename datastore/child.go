@@ -4,6 +4,7 @@ import "github.com/sasimpson/goparent"
 
 //ChildService -
 type ChildService struct {
+	Env *goparent.Env
 }
 
 //Save -

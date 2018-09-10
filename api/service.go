@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -105,12 +106,13 @@ func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 			}
 			return sh.Env.Auth.SigningKey, nil
 		})
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
 		if claims, ok := token.Claims.(*goparent.UserClaims); ok && token.Valid {
+			log.Printf("claims %#v", claims)
 			user, err := sh.UserService.User(ctx, claims.ID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

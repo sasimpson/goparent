@@ -4,6 +4,7 @@ import "github.com/sasimpson/goparent"
 
 //WasteService -
 type WasteService struct {
+	Env *goparent.Env
 }
 
 //Save -

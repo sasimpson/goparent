@@ -4,6 +4,7 @@ import "github.com/sasimpson/goparent"
 
 //FeedingService -
 type FeedingService struct {
+	Env *goparent.Env
 }
 
 //Save -

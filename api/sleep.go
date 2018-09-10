@@ -34,13 +34,15 @@ func (h *Handler) initSleepHandlers(r *mux.Router) {
 
 func (h *Handler) sleepGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -84,6 +86,8 @@ func (h *Handler) sleepEditHandler() http.Handler {
 
 func (h *Handler) sleepNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		//how time should be passed "2017-03-09T18:09:31.409Z"
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -91,7 +95,7 @@ func (h *Handler) sleepNewHandler() http.Handler {
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -217,6 +221,8 @@ func (h *Handler) sleepToggleStatus() http.Handler {
 
 func (h *Handler) sleepGraphData() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		log.Println("GET sleep graph data")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -226,7 +232,7 @@ func (h *Handler) sleepGraphData() http.Handler {
 
 		childID := mux.Vars(r)["id"]
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

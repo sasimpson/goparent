@@ -51,6 +51,7 @@ func (h *Handler) initChildrenHandlers(r *mux.Router) {
 //ChildSummary - handler to assemble and reuturn child summary data
 func (h *Handler) childSummary() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
 		childID := mux.Vars(r)["id"]
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -58,7 +59,7 @@ func (h *Handler) childSummary() http.Handler {
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -106,13 +107,14 @@ func (h *Handler) childSummary() http.Handler {
 //childrenGetHandler - GET / - gets all children for user
 func (h *Handler) childrenGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -133,13 +135,15 @@ func (h *Handler) childrenGetHandler() http.Handler {
 //ChildNewHandler - POST / - create a new child for a user
 func (h *Handler) childNewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -171,6 +175,8 @@ func (h *Handler) childNewHandler() http.Handler {
 //ChildViewHandler - GET /{id} - gets the data for a child for a user
 func (h *Handler) childViewHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		childID := mux.Vars(r)["id"]
 		user, err := UserFromContext(r.Context())
 		if err != nil {
@@ -178,7 +184,7 @@ func (h *Handler) childViewHandler() http.Handler {
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -204,13 +210,15 @@ func (h *Handler) childViewHandler() http.Handler {
 // ChildEditHandler - PUT /{id} - edit a child for a user
 func (h *Handler) childEditHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -246,13 +254,15 @@ func (h *Handler) childEditHandler() http.Handler {
 //TODO - need to delete or archive child and child's data.
 func (h *Handler) childDeleteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		family, err := h.UserService.GetFamily(user)
+		family, err := h.UserService.GetFamily(ctx, user)
 		id := mux.Vars(r)["id"]
 		child, err := h.ChildService.Child(id)
 		if err != nil {
