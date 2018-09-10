@@ -76,7 +76,7 @@ type UserService interface {
 	GetToken(*User) (string, error)
 	ValidateToken(context.Context, string) (*User, bool, error)
 	GetFamily(context.Context, *User) (*Family, error)
-	GetAllFamily(*User) ([]*Family, error)
+	GetAllFamily(context.Context, *User) ([]*Family, error)
 }
 
 //UserInvitation - structure for storing invitations
@@ -111,7 +111,7 @@ type FamilyService interface {
 	Save(context.Context, *Family) error
 	Family(context.Context, string) (*Family, error)
 	Children(*Family) ([]*Child, error)
-	AddMember(*Family, *User) error
+	AddMember(context.Context, *Family, *User) error
 	GetAdminFamily(context.Context, *User) (*Family, error)
 	// Delete(*Family) (int, error)
 }

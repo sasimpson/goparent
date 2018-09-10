@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -78,11 +79,11 @@ func TestFamilySave(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := fs.Save(tC.family)
+			err := fs.Save(ctx, tC.family)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
 			} else {
@@ -144,10 +145,11 @@ func TestFamily(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			family, err := fs.Family(tC.id)
+			family, err := fs.Family(ctx, tC.id)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
 			} else {
@@ -308,10 +310,11 @@ func TestAddMember(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := fs.AddMember(tC.family, tC.user)
+			err := fs.AddMember(ctx, tC.family, tC.user)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)
 			} else {
@@ -375,10 +378,11 @@ func TestGetAdminFamily(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			family, err := fs.GetAdminFamily(tC.user)
+			family, err := fs.GetAdminFamily(ctx, tC.user)
 			t.Logf("%#v %#v", family, err)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err)

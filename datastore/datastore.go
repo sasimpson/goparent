@@ -38,10 +38,9 @@ func (e Error) Error() string {
 
 //NewError is the creator of the new errors
 func NewError(origin string, err error) error {
-	e := Error{
+	return Error{
 		Err:     err,
 		Origin:  origin,
 		Message: err.Error(),
 	}
-	return e
 }

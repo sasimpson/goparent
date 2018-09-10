@@ -81,7 +81,7 @@ func (fs *FamilyService) Children(family *goparent.Family) ([]*goparent.Child, e
 }
 
 //AddMember - this will add a passed in user to a family.
-func (fs *FamilyService) AddMember(family *goparent.Family, newMember *goparent.User) error {
+func (fs *FamilyService) AddMember(ctx context.Context, family *goparent.Family, newMember *goparent.User) error {
 	//check to see if they are already in the family, we don't want to add twice
 	for _, member := range family.Members {
 		if member == newMember.ID {
@@ -91,7 +91,7 @@ func (fs *FamilyService) AddMember(family *goparent.Family, newMember *goparent.
 
 	family.Members = append(family.Members, newMember.ID)
 	family.LastUpdated = time.Now()
-	err := fs.Save(family)
+	err := fs.Save(ctx, family)
 	if err != nil {
 		return err
 	}

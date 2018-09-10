@@ -20,12 +20,12 @@ type UserService struct {
 }
 
 //User -
-func (m *UserService) User(string) (*goparent.User, error) {
+func (m *UserService) User(context.Context, string) (*goparent.User, error) {
 	panic("not implemented")
 }
 
 //UserByLogin -
-func (m *UserService) UserByLogin(string, string) (*goparent.User, error) {
+func (m *UserService) UserByLogin(context.Context, string, string) (*goparent.User, error) {
 	if m.AuthErr != nil {
 		return nil, m.AuthErr
 	}
@@ -36,7 +36,7 @@ func (m *UserService) UserByLogin(string, string) (*goparent.User, error) {
 }
 
 //Save -
-func (m *UserService) Save(user *goparent.User) error {
+func (m *UserService) Save(ctx context.Context, user *goparent.User) error {
 	if m.SaveErr != nil {
 		return m.SaveErr
 	}
@@ -63,7 +63,7 @@ func (m *UserService) ValidateToken(context.Context, string) (*goparent.User, bo
 }
 
 //GetFamily -
-func (m *UserService) GetFamily(*goparent.User) (*goparent.Family, error) {
+func (m *UserService) GetFamily(context.Context, *goparent.User) (*goparent.Family, error) {
 	if m.FamilyErr != nil {
 		return nil, m.FamilyErr
 	}
@@ -71,6 +71,6 @@ func (m *UserService) GetFamily(*goparent.User) (*goparent.Family, error) {
 }
 
 //GetAllFamily -
-func (m *UserService) GetAllFamily(*goparent.User) ([]*goparent.Family, error) {
+func (m *UserService) GetAllFamily(context.Context, *goparent.User) ([]*goparent.Family, error) {
 	panic("not implemented")
 }

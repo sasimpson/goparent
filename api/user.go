@@ -47,9 +47,9 @@ type InvitesResponse struct {
 
 func (h *Handler) initUsersHandlers(r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
-	u.Handle("/{id}", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserView")
 	u.Handle("/", h.userNewHandler()).Methods("POST").Name("UserNew")
 	u.Handle("/", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserGetData")
+	u.Handle("/{id}", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserView")
 	u.Handle("/login", h.loginHandler()).Methods("POST").Name("UserLogin")
 	u.Handle("/invite", h.AuthRequired(h.userListInviteHandler())).Methods("GET").Name("UserGetSentInvites")
 	u.Handle("/invite", h.AuthRequired(h.userNewInviteHandler())).Methods("POST").Name("UserNewInvite")

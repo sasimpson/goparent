@@ -21,6 +21,8 @@ const FamilyKind = "Family"
 var (
 	//ErrNoFamilyFound is when no family is found
 	ErrNoFamilyFound = errors.New("no family found with user as admin")
+	//ErrAlreadyInFamily is if a user is already a member of a family
+	ErrAlreadyInFamily = errors.New("user already in that family")
 )
 
 //Save -
@@ -38,7 +40,7 @@ func (s *FamilyService) Save(ctx context.Context, family *goparent.Family) error
 
 	family.LastUpdated = time.Now()
 
-	_, err := datastore.Put(ctx, familyKey, &family)
+	_, err := datastore.Put(ctx, familyKey, family)
 	if err != nil {
 		return NewError("FamilyService.Save", err)
 	}
@@ -64,8 +66,20 @@ func (s *FamilyService) Children(*goparent.Family) ([]*goparent.Child, error) {
 }
 
 //AddMember -
-func (s *FamilyService) AddMember(*goparent.Family, *goparent.User) error {
-	panic("not implemented")
+func (s *FamilyService) AddMember(ctx context.Context, family *goparent.Family, newMember *goparent.User) error {
+	for _, member := range family.Members {
+		if member == newMember.ID {
+			return ErrAlreadyInFamily
+		}
+	}
+
+	family.Members = append(family.Members, newMember.ID)
+	err := s.Save(ctx, family)
+	if err != nil {
+		return NewError("datastore.FamilyService.AddMember", err)
+	}
+
+	return nil
 }
 
 //GetAdminFamily -

@@ -1,12 +1,15 @@
 package rethinkdb
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sasimpson/goparent"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
+
+var ctx context.Context
 
 func TestGetNoUser(t *testing.T) {
 	var testEnv goparent.Env
@@ -16,7 +19,7 @@ func TestGetNoUser(t *testing.T) {
 	).Return([]interface{}{}, nil)
 
 	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
-	user, err := us.User("1")
+	user, err := us.User(ctx, "1")
 	mock.AssertExpectations(t)
 	assert.EqualError(t, err, "no result for that id")
 	assert.Nil(t, user)
@@ -37,7 +40,7 @@ func TestGetUser(t *testing.T) {
 	}}, nil)
 
 	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
-	user, err := us.User("1")
+	user, err := us.User(ctx, "1")
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.NotNil(t, user)
@@ -61,7 +64,7 @@ func TestGetUserByLogin(t *testing.T) {
 	}}, nil)
 
 	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
-	user, err := us.UserByLogin("testuser@test.com", "testpassword")
+	user, err := us.UserByLogin(ctx, "testuser@test.com", "testpassword")
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "1", user.ID)
@@ -79,7 +82,7 @@ func TestGetUserByLoginError(t *testing.T) {
 	).Return([]interface{}{}, nil)
 
 	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
-	user, err := us.UserByLogin("testuser@test.com", "testpassword")
+	user, err := us.UserByLogin(ctx, "testuser@test.com", "testpassword")
 	mock.AssertExpectations(t)
 	assert.EqualError(t, err, "no result for that username password combo")
 	assert.Nil(t, user)
@@ -135,7 +138,7 @@ func TestNewUserSave(t *testing.T) {
 	}
 
 	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
-	err := us.Save(&user)
+	err := us.Save(ctx, &user)
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "1", user.ID)
@@ -194,7 +197,7 @@ func TestUserSave(t *testing.T) {
 	}
 
 	us := UserService{Env: &testEnv, DB: &DBEnv{Session: mock}}
-	err := us.Save(&user)
+	err := us.Save(ctx, &user)
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.Equal(t, "1", user.ID)

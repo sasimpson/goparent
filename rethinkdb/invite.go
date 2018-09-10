@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -152,22 +153,22 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 	if err != nil {
 		return err
 	}
-
+	ctx := context.Background()
 	//get the user and family that is doing the inviting
 	us := UserService{Env: uis.Env, DB: uis.DB}
-	invitingUser, err := us.User(invite.UserID)
+	invitingUser, err := us.User(ctx, invite.UserID)
 	if err != nil {
 		return err
 	}
 
 	//NOTE: this would need to be set in the invite if we allowed family switching
-	family, err := us.GetFamily(invitingUser)
+	family, err := us.GetFamily(ctx, invitingUser)
 	if err != nil {
 		return err
 	}
 	fs := FamilyService{Env: uis.Env, DB: uis.DB}
 	//add the user to the family of the inviting user
-	err = fs.AddMember(family, user)
+	err = fs.AddMember(ctx, family, user)
 	if err != nil {
 		return err
 	}
