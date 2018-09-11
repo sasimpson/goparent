@@ -11,6 +11,6 @@ func (db *DBEnv) GetConnection() error {
 	panic("not implemented")
 }
 
-func (db *DBEnv) GetContext(*http.Request) context.Context {
-	return context.Background()
+func (db *DBEnv) GetContext(r *http.Request) context.Context {
+	return r.Context()
 }

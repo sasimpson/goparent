@@ -1,6 +1,10 @@
 package mock
 
-import "github.com/sasimpson/goparent"
+import (
+	"context"
+
+	"github.com/sasimpson/goparent"
+)
 
 //FamilyService -
 type FamilyService struct {
@@ -10,12 +14,12 @@ type FamilyService struct {
 }
 
 //Save -
-func (mfs *FamilyService) Save(*goparent.Family) error {
+func (mfs *FamilyService) Save(context.Context, *goparent.Family) error {
 	panic("not implemented")
 }
 
 //Family -
-func (mfs *FamilyService) Family(string) (*goparent.Family, error) {
+func (mfs *FamilyService) Family(context.Context, string) (*goparent.Family, error) {
 	panic("not implemented")
 }
 
@@ -28,11 +32,11 @@ func (mfs *FamilyService) Children(*goparent.Family) ([]*goparent.Child, error) 
 }
 
 //AddMember -
-func (mfs *FamilyService) AddMember(*goparent.Family, *goparent.User) error {
+func (mfs *FamilyService) AddMember(context.Context, *goparent.Family, *goparent.User) error {
 	panic("not implemented")
 }
 
 //GetAdminFamily -
-func (mfs *FamilyService) GetAdminFamily(*goparent.User) (*goparent.Family, error) {
+func (mfs *FamilyService) GetAdminFamily(context.Context, *goparent.User) (*goparent.Family, error) {
 	panic("not implemented")
 }
