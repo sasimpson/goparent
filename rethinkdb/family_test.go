@@ -85,7 +85,7 @@ func TestFamilySave(t *testing.T) {
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.Save(ctx, tC.family)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}
@@ -151,7 +151,7 @@ func TestFamily(t *testing.T) {
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			family, err := fs.Family(ctx, tC.id)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.EqualValues(t, tC.family, family)
@@ -229,7 +229,7 @@ func TestChildren(t *testing.T) {
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			children, err := fs.Children(tC.family)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tC.resultLength, len(children))
@@ -305,18 +305,19 @@ func TestAddMember(t *testing.T) {
 					Updated: 0,
 					Errors:  1,
 				}, errors.New("test error")),
-			returnError: errors.New("test error"),
+			returnError: errors.New("user already in that family"),
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			t.Logf("%#v", tC.returnError)
 			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.AddMember(ctx, tC.family, tC.user)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}
@@ -385,7 +386,7 @@ func TestGetAdminFamily(t *testing.T) {
 			family, err := fs.GetAdminFamily(ctx, tC.user)
 			t.Logf("%#v %#v", family, err)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tC.family.ID, family.ID)

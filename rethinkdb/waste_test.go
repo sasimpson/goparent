@@ -153,7 +153,7 @@ func TestWasteSave(t *testing.T) {
 			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.Save(&tC.data)
 			if tC.returnError != nil {
-				assert.Error(t, err, tC.returnError)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tC.id, tC.data.ID)
@@ -190,7 +190,7 @@ func TestStats(t *testing.T) {
 			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			statsData, err := fs.Stats(tC.child)
 			if tC.returnError != nil {
-				assert.Error(t, err, tC.returnError)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.NotNil(t, statsData)
@@ -226,7 +226,7 @@ func TestWasteGraph(t *testing.T) {
 			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			chartData, err := fs.GraphData(tC.child)
 			if tC.returnError != nil {
-				assert.Error(t, err, tC.returnError)
+				assert.EqualError(t, *tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.NotNil(t, chartData)

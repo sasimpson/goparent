@@ -108,7 +108,7 @@ func TestInviteParent(t *testing.T) {
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := uis.InviteParent(tC.user, tC.inviteEmail, timestamp)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}
@@ -182,7 +182,7 @@ func TestSentInvites(t *testing.T) {
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			invites, err := uis.SentInvites(tC.user)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}
@@ -247,7 +247,7 @@ func TestInvite(t *testing.T) {
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			invite, err := uis.Invite(tC.id)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				t.Logf("%#v", invite)
@@ -324,7 +324,7 @@ func TestInvites(t *testing.T) {
 			invites, err := uis.Invites(tC.user)
 			t.Logf("invites: %#v len: %#v err: %#v", invites, len(invites), err)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}
@@ -405,7 +405,7 @@ func TestAcceptInvite(t *testing.T) {
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := uis.Accept(tC.invitedUser, tC.id)
 			if tC.returnError != nil {
-				assert.Error(t, err, tC.returnError)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}
@@ -478,7 +478,7 @@ func TestDelete(t *testing.T) {
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := uis.Delete(tC.invite)
 			if tC.returnError != nil {
-				assert.Error(t, tC.returnError, err)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}

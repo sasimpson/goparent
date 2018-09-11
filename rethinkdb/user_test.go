@@ -234,7 +234,7 @@ func TestTokens(t *testing.T) {
 	}}, nil)
 	us.DB = &DBEnv{Session: mock}
 
-	user, ok, err := us.ValidateToken(token)
+	user, ok, err := us.ValidateToken(ctx, token)
 	mock.AssertExpectations(t)
 	assert.Nil(t, err)
 	assert.True(t, ok)

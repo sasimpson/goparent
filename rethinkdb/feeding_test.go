@@ -158,7 +158,7 @@ func TestFeedingSave(t *testing.T) {
 			fs := FeedingService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.Save(&tC.data)
 			if tC.returnError != nil {
-				assert.Error(t, err, tC.returnError)
+				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tC.id, tC.data.ID)

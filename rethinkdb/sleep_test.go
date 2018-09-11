@@ -155,7 +155,7 @@ func TestSleepSave(t *testing.T) {
 			fs := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			err := fs.Save(&tC.data)
 			if tC.returnError != nil {
-				assert.Error(t, err, tC.returnError)
+				assert.Error(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
 			}
@@ -249,7 +249,7 @@ func TestStatus(t *testing.T) {
 			sleepStart := ss.Start(tC.sleep, tC.family, tC.child)
 			sleepEnd := ss.End(tC.sleep, tC.family, tC.child)
 			if tC.returnError != nil {
-				assert.Error(t, err, tC.returnError)
+				assert.EqualError(t, tC.returnError, err.Error())
 				assert.Error(t, sleepStart)
 				assert.Error(t, sleepEnd)
 
