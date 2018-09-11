@@ -30,7 +30,7 @@ func TestFeedingGetHandler(t *testing.T) {
 	}{
 		{
 			desc: "returns no feedings",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -51,7 +51,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns some feedings",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -75,7 +75,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("user has no current family"),
 			},
@@ -87,7 +87,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc:          "returns feeding error",
-			env:           &goparent.Env{},
+			env:           &goparent.Env{DB: &mock.DBEnv{}},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			feedingService: &mock.FeedingService{
@@ -99,7 +99,7 @@ func TestFeedingGetHandler(t *testing.T) {
 		},
 		{
 			desc:           "returns auth error",
-			env:            &goparent.Env{},
+			env:            &goparent.Env{DB: &mock.DBEnv{}},
 			userService:    &mock.UserService{},
 			familyService:  &mock.FamilyService{},
 			feedingService: &mock.FeedingService{},
@@ -162,7 +162,7 @@ func TestFeedingNewHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit feeding",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -190,7 +190,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -211,7 +211,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns feeding error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -240,7 +240,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			feedingRequest: FeedingRequest{
 				FeedingData: goparent.Feeding{
 					Type:      "bottle",
@@ -259,7 +259,7 @@ func TestFeedingNewHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -318,7 +318,7 @@ func TestFeedingNewHandler(t *testing.T) {
 func TestFeedingViewHandler(t *testing.T) {
 
 	mockHandler := Handler{
-		Env: &goparent.Env{},
+		Env: &goparent.Env{DB: &mock.DBEnv{}},
 		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
@@ -356,7 +356,7 @@ func TestFeedingViewHandler(t *testing.T) {
 
 func TestFeedingEditHandler(t *testing.T) {
 	mockHandler := Handler{
-		Env: &goparent.Env{},
+		Env: &goparent.Env{DB: &mock.DBEnv{}},
 		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",
@@ -393,7 +393,7 @@ func TestFeedingEditHandler(t *testing.T) {
 
 func TestFeedingDeleteHandler(t *testing.T) {
 	mockHandler := Handler{
-		Env: &goparent.Env{},
+		Env: &goparent.Env{DB: &mock.DBEnv{}},
 		UserService: &mock.UserService{
 			Family: &goparent.Family{
 				ID:          "1",

@@ -178,7 +178,7 @@ func (s *UserService) GetFamily(ctx context.Context, user *goparent.User) (*gopa
 }
 
 //GetAllFamily -
-func (s *UserService) GetAllFamily(*goparent.User) ([]*goparent.Family, error) {
+func (s *UserService) GetAllFamily(context.Context, *goparent.User) ([]*goparent.Family, error) {
 	panic("not implemented")
 }
 

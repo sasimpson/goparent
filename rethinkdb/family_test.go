@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 
 	r "gopkg.in/gorethink/gorethink.v3"
@@ -35,7 +36,7 @@ func TestFamilySave(t *testing.T) {
 					Errors:        0,
 					GeneratedKeys: []string{"1"},
 				}, nil),
-			env:         &goparent.Env{},
+			env:         &goparent.Env{DB: &mock.DBEnv{}},
 			returnError: nil,
 		},
 		{
@@ -54,7 +55,7 @@ func TestFamilySave(t *testing.T) {
 					Inserted:      0,
 					Errors:        0,
 					GeneratedKeys: []string{"1"}}, nil),
-			env:         &goparent.Env{},
+			env:         &goparent.Env{DB: &mock.DBEnv{}},
 			returnError: nil,
 		},
 		{
@@ -73,7 +74,7 @@ func TestFamilySave(t *testing.T) {
 					Inserted:      0,
 					Errors:        1,
 					GeneratedKeys: []string{"1"}}, errors.New("test error")),
-			env:         &goparent.Env{},
+			env:         &goparent.Env{DB: &mock.DBEnv{}},
 			returnError: errors.New("test error"),
 		},
 	}
@@ -105,7 +106,7 @@ func TestFamily(t *testing.T) {
 	}{
 		{
 			desc: "return family",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			id:   "family-1",
 			family: &goparent.Family{
 				ID:          "family-1",
@@ -127,7 +128,7 @@ func TestFamily(t *testing.T) {
 		},
 		{
 			desc: "return error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			id:   "family-1",
 			family: &goparent.Family{
 				ID:          "family-1",
@@ -172,7 +173,7 @@ func TestChildren(t *testing.T) {
 	}{
 		{
 			desc: "get some children",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -205,7 +206,7 @@ func TestChildren(t *testing.T) {
 		},
 		{
 			desc: "get error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -250,7 +251,7 @@ func TestAddMember(t *testing.T) {
 	}{
 		{
 			desc: "add member",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -269,7 +270,7 @@ func TestAddMember(t *testing.T) {
 		},
 		{
 			desc: "add member fail",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -289,7 +290,7 @@ func TestAddMember(t *testing.T) {
 		},
 		{
 			desc: "add member db error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			family: &goparent.Family{
 				ID:          "family-1",
 				Admin:       "1",
@@ -337,7 +338,7 @@ func TestGetAdminFamily(t *testing.T) {
 	}{
 		{
 			desc: "valid call",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{
 				ID: "user-1",
 			},
@@ -360,7 +361,7 @@ func TestGetAdminFamily(t *testing.T) {
 		},
 		{
 			desc: "nothing returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{
 				ID: "user-1",
 			},

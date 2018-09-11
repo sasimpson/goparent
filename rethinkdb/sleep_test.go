@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
@@ -22,7 +23,7 @@ func TestGetSleep(t *testing.T) {
 	}{
 		{
 			desc: "return 1 sleep",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("sleep").MockAnything(),
 			).
@@ -42,7 +43,7 @@ func TestGetSleep(t *testing.T) {
 		},
 		{
 			desc: "return 0 sleep",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("sleep").MockAnything(),
 			).
@@ -53,7 +54,7 @@ func TestGetSleep(t *testing.T) {
 		},
 		{
 			desc: "return sleep error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("sleep").MockAnything(),
 			).
@@ -95,7 +96,7 @@ func TestSleepSave(t *testing.T) {
 	}{
 		{
 			desc:      "save data",
-			env:       &goparent.Env{},
+			env:       &goparent.Env{DB: &mock.DBEnv{}},
 			id:        "1",
 			timestamp: timestamp.Add(time.Hour),
 			query: (&r.Mock{}).On(
@@ -124,7 +125,7 @@ func TestSleepSave(t *testing.T) {
 		},
 		{
 			desc:      "save data error",
-			env:       &goparent.Env{},
+			env:       &goparent.Env{DB: &mock.DBEnv{}},
 			timestamp: timestamp.Add(time.Hour),
 			query: (&r.Mock{}).On(
 				r.Table("sleep").Insert(
@@ -176,7 +177,7 @@ func TestStatus(t *testing.T) {
 	}{
 		{
 			desc: "get status true",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("sleep").Filter(map[string]interface{}{
 					"end":      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -193,7 +194,7 @@ func TestStatus(t *testing.T) {
 		},
 		{
 			desc: "get status false",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("sleep").Filter(map[string]interface{}{
 					"end":      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -208,7 +209,7 @@ func TestStatus(t *testing.T) {
 		},
 		{
 			desc: "get status empty result",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("sleep").Filter(map[string]interface{}{
 					"end":      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -224,7 +225,7 @@ func TestStatus(t *testing.T) {
 		},
 		{
 			desc: "get status err result",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("sleep").Filter(map[string]interface{}{
 					"end":      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),

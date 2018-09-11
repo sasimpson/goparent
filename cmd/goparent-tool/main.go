@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"log"
@@ -24,7 +25,7 @@ var (
 )
 
 func main() {
-	env, dbenv := InitRethinkDBConfig()
+	env, dbenv := rethinkdb.InitRethinkDBConfig()
 
 	flag.BoolVar(&createFlag, "createTables", false, "create all the needed tables")
 	flag.BoolVar(&genFlag, "generate", false, "generate test data")
@@ -91,13 +92,14 @@ func generateRandomData(env *goparent.Env, childID string, userID string, dateSt
 	userService := rethinkdb.UserService{Env: env}
 	familyService := rethinkdb.FamilyService{Env: env}
 	childService := rethinkdb.ChildService{Env: env}
+	ctx := context.Background()
 
-	user, err := userService.User(userID)
+	user, err := userService.User(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	family, err = userService.GetFamily(user)
+	family, err = userService.GetFamily(ctx, user)
 	if err != nil {
 		return err
 	}

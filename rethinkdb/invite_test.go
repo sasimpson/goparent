@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
@@ -23,7 +24,7 @@ func TestInviteParent(t *testing.T) {
 	}{
 		{
 			desc: "invite parent",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -44,7 +45,7 @@ func TestInviteParent(t *testing.T) {
 		},
 		{
 			desc: "invite parent existing invite",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -63,7 +64,7 @@ func TestInviteParent(t *testing.T) {
 		},
 		{
 			desc: "invite parent check error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -77,7 +78,7 @@ func TestInviteParent(t *testing.T) {
 		},
 		{
 			desc: "invite parent insert error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query1: (&r.Mock{}).On(
 				r.Table("invites").Filter(
 					map[string]interface{}{
@@ -128,7 +129,7 @@ func TestSentInvites(t *testing.T) {
 	}{
 		{
 			desc: "nothing returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{ID: "1"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -139,7 +140,7 @@ func TestSentInvites(t *testing.T) {
 		},
 		{
 			desc: "nothing returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{ID: "1"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -151,7 +152,7 @@ func TestSentInvites(t *testing.T) {
 		},
 		{
 			desc: "two invites returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{ID: "1"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -203,7 +204,7 @@ func TestInvite(t *testing.T) {
 	}{
 		{
 			desc: "nothing returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Get("1"),
 			).Return(nil, nil),
@@ -212,7 +213,7 @@ func TestInvite(t *testing.T) {
 		},
 		{
 			desc: "invite returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Get("1"),
 			).Return(map[string]interface{}{
@@ -231,7 +232,7 @@ func TestInvite(t *testing.T) {
 		},
 		{
 			desc: "error returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Get("1"),
 			).Return(nil, errors.New("test error")),
@@ -269,7 +270,7 @@ func TestInvites(t *testing.T) {
 	}{
 		{
 			desc: "nothing returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -280,7 +281,7 @@ func TestInvites(t *testing.T) {
 		},
 		{
 			desc: "nothing returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -292,7 +293,7 @@ func TestInvites(t *testing.T) {
 		},
 		{
 			desc: "two invites returned",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			user: &goparent.User{ID: "1", Email: "testUser@test.com"},
 			query: (&r.Mock{}).On(
 				r.Table("invites").Filter(map[string]interface{}{
@@ -350,7 +351,7 @@ func TestAcceptInvite(t *testing.T) {
 	}{
 		{
 			desc: "invite accepted, no errors",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			id:   "invite-1",
 			invitedUser: &goparent.User{
 				ID: "user-2", Email: "invitedUser@test.com",
@@ -423,7 +424,7 @@ func TestDelete(t *testing.T) {
 	}{
 		{
 			desc: "valid delete",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			invite: &goparent.UserInvitation{
 				ID: "invite-1",
 			},
@@ -439,7 +440,7 @@ func TestDelete(t *testing.T) {
 		},
 		{
 			desc: "delete error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			invite: &goparent.UserInvitation{
 				ID: "invite-1",
 			},
@@ -455,7 +456,7 @@ func TestDelete(t *testing.T) {
 		},
 		{
 			desc: "nothing deleted",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			invite: &goparent.UserInvitation{
 				ID: "invite-1",
 			},

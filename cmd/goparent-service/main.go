@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	env, dbenv := InitRethinkDBConfig()
+	env, dbenv := rethinkdb.InitRethinkDBConfig()
 	runService(env, dbenv)
 }
 

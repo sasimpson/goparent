@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/sasimpson/goparent"
+	"github.com/spf13/viper"
 	"gopkg.in/gorethink/gorethink.v3"
 )
 
@@ -39,8 +41,9 @@ func (dbenv *DBEnv) GetConnection() error {
 	return nil
 }
 
-func (dbenv *DBEnv) GetContext(*http.Request) context.Context {
-	return context.Background()
+//GetContext returns the request context to satisfy the interface needs
+func (dbenv *DBEnv) GetContext(r *http.Request) context.Context {
+	return r.Context()
 }
 
 //CreateTables - this will build out the database.
@@ -58,4 +61,46 @@ func CreateTables(dbenv *DBEnv) {
 	gorethink.DB("goparent").TableCreate("children").Run(dbenv.Session)
 	gorethink.DB("goparent").TableCreate("invites").Run(dbenv.Session)
 	gorethink.DB("goparent").TableCreate("family").Run(dbenv.Session)
+}
+
+//InitConfig - setup and read configuration for the service
+func InitRethinkDBConfig() (*goparent.Env, *DBEnv) {
+	//set defaults
+	viper.SetDefault("service.host", "localhost")
+	viper.SetDefault("service.port", "8000")
+	viper.SetDefault("rethinkdb.host", "localhost")
+	viper.SetDefault("rethinkdb.port", 28015)
+	viper.SetDefault("rethinkdb.name", "goparent")
+	viper.SetDefault("auth.signingkey", "supersecretsquirrl")
+
+	//parse configs if they exist
+	viper.SetConfigName("goparent")
+	viper.AddConfigPath("/etc/config/")
+	viper.AddConfigPath("$HOME/.goparent")
+	viper.AddConfigPath(".")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("no config read in: %s", err))
+	}
+	log.Println("config used:", viper.ConfigFileUsed())
+
+	return &goparent.Env{
+			Service: goparent.Service{
+				Host: viper.GetString("service.host"),
+				Port: viper.GetInt("service.port")},
+			DB: &DBEnv{
+				Host:     viper.GetString("rethinkdb.host"),
+				Port:     viper.GetInt("rethinkdb.port"),
+				Database: viper.GetString("rethinkdb.name"),
+				Username: viper.GetString("rethinkdb.username"),
+				Password: viper.GetString("rethinkdb.password")},
+			Auth: goparent.Authentication{
+				SigningKey: []byte(viper.GetString("auth.signingkey"))},
+		}, &DBEnv{
+			Host:     viper.GetString("rethinkdb.host"),
+			Port:     viper.GetInt("rethinkdb.port"),
+			Database: viper.GetString("rethinkdb.name"),
+			Username: viper.GetString("rethinkdb.username"),
+			Password: viper.GetString("rethinkdb.password")}
 }

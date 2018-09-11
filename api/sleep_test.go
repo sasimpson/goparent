@@ -30,7 +30,7 @@ func TestSleepGetHandler(t *testing.T) {
 	}{
 		{
 			desc:          "returns auth error",
-			env:           &goparent.Env{},
+			env:           &goparent.Env{DB: &mock.DBEnv{}},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			sleepService:  &mock.SleepService{},
@@ -39,7 +39,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns family error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
@@ -50,7 +50,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns sleep error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -69,7 +69,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no sleep",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -89,7 +89,7 @@ func TestSleepGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns one sleep",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -164,7 +164,7 @@ func TestSleepNewHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit sleep",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -190,7 +190,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -209,7 +209,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns sleep error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -236,7 +236,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			sleepRequest: SleepRequest{
 				SleepData: goparent.Sleep{
 					Start:    timestamp,
@@ -253,7 +253,7 @@ func TestSleepNewHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -320,7 +320,7 @@ func TestSleepViewHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepViewHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/1",
 			method:       "GET",
 			responseCode: http.StatusUnauthorized,
@@ -328,7 +328,7 @@ func TestSleepViewHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepViewHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/1",
 			method:       "GET",
 			responseCode: http.StatusNotImplemented,
@@ -372,7 +372,7 @@ func TestSleepEditHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepEditHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/1",
 			method:       "PUT",
 			responseCode: http.StatusUnauthorized,
@@ -380,7 +380,7 @@ func TestSleepEditHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepEditHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/1",
 			method:       "PUT",
 			responseCode: http.StatusNotImplemented,
@@ -424,7 +424,7 @@ func TestSleepDeleteHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepDeleteHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/1",
 			method:       "DELETE",
 			responseCode: http.StatusUnauthorized,
@@ -432,7 +432,7 @@ func TestSleepDeleteHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepDeleteHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/1",
 			method:       "DELETE",
 			responseCode: http.StatusNotImplemented,
@@ -476,7 +476,7 @@ func TestSleepStartHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepStartHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/start",
 			method:       "POST",
 			responseCode: http.StatusUnauthorized,
@@ -484,7 +484,7 @@ func TestSleepStartHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepStartHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/start",
 			method:       "POST",
 			responseCode: http.StatusNotImplemented,
@@ -528,7 +528,7 @@ func TestSleepEndHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepStartHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/end",
 			method:       "POST",
 			responseCode: http.StatusUnauthorized,
@@ -536,7 +536,7 @@ func TestSleepEndHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepStartHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/end",
 			method:       "POST",
 			responseCode: http.StatusNotImplemented,
@@ -580,7 +580,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 	}{
 		{
 			desc:         "sleepToggleStatusHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/status",
 			method:       "GET",
 			responseCode: http.StatusUnauthorized,
@@ -588,7 +588,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 		},
 		{
 			desc:         "sleepToggleStatusHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/status",
 			method:       "GET",
 			responseCode: http.StatusNotImplemented,

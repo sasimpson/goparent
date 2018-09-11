@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
@@ -21,7 +22,7 @@ func TestGetWastes(t *testing.T) {
 	}{
 		{
 			desc: "return 1 waste",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 				// Filter(
@@ -46,7 +47,7 @@ func TestGetWastes(t *testing.T) {
 		},
 		{
 			desc: "return 0 waste",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 				// r.Table("waste").Filter(
@@ -61,7 +62,7 @@ func TestGetWastes(t *testing.T) {
 		},
 		{
 			desc: "return 0 waste",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 				// r.Table("waste").Filter(
@@ -106,7 +107,7 @@ func TestWasteSave(t *testing.T) {
 	}{
 		{
 			desc:      "save data",
-			env:       &goparent.Env{},
+			env:       &goparent.Env{DB: &mock.DBEnv{}},
 			id:        "1",
 			timestamp: timestamp.Add(time.Hour),
 			query: (&r.Mock{}).On(
@@ -129,7 +130,7 @@ func TestWasteSave(t *testing.T) {
 		},
 		{
 			desc:      "save data error",
-			env:       &goparent.Env{},
+			env:       &goparent.Env{DB: &mock.DBEnv{}},
 			timestamp: timestamp.Add(time.Hour),
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
@@ -172,7 +173,7 @@ func TestStats(t *testing.T) {
 	}{
 		{
 			desc: "get stats",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 			).Return([]map[string]interface{}{
@@ -209,7 +210,7 @@ func TestWasteGraph(t *testing.T) {
 	}{
 		{
 			desc: "get graph data",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("waste").MockAnything(),
 			).Return([]map[string]interface{}{

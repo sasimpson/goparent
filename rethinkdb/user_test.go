@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sasimpson/goparent"
+	"github.com/sasimpson/goparent/mock"
 	"github.com/stretchr/testify/assert"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
@@ -252,7 +253,7 @@ func TestGetAllFamily(t *testing.T) {
 	}{
 		{
 			desc: "get all families",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			query: (&r.Mock{}).On(
 				r.Table("family").Filter(
 					func(row r.Term) r.Term {
@@ -272,7 +273,7 @@ func TestGetAllFamily(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			us := UserService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			families, err := us.GetAllFamily(tC.user)
+			families, err := us.GetAllFamily(ctx, tC.user)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {

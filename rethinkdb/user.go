@@ -192,7 +192,7 @@ func (us *UserService) GetFamily(ctx context.Context, user *goparent.User) (*gop
 }
 
 //GetAllFamily - return the family for a user. used for lookups
-func (us *UserService) GetAllFamily(user *goparent.User) ([]*goparent.Family, error) {
+func (us *UserService) GetAllFamily(ctx context.Context, user *goparent.User) ([]*goparent.Family, error) {
 	err := us.DB.GetConnection()
 	if err != nil {
 		return nil, err

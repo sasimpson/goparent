@@ -29,7 +29,7 @@ func TestWasteGetHandler(t *testing.T) {
 	}{
 		{
 			desc:          "returns auth error",
-			env:           &goparent.Env{},
+			env:           &goparent.Env{DB: &mock.DBEnv{}},
 			userService:   &mock.UserService{},
 			familyService: &mock.FamilyService{},
 			wasteService:  &mock.WasteService{},
@@ -38,7 +38,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns family error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				FamilyErr: errors.New("test error"),
 			},
@@ -49,7 +49,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns waste error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -68,7 +68,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no waste",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -88,7 +88,7 @@ func TestWasteGetHandler(t *testing.T) {
 		},
 		{
 			desc: "returns one waste",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
@@ -158,7 +158,7 @@ func TestWasteViewHandler(t *testing.T) {
 	}{
 		{
 			desc:         "wasteViewHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/waste/1",
 			method:       "GET",
 			responseCode: http.StatusUnauthorized,
@@ -166,7 +166,7 @@ func TestWasteViewHandler(t *testing.T) {
 		},
 		{
 			desc:         "wasteViewHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/waste/1",
 			method:       "GET",
 			responseCode: http.StatusNotImplemented,
@@ -210,7 +210,7 @@ func TestWasteEditHandler(t *testing.T) {
 	}{
 		{
 			desc:         "wasteEditHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/waste/1",
 			method:       "PUT",
 			responseCode: http.StatusUnauthorized,
@@ -218,7 +218,7 @@ func TestWasteEditHandler(t *testing.T) {
 		},
 		{
 			desc:         "wasteEditHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/waste/1",
 			method:       "PUT",
 			responseCode: http.StatusNotImplemented,
@@ -262,7 +262,7 @@ func TestWasteDeleteHandler(t *testing.T) {
 	}{
 		{
 			desc:         "wasteDeleteHandler unauthorized",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/waste/1",
 			method:       "DELETE",
 			responseCode: http.StatusUnauthorized,
@@ -270,7 +270,7 @@ func TestWasteDeleteHandler(t *testing.T) {
 		},
 		{
 			desc:         "wasteDeleteHandler not impl",
-			env:          &goparent.Env{},
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/waste/1",
 			method:       "DELETE",
 			responseCode: http.StatusNotImplemented,
@@ -319,7 +319,7 @@ func TestWasteNewHandler(t *testing.T) {
 	}{
 		{
 			desc: "submit waste",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -346,7 +346,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns no family error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -366,7 +366,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns waste error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -394,7 +394,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "returns auth error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			wasteRequest: WasteRequest{
 				WasteData: goparent.Waste{
 					Type:      1,
@@ -412,7 +412,7 @@ func TestWasteNewHandler(t *testing.T) {
 		},
 		{
 			desc: "decode input error",
-			env:  &goparent.Env{},
+			env:  &goparent.Env{DB: &mock.DBEnv{}},
 			userService: &mock.UserService{
 				Family: &goparent.Family{
 					ID:          "1",
