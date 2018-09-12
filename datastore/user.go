@@ -178,8 +178,22 @@ func (s *UserService) GetFamily(ctx context.Context, user *goparent.User) (*gopa
 }
 
 //GetAllFamily -
-func (s *UserService) GetAllFamily(context.Context, *goparent.User) ([]*goparent.Family, error) {
-	panic("not implemented")
+func (s *UserService) GetAllFamily(ctx context.Context, user *goparent.User) ([]*goparent.Family, error) {
+	var families []*goparent.Family
+	q := datastore.NewQuery(FamilyKind).Filter("Members =", user.ID)
+	t := q.Run(ctx)
+	for {
+		var family goparent.Family
+		_, err := t.Next(&family)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		families = append(families, &family)
+	}
+	return families, nil
 }
 
 func md5Email(email string) string {

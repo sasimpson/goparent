@@ -63,7 +63,7 @@ func CreateTables(dbenv *DBEnv) {
 	gorethink.DB("goparent").TableCreate("family").Run(dbenv.Session)
 }
 
-//InitConfig - setup and read configuration for the service
+//InitRethinkDBConfig - setup and read configuration for the service
 func InitRethinkDBConfig() (*goparent.Env, *DBEnv) {
 	//set defaults
 	viper.SetDefault("service.host", "localhost")
