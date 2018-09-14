@@ -30,13 +30,25 @@ func TestDatastoreFamily(t *testing.T) {
 	err = familyService.Save(ctx, newFamily)
 	assert.Nil(t, err)
 
+	//create a user to test adding to a family
 	userService := datastore.UserService{}
-	testUser := &goparent.User{}
+	testUser := &goparent.User{
+		Email:    "test@test.com",
+		Username: "test@test.com",
+		Password: "testing",
+	}
+	//save it
 	err = userService.Save(ctx, testUser)
 	assert.Nil(t, err)
+	assert.NotNil(t, testUser.ID)
+
+	//add the member to the family
 	err = familyService.AddMember(ctx, newFamily, testUser)
 	assert.Nil(t, err)
-	err = familyService.AddMember(ctx, newFamily, testUser)
-	assert.NotNil(t, err)
 
+	//get the admin family for the user, which should have been
+	//created on save. should be equal to the returned admin family id
+	adminFamily, err := familyService.GetAdminFamily(ctx, testUser)
+	assert.Nil(t, err)
+	assert.Equal(t, testUser.CurrentFamily, adminFamily.ID)
 }
