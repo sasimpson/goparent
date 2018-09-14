@@ -1,6 +1,7 @@
 package datastore_test
 
 import (
+	"log"
 	"testing"
 
 	"github.com/sasimpson/goparent"
@@ -37,8 +38,15 @@ func TestDatastoreUser(t *testing.T) {
 
 	//save user
 	err = us.Save(ctx, &user)
-	t.Logf("%#v", user)
 	assert.Nil(t, err)
+
+	//check that the current family is the loaded family
+	cFamily, err := us.GetFamily(ctx, &user)
+	log.Println(err)
+	log.Println(cFamily)
+	assert.Nil(t, err)
+	assert.NotNil(t, cFamily)
+	assert.Equal(t, user.CurrentFamily, cFamily.ID)
 
 	//get user
 	nextUser, err := us.User(ctx, user.ID)
@@ -48,8 +56,12 @@ func TestDatastoreUser(t *testing.T) {
 	//save user with no current family
 	nextUser.CurrentFamily = ""
 	err = us.Save(ctx, nextUser)
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, "datastore.UserService.Save.1b: FamilyService.GetAdminFamily: no family found with user as admin")
+	assert.Nil(t, err)
+	assert.NotEmpty(t, nextUser.CurrentFamily)
+
+	families, err := us.GetAllFamily(ctx, nextUser)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(families))
 
 	//test login succeed
 	loggedInUser, err := us.UserByLogin(ctx, "test@test.com", "testing")

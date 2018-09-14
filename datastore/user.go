@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -81,40 +80,33 @@ func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
 	fs := &FamilyService{Env: s.Env}
 	//user doesn't have a current family
 	if user.CurrentFamily == "" && user.ID != "" {
-		log.Println("user with no current family but with an ID")
 		//get the family for which the user is the admin
 		family, err := fs.GetAdminFamily(ctx, user)
 		if err == ErrNoFamilyFound {
 			//didn't find a family, creating one.
 			family = &goparent.Family{Admin: userKey.StringID(), Members: []string{userKey.StringID()}}
-			err = fs.Save(ctx, family)
+			// err = fs.Save(ctx, family)
 			if err != nil {
 				return NewError("datastore.UserService.Save.1a", err)
 			}
-			log.Printf("%#v", family.ID)
 		}
 		if err != nil {
 			return NewError("datastore.UserService.Save.1b", err)
 		}
-		log.Println("setting current family")
 		user.CurrentFamily = family.ID
 	}
 
 	//if the user has no current family and no id, then we need to create a family.
 	if user.CurrentFamily == "" && user.ID == "" {
-		log.Println("user is new,  has no id or current family, so we're going to create one")
 		family = &goparent.Family{Admin: userKey.StringID(), Members: []string{userKey.StringID()}}
 		err := fs.Save(ctx, family)
 		if err != nil {
 			return NewError("datastore.UserService.Save.2", err)
 		}
 		user.CurrentFamily = family.ID
-		log.Printf("%#v", family)
-		log.Println("setting current family", family.ID)
 	}
 
 	user.ID = userKey.StringID()
-	log.Printf("%#v", user)
 	//this will save if there is or isn't a record for this user.
 	_, err := datastore.Put(ctx, userKey, user)
 	if err != nil {
@@ -133,7 +125,6 @@ func (s *UserService) GetToken(user *goparent.User) (string, error) {
 	claims["Email"] = user.Email
 	claims["Username"] = user.Username
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-	log.Printf("%s", s.Env.Auth.SigningKey)
 	tokenString, err := token.SignedString(s.Env.Auth.SigningKey)
 	if err != nil {
 		return "", NewError("datastore.UserService.GetToken", err)
