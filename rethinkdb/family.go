@@ -59,7 +59,7 @@ func (fs *FamilyService) Family(ctx context.Context, id string) (*goparent.Famil
 }
 
 //Children - returns all the children for a family
-func (fs *FamilyService) Children(family *goparent.Family) ([]*goparent.Child, error) {
+func (fs *FamilyService) Children(ctx context.Context, family *goparent.Family) ([]*goparent.Child, error) {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err

@@ -47,6 +47,14 @@ func TestDatastoreFamily(t *testing.T) {
 	err = familyService.AddMember(ctx, newFamily, testUser)
 	assert.Nil(t, err)
 
+	childService := datastore.ChildService{}
+	testChild := goparent.Child{Name: "test child 1", FamilyID: newFamily.ID}
+	err = childService.Save(ctx, &testChild)
+	assert.Nil(t, err)
+
+	// children, err := familyService.Children(ctx, newFamily)
+	//why is this zero when i run the test, but 1 when i debug??
+	// assert.Len(t, children, 1)
 	//get the admin family for the user, which should have been
 	//created on save. should be equal to the returned admin family id
 	// adminFamily, err := familyService.GetAdminFamily(ctx, testUser)

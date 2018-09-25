@@ -66,7 +66,7 @@ func (h *Handler) childSummary() http.Handler {
 		}
 
 		var summary ChildSummaryResponse
-		child, err := h.ChildService.Child(childID)
+		child, err := h.ChildService.Child(ctx, childID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -120,7 +120,7 @@ func (h *Handler) childrenGetHandler() http.Handler {
 			return
 		}
 
-		allChildren, err := h.FamilyService.Children(family)
+		allChildren, err := h.FamilyService.Children(ctx, family)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -162,7 +162,7 @@ func (h *Handler) childNewHandler() http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		childRequest.ChildData.ParentID = user.ID
 		childRequest.ChildData.FamilyID = family.ID
-		err = h.ChildService.Save(&childRequest.ChildData)
+		err = h.ChildService.Save(ctx, &childRequest.ChildData)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -190,7 +190,7 @@ func (h *Handler) childViewHandler() http.Handler {
 			return
 		}
 
-		child, err := h.ChildService.Child(childID)
+		child, err := h.ChildService.Child(ctx, childID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -233,7 +233,7 @@ func (h *Handler) childEditHandler() http.Handler {
 		}
 
 		id := mux.Vars(r)["id"]
-		child, err := h.ChildService.Child(id)
+		child, err := h.ChildService.Child(ctx, id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -244,7 +244,7 @@ func (h *Handler) childEditHandler() http.Handler {
 			http.Error(w, "invalid relationship", http.StatusBadRequest)
 			return
 		}
-		h.ChildService.Save(&childRequest.ChildData)
+		h.ChildService.Save(ctx, &childRequest.ChildData)
 		err = json.NewEncoder(w).Encode(childRequest.ChildData)
 		return
 	})
@@ -264,7 +264,7 @@ func (h *Handler) childDeleteHandler() http.Handler {
 
 		family, err := h.UserService.GetFamily(ctx, user)
 		id := mux.Vars(r)["id"]
-		child, err := h.ChildService.Child(id)
+		child, err := h.ChildService.Child(ctx, id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -274,7 +274,7 @@ func (h *Handler) childDeleteHandler() http.Handler {
 			http.Error(w, "not found", http.StatusNotFound)
 		}
 
-		deleted, err := h.ChildService.Delete(child)
+		deleted, err := h.ChildService.Delete(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

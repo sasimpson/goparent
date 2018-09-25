@@ -24,7 +24,7 @@ func (mfs *FamilyService) Family(context.Context, string) (*goparent.Family, err
 }
 
 //Children -
-func (mfs *FamilyService) Children(*goparent.Family) ([]*goparent.Child, error) {
+func (mfs *FamilyService) Children(context.Context, *goparent.Family) ([]*goparent.Child, error) {
 	if mfs.GetErr != nil {
 		return nil, mfs.GetErr
 	}

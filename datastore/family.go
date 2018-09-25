@@ -61,8 +61,15 @@ func (s *FamilyService) Family(ctx context.Context, id string) (*goparent.Family
 }
 
 //Children -
-func (s *FamilyService) Children(*goparent.Family) ([]*goparent.Child, error) {
-	panic("not implemented")
+func (s *FamilyService) Children(ctx context.Context, family *goparent.Family) ([]*goparent.Child, error) {
+	var children []*goparent.Child
+	q := datastore.NewQuery(ChildKind).Filter("FamilyID=", family.ID)
+	_, err := q.GetAll(ctx, &children)
+	if err != nil {
+		return nil, err
+	}
+
+	return children, nil
 }
 
 //AddMember -

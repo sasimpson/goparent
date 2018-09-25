@@ -110,7 +110,7 @@ type Family struct {
 type FamilyService interface {
 	Save(context.Context, *Family) error
 	Family(context.Context, string) (*Family, error)
-	Children(*Family) ([]*Child, error)
+	Children(context.Context, *Family) ([]*Child, error)
 	AddMember(context.Context, *Family, *User) error
 	GetAdminFamily(context.Context, *User) (*Family, error)
 	// Delete(*Family) (int, error)

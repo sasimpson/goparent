@@ -228,7 +228,7 @@ func TestChildren(t *testing.T) {
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			children, err := fs.Children(tC.family)
+			children, err := fs.Children(ctx, tC.family)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {

@@ -106,12 +106,12 @@ func generateRandomData(env *goparent.Env, childID string, userID string, dateSt
 
 	switch childID {
 	case "":
-		children, err = familyService.Children(family)
+		children, err = familyService.Children(ctx, family)
 		if err != nil {
 			return err
 		}
 	default:
-		child, err = childService.Child(childID)
+		child, err = childService.Child(ctx, childID)
 		if err != nil {
 			return err
 		}

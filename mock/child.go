@@ -1,6 +1,10 @@
 package mock
 
-import "github.com/sasimpson/goparent"
+import (
+	"context"
+
+	"github.com/sasimpson/goparent"
+)
 
 //ChildService -
 type ChildService struct {
@@ -12,7 +16,7 @@ type ChildService struct {
 }
 
 //Save -
-func (mcs *ChildService) Save(*goparent.Child) error {
+func (mcs *ChildService) Save(context.Context, *goparent.Child) error {
 	if mcs.GetErr != nil {
 		return mcs.GetErr
 	}
@@ -20,7 +24,7 @@ func (mcs *ChildService) Save(*goparent.Child) error {
 }
 
 //Child -
-func (mcs *ChildService) Child(string) (*goparent.Child, error) {
+func (mcs *ChildService) Child(context.Context, string) (*goparent.Child, error) {
 	if mcs.GetErr != nil {
 		return nil, mcs.GetErr
 	}
@@ -28,7 +32,7 @@ func (mcs *ChildService) Child(string) (*goparent.Child, error) {
 }
 
 //Delete -
-func (mcs *ChildService) Delete(*goparent.Child) (int, error) {
+func (mcs *ChildService) Delete(context.Context, *goparent.Child) (int, error) {
 	if mcs.DeleteErr != nil {
 		return 0, mcs.DeleteErr
 	}

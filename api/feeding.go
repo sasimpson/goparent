@@ -149,7 +149,7 @@ func (h *Handler) feedingGraphDataHandler() http.Handler {
 			return
 		}
 
-		child, err := h.ChildService.Child(childID)
+		child, err := h.ChildService.Child(ctx, childID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
