@@ -83,9 +83,9 @@ func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
 		//get the family for which the user is the admin
 		family, err := fs.GetAdminFamily(ctx, user)
 		if err == ErrNoFamilyFound {
-			//didn't find a family, creating one.
+			//didn't find a family, creating one, save it
 			family = &goparent.Family{Admin: userKey.StringID(), Members: []string{userKey.StringID()}}
-			// err = fs.Save(ctx, family)
+			err = fs.Save(ctx, family)
 			if err != nil {
 				return NewError("datastore.UserService.Save.1a", err)
 			}
@@ -96,7 +96,7 @@ func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
 		user.CurrentFamily = family.ID
 	}
 
-	//if the user has no current family and no id, then we need to create a family.
+	//if the user has no current family and no id, then we need to create a family and save it
 	if user.CurrentFamily == "" && user.ID == "" {
 		family = &goparent.Family{Admin: userKey.StringID(), Members: []string{userKey.StringID()}}
 		err := fs.Save(ctx, family)

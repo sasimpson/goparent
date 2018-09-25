@@ -118,18 +118,20 @@ type FamilyService interface {
 
 //Child -
 type Child struct {
-	ID       string    `json:"id" gorethink:"id,omitempty"`
-	Name     string    `json:"name" gorethink:"name"`
-	ParentID string    `json:"parentID" gorethink:"parentID"`
-	FamilyID string    `json:"familyID" gorethink:"familyID"`
-	Birthday time.Time `json:"birthday" gorethink:"birthday"`
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	Name        string    `json:"name" gorethink:"name"`
+	ParentID    string    `json:"parentID" gorethink:"parentID"`
+	FamilyID    string    `json:"familyID" gorethink:"familyID"`
+	Birthday    time.Time `json:"birthday" gorethink:"birthday"`
+	CreatedAt   time.Time `json:"created_at" gorethink:"created_at"`
+	LastUpdated time.Time `json:"last_updated" gorethink:"last_updated"`
 }
 
 //ChildService -
 type ChildService interface {
-	Save(*Child) error
-	Child(string) (*Child, error)
-	Delete(*Child) (int, error)
+	Save(context.Context, *Child) error
+	Child(context.Context, string) (*Child, error)
+	Delete(context.Context, *Child) (int, error)
 }
 
 //Feeding - main data structure for storing feeding data

@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -42,10 +43,11 @@ func TestSave(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			cs := ChildService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := cs.Save(tC.child)
+			err := cs.Save(ctx, tC.child)
 			if tC.returnError != nil {
 				assert.Equal(t, tC.returnError, err)
 			} else {
@@ -107,10 +109,11 @@ func TestChild(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			cs := ChildService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			child, err := cs.Child(tC.id)
+			child, err := cs.Child(ctx, tC.id)
 			if tC.returnError != nil {
 				assert.Equal(t, tC.returnError, err)
 			} else {
@@ -166,10 +169,11 @@ func TestDeleteChild(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			cs := ChildService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			num, err := cs.Delete(tC.child)
+			num, err := cs.Delete(ctx, tC.child)
 			if tC.returnError != nil {
 				assert.Equal(t, tC.returnError, err)
 			} else {

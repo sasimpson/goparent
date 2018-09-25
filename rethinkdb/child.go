@@ -1,6 +1,8 @@
 package rethinkdb
 
 import (
+	"context"
+
 	"github.com/sasimpson/goparent"
 	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
@@ -12,7 +14,7 @@ type ChildService struct {
 }
 
 //Save - Create or update child record
-func (cs *ChildService) Save(child *goparent.Child) error {
+func (cs *ChildService) Save(ctx context.Context, child *goparent.Child) error {
 	err := cs.DB.GetConnection()
 	if err != nil {
 		return err
@@ -30,7 +32,7 @@ func (cs *ChildService) Save(child *goparent.Child) error {
 }
 
 //Child - return a child for an ID
-func (cs *ChildService) Child(id string) (*goparent.Child, error) {
+func (cs *ChildService) Child(ctx context.Context, id string) (*goparent.Child, error) {
 
 	err := cs.DB.GetConnection()
 	if err != nil {
@@ -52,7 +54,7 @@ func (cs *ChildService) Child(id string) (*goparent.Child, error) {
 }
 
 //Delete - delete a passed child record from the datastore
-func (cs *ChildService) Delete(child *goparent.Child) (int, error) {
+func (cs *ChildService) Delete(ctx context.Context, child *goparent.Child) (int, error) {
 	err := cs.DB.GetConnection()
 	if err != nil {
 		return 0, err
