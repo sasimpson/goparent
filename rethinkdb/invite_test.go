@@ -322,11 +322,12 @@ func TestInvites(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			invites, err := uis.Invites(tC.user)
+			invites, err := uis.Invites(ctx, tC.user)
 			t.Logf("invites: %#v len: %#v err: %#v", invites, len(invites), err)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
@@ -400,6 +401,7 @@ func TestAcceptInvite(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.inviteQuery)
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.userQuery)
@@ -408,7 +410,7 @@ func TestAcceptInvite(t *testing.T) {
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.deleteQuery)
 
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := uis.Accept(tC.invitedUser, tC.id)
+			err := uis.Accept(ctx, tC.invitedUser, tC.id)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
@@ -477,11 +479,12 @@ func TestDelete(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.deleteQuery)
 
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := uis.Delete(tC.invite)
+			err := uis.Delete(ctx, tC.invite)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {

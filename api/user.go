@@ -183,7 +183,7 @@ func (h *Handler) userListInviteHandler() http.Handler {
 			return
 		}
 
-		pendingInvites, err := h.UserInvitationService.Invites(user)
+		pendingInvites, err := h.UserInvitationService.Invites(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -197,7 +197,8 @@ func (h *Handler) userListInviteHandler() http.Handler {
 
 func (h *Handler) userAcceptInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := UserFromContext(r.Context())
+		ctx := h.Env.DB.GetContext(r)
+		user, err := UserFromContext(ctx)
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -205,7 +206,7 @@ func (h *Handler) userAcceptInviteHandler() http.Handler {
 		}
 
 		id := mux.Vars(r)["id"]
-		err = h.UserInvitationService.Accept(user, id)
+		err = h.UserInvitationService.Accept(ctx, user, id)
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -232,7 +233,7 @@ func (h *Handler) userDeleteInviteHandler() http.Handler {
 			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
-		err = h.UserInvitationService.Delete(invite)
+		err = h.UserInvitationService.Delete(ctx, invite)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

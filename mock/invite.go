@@ -48,7 +48,7 @@ func (m *UserInvitationService) Invite(context.Context, string) (*goparent.UserI
 }
 
 //Invites -
-func (m *UserInvitationService) Invites(*goparent.User) ([]*goparent.UserInvitation, error) {
+func (m *UserInvitationService) Invites(context.Context, *goparent.User) ([]*goparent.UserInvitation, error) {
 	if m.InvitesErr != nil {
 		return nil, m.InvitesErr
 	}
@@ -61,7 +61,7 @@ func (m *UserInvitationService) Invites(*goparent.User) ([]*goparent.UserInvitat
 }
 
 //Accept -
-func (m *UserInvitationService) Accept(*goparent.User, string) error {
+func (m *UserInvitationService) Accept(context.Context, *goparent.User, string) error {
 	if m.AcceptErr != nil {
 		return m.AcceptErr
 	}
@@ -69,7 +69,7 @@ func (m *UserInvitationService) Accept(*goparent.User, string) error {
 }
 
 //Delete -
-func (m *UserInvitationService) Delete(*goparent.UserInvitation) error {
+func (m *UserInvitationService) Delete(context.Context, *goparent.UserInvitation) error {
 	if m.DeleteErr != nil {
 		return m.DeleteErr
 	}

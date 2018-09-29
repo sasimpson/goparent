@@ -13,3 +13,5 @@ to run do this:
 
 the service should be availble on port 8000
 
+[![CircleCI](https://circleci.com/gh/sasimpson/goparent.svg?style=svg)](https://circleci.com/gh/sasimpson/goparent)
+

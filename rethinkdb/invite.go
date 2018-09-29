@@ -101,7 +101,7 @@ func (uis *UserInviteService) Invite(ctx context.Context, id string) (*goparent.
 }
 
 //Invites - return the invites that have been issued to a user based on the email.
-func (uis *UserInviteService) Invites(user *goparent.User) ([]*goparent.UserInvitation, error) {
+func (uis *UserInviteService) Invites(ctx context.Context, user *goparent.User) ([]*goparent.UserInvitation, error) {
 	err := uis.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (uis *UserInviteService) Invites(user *goparent.User) ([]*goparent.UserInvi
 
 //Accept - user can accept an invite, this will set their
 // CurrentFamily and add them as a member to that family.
-func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
+func (uis *UserInviteService) Accept(ctx context.Context, user *goparent.User, id string) error {
 	err := uis.DB.GetConnection()
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 	if err != nil {
 		return err
 	}
-	ctx := context.Background()
+
 	//get the user and family that is doing the inviting
 	us := UserService{Env: uis.Env, DB: uis.DB}
 	invitingUser, err := us.User(ctx, invite.UserID)
@@ -174,7 +174,7 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 	}
 
 	//remove invite from system
-	err = uis.Delete(&invite)
+	err = uis.Delete(ctx, &invite)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (uis *UserInviteService) Accept(user *goparent.User, id string) error {
 }
 
 //Delete - a user can delete invites they have sent.
-func (uis *UserInviteService) Delete(invite *goparent.UserInvitation) error {
+func (uis *UserInviteService) Delete(ctx context.Context, invite *goparent.UserInvitation) error {
 	err := uis.DB.GetConnection()
 	if err != nil {
 		return err

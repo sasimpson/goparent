@@ -92,9 +92,9 @@ type UserInvitationService interface {
 	InviteParent(context.Context, *User, string, time.Time) error
 	SentInvites(context.Context, *User) ([]*UserInvitation, error)
 	Invite(context.Context, string) (*UserInvitation, error)
-	Invites(*User) ([]*UserInvitation, error)
-	Accept(*User, string) error
-	Delete(*UserInvitation) error
+	Invites(context.Context, *User) ([]*UserInvitation, error)
+	Accept(context.Context, *User, string) error
+	Delete(context.Context, *UserInvitation) error
 }
 
 //Family -
