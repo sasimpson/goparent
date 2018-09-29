@@ -16,7 +16,13 @@ func TestDatastoreUser(t *testing.T) {
 	if err != nil {
 		t.Error("error", err)
 	}
-	us := datastore.UserService{}
+	us := datastore.UserService{
+		Env: &goparent.Env{
+			Auth: goparent.Authentication{
+				SigningKey: []byte("test"),
+			},
+		},
+	}
 
 	//test invalid user
 	nilUser, err := us.User(ctx, "123")
@@ -67,6 +73,17 @@ func TestDatastoreUser(t *testing.T) {
 	loggedInUser, err := us.UserByLogin(ctx, "test@test.com", "testing")
 	assert.NotNil(t, loggedInUser)
 	assert.Nil(t, err)
+
+	//get token
+	token, err := us.GetToken(loggedInUser)
+	assert.NotNil(t, token)
+	assert.Nil(t, err)
+
+	//validate token
+	validatedUser, ok, err := us.ValidateToken(ctx, token)
+	assert.Nil(t, err)
+	assert.True(t, ok)
+	assert.EqualValues(t, loggedInUser, validatedUser)
 
 	//test bad login
 	notLoggedInUser, err := us.UserByLogin(ctx, "test@test.com", "test")

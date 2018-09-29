@@ -9,3 +9,4 @@ vendor
 goparent.json
 build
 goparent-*
+coverage.html
