@@ -28,6 +28,7 @@ const (
 	userContextKey  contextKey = "user"
 )
 
+//ServiceHandler -
 type ServiceHandler interface {
 	GetContext(*http.Request) *context.Context
 }
