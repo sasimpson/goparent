@@ -24,3 +24,8 @@ jobs:
       - run: export PATH=$PATH:./go_appengine
       - run: go get -v -t -d ./...
       - run: go test -v ./...
+workflows:
+  version: 2
+  test: 
+    jobs: 
+     - test
