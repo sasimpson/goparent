@@ -1,6 +1,8 @@
 package datastore_test
 
 import (
+	"log"
+	"reflect"
 	"testing"
 
 	"github.com/sasimpson/goparent"
@@ -46,20 +48,52 @@ func TestDatastoreFamily(t *testing.T) {
 	//add the member to the family
 	err = familyService.AddMember(ctx, newFamily, testUser)
 	assert.Nil(t, err)
+}
 
+func TestDatastoreFamilyChildren(t *testing.T) {
+	ctx, done, err := aetest.NewContext()
+	defer done()
+	if err != nil {
+		t.Error("appengine context error", err)
+	}
+
+	//some setup
+	familyService := datastore.FamilyService{}
+	userService := datastore.UserService{}
 	childService := datastore.ChildService{}
-	testChild := goparent.Child{Name: "test child 1", FamilyID: newFamily.ID}
-	err = childService.Save(ctx, &testChild)
+	user := &goparent.User{
+		Name:     "Test User",
+		Email:    "test@test.com",
+		Username: "test@test.com",
+		Password: "testing",
+	}
+	err = userService.Save(ctx, user)
 	assert.Nil(t, err)
+	assert.NotNil(t, user.CurrentFamily)
 
-	// children, err := familyService.Children(ctx, newFamily)
-	//why is this zero when i run the test, but 1 when i debug??
-	// assert.Len(t, children, 1)
-	//get the admin family for the user, which should have been
-	//created on save. should be equal to the returned admin family id
-	// adminFamily, err := familyService.GetAdminFamily(ctx, testUser)
-	// t.Logf("%#v", adminFamily)
-	// t.Logf("%#v", err)
-	// assert.Nil(t, err)
-	// assert.Equal(t, testUser.CurrentFamily, adminFamily.ID)
+	family, err := familyService.Family(ctx, user.CurrentFamily)
+	assert.Nil(t, err)
+	assert.NotNil(t, family)
+
+	// //test no children yet
+	noChildren, err := familyService.Children(ctx, family)
+	assert.Nil(t, err)
+	assert.Empty(t, noChildren)
+
+	child := &goparent.Child{
+		Name:     "Test User Jr",
+		FamilyID: user.CurrentFamily,
+		ParentID: user.ID,
+	}
+	err = childService.Save(ctx, child)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, child.ID)
+
+	children, err := familyService.Children(ctx, family)
+
+	log.Println("typeOf: ", reflect.TypeOf(children))
+	assert.Nil(t, err)
+	assert.NotEmpty(t, children)
+	assert.Len(t, children, 1)
+
 }

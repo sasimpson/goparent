@@ -20,13 +20,15 @@ const ChildKind = "Child"
 //Save -
 func (s *ChildService) Save(ctx context.Context, child *goparent.Child) error {
 	var childKey *datastore.Key
+	//TODO: family id nil error here
+	familyKey := datastore.NewKey(ctx, FamilyKind, child.FamilyID, 0, nil)
 	if child.ID == "" {
 		u := uuid.New()
-		childKey = datastore.NewKey(ctx, ChildKind, u.String(), 0, nil)
+		childKey = datastore.NewKey(ctx, ChildKind, u.String(), 0, familyKey)
 		child.CreatedAt = time.Now()
 		child.ID = u.String()
 	} else {
-		childKey = datastore.NewKey(ctx, ChildKind, child.ID, 0, nil)
+		childKey = datastore.NewKey(ctx, ChildKind, child.ID, 0, familyKey)
 	}
 	child.LastUpdated = time.Now()
 	_, err := datastore.Put(ctx, childKey, child)
@@ -40,8 +42,15 @@ func (s *ChildService) Save(ctx context.Context, child *goparent.Child) error {
 //Child -
 func (s *ChildService) Child(ctx context.Context, id string) (*goparent.Child, error) {
 	var child goparent.Child
-	childKey := datastore.NewKey(ctx, ChildKind, id, 0, nil)
-	err := datastore.Get(ctx, childKey, &child)
+	q := datastore.NewQuery(ChildKind).Filter("ID =", id).KeysOnly()
+	itx := q.Run(ctx)
+	_, err := itx.Next(&child)
+	//since ancestry was added to child, this key no longer works without the parent
+	//in order make this work the parent would need to be passed, or the key
+	//could be pulled from the previous statement and used...but that is redundant.
+	// childKey := datastore.NewKey(ctx, ChildKind, id, 0, nil)
+	// err := datastore.Get(ctx, childKey, &child)
+
 	if err != nil {
 		return nil, NewError("ChildService.Child", err)
 	}

@@ -63,10 +63,21 @@ func (s *FamilyService) Family(ctx context.Context, id string) (*goparent.Family
 //Children -
 func (s *FamilyService) Children(ctx context.Context, family *goparent.Family) ([]*goparent.Child, error) {
 	var children []*goparent.Child
-	q := datastore.NewQuery(ChildKind).Filter("FamilyID=", family.ID)
-	_, err := q.GetAll(ctx, &children)
-	if err != nil {
-		return nil, err
+	familyKey := datastore.NewKey(ctx, FamilyKind, family.ID, 0, nil)
+	q := datastore.NewQuery("Child").Ancestor(familyKey)
+	itx := q.Run(ctx)
+	for {
+		var child goparent.Child
+		_, err := itx.Next(&child)
+
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		children = append(children, &child)
+
 	}
 
 	return children, nil
@@ -92,7 +103,7 @@ func (s *FamilyService) AddMember(ctx context.Context, family *goparent.Family, 
 //GetAdminFamily -
 func (s *FamilyService) GetAdminFamily(ctx context.Context, user *goparent.User) (*goparent.Family, error) {
 	var families []goparent.Family
-	q := datastore.NewQuery(FamilyKind).Filter("Admin=", user.ID)
+	q := datastore.NewQuery(FamilyKind).Filter("Admin =", user.ID)
 	_, err := q.GetAll(ctx, &families)
 	if err != nil {
 		return nil, NewError("FamilyService.GetAdminFamily", err)
