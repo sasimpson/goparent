@@ -87,8 +87,7 @@ func (h *Handler) loginHandler() http.Handler {
 func (h *Handler) userGetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := h.Env.DB.GetContext(r)
-
-		user, err := UserFromContext(r.Context())
+		user, err := UserFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -138,7 +137,8 @@ func (h *Handler) userNewHandler() http.Handler {
 
 func (h *Handler) userNewInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := UserFromContext(r.Context())
+		ctx := h.Env.DB.GetContext(r)
+		user, err := UserFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -155,7 +155,7 @@ func (h *Handler) userNewInviteHandler() http.Handler {
 			return
 		}
 
-		err = h.UserInvitationService.InviteParent(user, invitedUserEmail, time.Now())
+		err = h.UserInvitationService.InviteParent(ctx, user, invitedUserEmail, time.Now())
 		if err != nil {
 			if err == goparent.ErrExistingInvitation {
 				http.Error(w, err.Error(), http.StatusConflict)
@@ -170,13 +170,14 @@ func (h *Handler) userNewInviteHandler() http.Handler {
 
 func (h *Handler) userListInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := UserFromContext(r.Context())
+		ctx := h.Env.DB.GetContext(r)
+		user, err := UserFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		sentInvites, err := h.UserInvitationService.SentInvites(user)
+		sentInvites, err := h.UserInvitationService.SentInvites(ctx, user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -219,13 +220,14 @@ func (h *Handler) userAcceptInviteHandler() http.Handler {
 
 func (h *Handler) userDeleteInviteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := UserFromContext(r.Context())
+		ctx := h.Env.DB.GetContext(r)
+		_, err := UserFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		id := mux.Vars(r)["id"]
-		invite, err := h.UserInvitationService.Invite(id)
+		invite, err := h.UserInvitationService.Invite(ctx, id)
 		if err != nil {
 			http.Error(w, "not found", http.StatusNotFound)
 			return

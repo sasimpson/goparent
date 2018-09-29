@@ -320,7 +320,7 @@ func TestUserNewInviteHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			mockHandler := Handler{
-				Env:                   tC.env,
+				Env: tC.env,
 				UserInvitationService: tC.userInviteService,
 			}
 
@@ -416,7 +416,9 @@ func TestListInviteHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			mockHandler := Handler{
-				Env:                   tC.env,
+				Env: &goparent.Env{
+					DB: &mock.DBEnv{},
+				},
 				UserInvitationService: tC.userInvitationService,
 			}
 
@@ -469,7 +471,7 @@ func TestAcceptInviteHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			mockHandler := Handler{
-				Env:                   tC.env,
+				Env: tC.env,
 				UserInvitationService: tC.userInvitationService,
 			}
 
@@ -545,7 +547,7 @@ func TestDeleteInviteHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			mockHandler := Handler{
-				Env:                   tC.env,
+				Env: tC.env,
 				UserInvitationService: tC.userInvitationService,
 			}
 

@@ -89,9 +89,9 @@ type UserInvitation struct {
 
 //UserInvitationService -
 type UserInvitationService interface {
-	InviteParent(*User, string, time.Time) error
-	SentInvites(*User) ([]*UserInvitation, error)
-	Invite(string) (*UserInvitation, error)
+	InviteParent(context.Context, *User, string, time.Time) error
+	SentInvites(context.Context, *User) ([]*UserInvitation, error)
+	Invite(context.Context, string) (*UserInvitation, error)
 	Invites(*User) ([]*UserInvitation, error)
 	Accept(*User, string) error
 	Delete(*UserInvitation) error

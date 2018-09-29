@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -101,13 +102,14 @@ func TestInviteParent(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query1)
 			if tC.query2 != nil {
 				mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query2)
 			}
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := uis.InviteParent(tC.user, tC.inviteEmail, timestamp)
+			err := uis.InviteParent(ctx, tC.user, tC.inviteEmail, timestamp)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
@@ -177,11 +179,12 @@ func TestSentInvites(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			invites, err := uis.SentInvites(tC.user)
+			invites, err := uis.SentInvites(ctx, tC.user)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
@@ -242,11 +245,12 @@ func TestInvite(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			invite, err := uis.Invite(tC.id)
+			invite, err := uis.Invite(ctx, tC.id)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {

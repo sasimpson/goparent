@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"context"
 	"time"
 
 	"github.com/sasimpson/goparent"
@@ -20,7 +21,7 @@ type UserInvitationService struct {
 }
 
 //InviteParent -
-func (m *UserInvitationService) InviteParent(*goparent.User, string, time.Time) error {
+func (m *UserInvitationService) InviteParent(context.Context, *goparent.User, string, time.Time) error {
 	if m.InviteParentErr != nil {
 		return m.InviteParentErr
 	}
@@ -28,7 +29,7 @@ func (m *UserInvitationService) InviteParent(*goparent.User, string, time.Time) 
 }
 
 //SentInvites -
-func (m *UserInvitationService) SentInvites(*goparent.User) ([]*goparent.UserInvitation, error) {
+func (m *UserInvitationService) SentInvites(context.Context, *goparent.User) ([]*goparent.UserInvitation, error) {
 	if m.SentInvitesErr != nil {
 		return nil, m.SentInvitesErr
 	}
@@ -36,7 +37,7 @@ func (m *UserInvitationService) SentInvites(*goparent.User) ([]*goparent.UserInv
 }
 
 //Invite -
-func (m *UserInvitationService) Invite(string) (*goparent.UserInvitation, error) {
+func (m *UserInvitationService) Invite(context.Context, string) (*goparent.UserInvitation, error) {
 	if m.InviteErr != nil {
 		return nil, m.InviteErr
 	}

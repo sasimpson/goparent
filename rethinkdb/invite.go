@@ -19,7 +19,7 @@ type UserInviteService struct {
 }
 
 //InviteParent - add an invitation for another parent to join in on user's data.
-func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail string, timestamp time.Time) error {
+func (uis *UserInviteService) InviteParent(ctx context.Context, user *goparent.User, inviteEmail string, timestamp time.Time) error {
 	err := uis.DB.GetConnection()
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func (uis *UserInviteService) InviteParent(user *goparent.User, inviteEmail stri
 }
 
 //SentInvites - return the current invites a user has sent out.
-func (uis *UserInviteService) SentInvites(user *goparent.User) ([]*goparent.UserInvitation, error) {
+func (uis *UserInviteService) SentInvites(ctx context.Context, user *goparent.User) ([]*goparent.UserInvitation, error) {
 	err := uis.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (uis *UserInviteService) SentInvites(user *goparent.User) ([]*goparent.User
 }
 
 //Invite - return the invite by the id
-func (uis *UserInviteService) Invite(id string) (*goparent.UserInvitation, error) {
+func (uis *UserInviteService) Invite(ctx context.Context, id string) (*goparent.UserInvitation, error) {
 	err := uis.DB.GetConnection()
 	if err != nil {
 		return nil, err
