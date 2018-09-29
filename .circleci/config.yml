@@ -1,7 +1,7 @@
 
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/golang:1.11
       
@@ -19,5 +19,8 @@ jobs:
       - checkout
 
       # specify any bash command here prefixed with `run: `
+      - run: wget https://storage.googleapis.com/appengine-sdks/featured/go_appengine_sdk_linux_amd64-1.9.68.zip
+      - run: unzip go_appengine_sdk_linux_amd64-1.9.68.zip
+      - run: export PATH=$PATH:./go_appengine
       - run: go get -v -t -d ./...
       - run: go test -v ./...
