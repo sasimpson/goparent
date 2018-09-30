@@ -8,5 +8,4 @@ vendor
 .vscode
 goparent.json
 build
-goparent-*
 coverage.html
