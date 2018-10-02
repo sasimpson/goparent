@@ -122,7 +122,6 @@ func (ss *SleepService) Sleep(family *goparent.Family, days uint64) ([]*goparent
 	var rows []*goparent.Sleep
 	err = res.All(&rows)
 	if err != nil {
-		// log.Println("error getting all")
 		return nil, err
 	}
 	return rows, nil

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -81,6 +80,7 @@ func BuildAPIRouting(serviceHandler *Handler) *mux.Router {
 	serviceHandler.initFeedingHandlers(a)
 	serviceHandler.initSleepHandlers(a)
 	serviceHandler.initWasteHandlers(a)
+
 	return r
 }
 
@@ -113,7 +113,6 @@ func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 		}
 
 		if claims, ok := token.Claims.(*goparent.UserClaims); ok && token.Valid {
-			log.Printf("claims %#v", claims)
 			user, err := sh.UserService.User(ctx, claims.ID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

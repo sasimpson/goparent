@@ -61,7 +61,6 @@ func (h *Handler) loginHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		log.Printf("%s:%s", username, password)
 		ctx := h.Env.DB.GetContext(r)
 
 		user, err := h.UserService.UserByLogin(ctx, username, password)

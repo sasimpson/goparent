@@ -1,8 +1,6 @@
 package datastore_test
 
 import (
-	"log"
-	"reflect"
 	"testing"
 
 	"github.com/sasimpson/goparent"
@@ -90,8 +88,6 @@ func TestDatastoreFamilyChildren(t *testing.T) {
 	assert.NotEmpty(t, child.ID)
 
 	children, err := familyService.Children(ctx, family)
-
-	log.Println("typeOf: ", reflect.TypeOf(children))
 	assert.Nil(t, err)
 	assert.NotEmpty(t, children)
 	assert.Len(t, children, 1)
