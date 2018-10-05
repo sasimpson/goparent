@@ -47,7 +47,7 @@ func (h *Handler) wasteGetHandler() http.Handler {
 			return
 		}
 
-		wasteData, err := h.WasteService.Waste(family, pagination.Days)
+		wasteData, err := h.WasteService.Waste(ctx, family, pagination.Days)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -111,7 +111,7 @@ func (h *Handler) wasteNewHandler() http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		wasteRequest.WasteData.UserID = user.ID
 		wasteRequest.WasteData.FamilyID = family.ID
-		err = h.WasteService.Save(&wasteRequest.WasteData)
+		err = h.WasteService.Save(ctx, &wasteRequest.WasteData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
@@ -163,7 +163,7 @@ func (h *Handler) wasteGraphDataHandler() http.Handler {
 			return
 		}
 
-		wasteGraphData, err := h.WasteService.GraphData(child)
+		wasteGraphData, err := h.WasteService.GraphData(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

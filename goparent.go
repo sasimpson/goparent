@@ -223,13 +223,15 @@ type SleepService interface {
 
 //Waste - structure for holding waste data such as diapers
 type Waste struct {
-	ID        string    `json:"id" gorethink:"id,omitempty"`
-	Type      int       `json:"wasteType" gorethink:"wasteType"`
-	Notes     string    `json:"notes" gorethink:"notes"`
-	UserID    string    `json:"userid" gorethink:"userID"`
-	FamilyID  string    `json:"familyid" gorethink:"familyID"`
-	ChildID   string    `json:"childid" gorethink:"childID"`
-	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	Type        int       `json:"wasteType" gorethink:"wasteType"`
+	Notes       string    `json:"notes" gorethink:"notes"`
+	UserID      string    `json:"userid" gorethink:"userID"`
+	FamilyID    string    `json:"familyid" gorethink:"familyID"`
+	ChildID     string    `json:"childid" gorethink:"childID"`
+	TimeStamp   time.Time `json:"timestamp" gorethink:"timestamp"`
+	CreatedAt   time.Time `json:"createdAt" gorethink:"createdAt"`
+	LastUpdated time.Time `json:"lastUpdated" gorethink:"lastUpdated"`
 }
 
 //WasteSummary - structure for waste summary data
@@ -252,10 +254,10 @@ type WasteType struct {
 
 //WasteService -
 type WasteService interface {
-	Save(*Waste) error
-	Waste(*Family, uint64) ([]*Waste, error)
-	Stats(*Child) (*WasteSummary, error)
-	GraphData(*Child) (*WasteChartData, error)
+	Save(context.Context, *Waste) error
+	Waste(context.Context, *Family, uint64) ([]*Waste, error)
+	Stats(context.Context, *Child) (*WasteSummary, error)
+	GraphData(context.Context, *Child) (*WasteChartData, error)
 }
 
 //wasteChartData -

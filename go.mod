@@ -5,10 +5,12 @@ require (
 	github.com/cosiner/argv v0.0.0-20170225145430-13bacc38a0a5 // indirect
 	github.com/derekparker/delve v1.1.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/google/pprof v0.0.0-20180926163344-782e5fd74720 // indirect
 	github.com/google/uuid v1.0.0
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.6.2
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
+	github.com/ianlancetaylor/demangle v0.0.0-20180714043527-fcd258a6f0b4 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/peterh/liner v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.1.0 // indirect

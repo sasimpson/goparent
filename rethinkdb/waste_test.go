@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -78,10 +79,11 @@ func TestGetWastes(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			wasteResult, err := fs.Waste(tC.family, 7)
+			wasteResult, err := fs.Waste(ctx, tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {
@@ -149,10 +151,11 @@ func TestWasteSave(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := fs.Save(&tC.data)
+			err := fs.Save(ctx, &tC.data)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
@@ -186,10 +189,11 @@ func TestStats(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			statsData, err := fs.Stats(tC.child)
+			statsData, err := fs.Stats(ctx, tC.child)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
@@ -222,10 +226,11 @@ func TestWasteGraph(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := WasteService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			chartData, err := fs.GraphData(tC.child)
+			chartData, err := fs.GraphData(ctx, tC.child)
 			if tC.returnError != nil {
 				assert.EqualError(t, *tC.returnError, err.Error())
 			} else {

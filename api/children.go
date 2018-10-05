@@ -92,7 +92,7 @@ func (h *Handler) childSummary() http.Handler {
 		}
 		summary.Stats.Sleep = *sleeps
 
-		wastes, err := h.WasteService.Stats(child)
+		wastes, err := h.WasteService.Stats(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
