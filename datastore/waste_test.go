@@ -67,4 +67,9 @@ func TestDatastoreWaste(t *testing.T) {
 	err = wasteService.Save(ctx, waste)
 	assert.Nil(t, err)
 	assert.NotEqual(t, waste.CreatedAt, waste.LastUpdated)
+
+	allWaste, err := wasteService.Waste(ctx, family, 7)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, allWaste)
+	assert.Len(t, allWaste, 1)
 }

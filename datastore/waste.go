@@ -42,7 +42,23 @@ func (s *WasteService) Save(ctx context.Context, waste *goparent.Waste) error {
 
 //Waste returns all waste entries by user and child id?
 func (s *WasteService) Waste(ctx context.Context, family *goparent.Family, days uint64) ([]*goparent.Waste, error) {
-	panic("not implemented")
+	var wastes []*goparent.Waste
+	familyKey := datastore.NewKey(ctx, FamilyKind, family.ID, 0, nil)
+
+	q := datastore.NewQuery(WasteKind).Ancestor(familyKey)
+	itx := q.Run(ctx)
+	for {
+		var waste goparent.Waste
+		_, err := itx.Next(&waste)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		wastes = append(wastes, &waste)
+	}
+	return wastes, nil
 }
 
 //Stats -
