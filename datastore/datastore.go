@@ -5,23 +5,35 @@ import (
 	"fmt"
 	"net/http"
 
-	"google.golang.org/appengine"
+	"cloud.google.com/go/datastore"
 )
 
 //DBEnv -
 type DBEnv struct {
+	Client *datastore.Client
 }
 
 //GetConnection -
 func (db *DBEnv) GetConnection() error {
-	panic("not implemented")
+	if db.Client != nil {
+		return nil
+	}
+
+	ctx := db.GetContext(nil)
+	dsClient, err := datastore.NewClient(ctx, "my-project")
+	if err != nil {
+		return err
+	}
+	db.Client = dsClient
+
+	return nil
 }
 
 //GetContext - appengine requires a context from the request, but we don't
 //want appengine code burried in the API.  This has been added to the interface,
 //so it is abstracted out to the datastore bits.
 func (db *DBEnv) GetContext(r *http.Request) context.Context {
-	return appengine.NewContext(r)
+	return context.Background()
 }
 
 //Error is a custom error handler for the datastore code so the source of

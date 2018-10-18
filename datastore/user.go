@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
+	"cloud.google.com/go/datastore"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sasimpson/goparent"
-	"google.golang.org/appengine/datastore"
 )
 
 //UserService -
@@ -40,9 +40,12 @@ var (
 
 //User - get a user by the key/id
 func (s *UserService) User(ctx context.Context, key string) (*goparent.User, error) {
+	err := s.Env.DB.GetConnection()
 	var user goparent.User
-	userKey := datastore.NewKey(ctx, UserKind, key, 0, nil)
-	err := datastore.Get(ctx, userKey, &user)
+	userKey := datastore.NameKey(UserKind, key, nil)
+	dsClient := s.Env.DB.Client
+	err = dsClient.Get(ctx, userKey, &user)
+
 	if err != nil {
 		if err == datastore.ErrNoSuchEntity {
 			return nil, NewError("datastore.UserService.User", ErrNoUserFound)
@@ -54,14 +57,19 @@ func (s *UserService) User(ctx context.Context, key string) (*goparent.User, err
 
 //UserByLogin - get a user by their login, email and password
 func (s *UserService) UserByLogin(ctx context.Context, email string, password string) (*goparent.User, error) {
+	err := s.Env.DB.GetConnection()
+	if err != nil {
+		return nil, NewError("datastore.UserService.UserByLogin.1", err)
+	}
+
 	var user goparent.User
-	userKey := datastore.NewKey(ctx, UserKind, md5Email(email), 0, nil)
-	err := datastore.Get(ctx, userKey, &user)
+	userKey := datastore.NameKey(UserKind, md5Email(email), nil)
+	err = datastore.Get(ctx, userKey, &user)
 	if err != nil {
 		if err == datastore.ErrNoSuchEntity {
 			return nil, ErrInvalidLogin
 		}
-		return nil, NewError("datastore.UserService.User", err)
+		return nil, NewError("datastore.UserService.UserByLogin.2", err)
 	}
 
 	//verify the email and password match, then return it
@@ -73,7 +81,7 @@ func (s *UserService) UserByLogin(ctx context.Context, email string, password st
 
 //Save - save a user's current values
 func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
-	userKey := datastore.NewKey(ctx, UserKind, md5Email(user.Email), 0, nil)
+	userKey := datastore.NameKey(UserKind, md5Email(user.Email), nil)
 	//we use id as a way to lookup stuff, but don't actually _use_ id since we are using key...
 
 	var family *goparent.Family
@@ -84,7 +92,7 @@ func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
 		family, err := fs.GetAdminFamily(ctx, user)
 		if err == ErrNoFamilyFound {
 			//didn't find a family, creating one, save it
-			family = &goparent.Family{Admin: userKey.StringID(), Members: []string{userKey.StringID()}}
+			family = &goparent.Family{Admin: userKey.String(), Members: []string{userKey.String()}}
 			err = fs.Save(ctx, family)
 			if err != nil {
 				return NewError("datastore.UserService.Save.1a", err)
@@ -98,7 +106,7 @@ func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
 
 	//if the user has no current family and no id, then we need to create a family and save it
 	if user.CurrentFamily == "" && user.ID == "" {
-		family = &goparent.Family{Admin: userKey.StringID(), Members: []string{userKey.StringID()}}
+		family = &goparent.Family{Admin: userKey.String(), Members: []string{userKey.String()}}
 		err := fs.Save(ctx, family)
 		if err != nil {
 			return NewError("datastore.UserService.Save.2", err)
@@ -106,7 +114,7 @@ func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
 		user.CurrentFamily = family.ID
 	}
 
-	user.ID = userKey.StringID()
+	user.ID = userKey.String()
 	//this will save if there is or isn't a record for this user.
 	_, err := datastore.Put(ctx, userKey, user)
 	if err != nil {
