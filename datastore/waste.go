@@ -63,7 +63,39 @@ func (s *WasteService) Waste(ctx context.Context, family *goparent.Family, days 
 
 //Stats -
 func (s *WasteService) Stats(ctx context.Context, child *goparent.Child) (*goparent.WasteSummary, error) {
-	panic("not implemented")
+	var wastes []goparent.Waste
+	end := time.Now()
+	start := end.AddDate(0, 0, -1)
+
+	familyKey := datastore.NewKey(ctx, FamilyKind, child.FamilyID, 0, nil)
+	childKey := datastore.NewKey(ctx, ChildKind, child.ID, 0, familyKey)
+
+	q := datastore.NewQuery(WasteKind).Filter("ChildID=", childKey).Filter("Timestamp >=", start)
+	itx := q.Run(ctx)
+	for {
+		var waste goparent.Waste
+		_, err := itx.Next(&waste)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		wastes = append(wastes, waste)
+	}
+
+	summary := goparent.WasteSummary{
+		Data:  wastes,
+		Total: make(map[int]int),
+	}
+
+	for _, x := range wastes {
+		if _, ok := summary.Total[x.Type]; !ok {
+			summary.Total[x.Type] = 0
+		}
+		summary.Total[x.Type]++
+	}
+	return &summary, nil
 }
 
 //GraphData -
