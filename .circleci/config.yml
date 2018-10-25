@@ -3,28 +3,18 @@ jobs:
   test:
     docker:
       - image: circleci/golang:1.9
-      
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
 
-    #### TEMPLATE_NOTE: go expects specific checkout path representing url
-    #### expecting it in the form of
-    ####   /go/src/github.com/circleci/go-tool
-    ####   /go/src/bitbucket.org/circleci/go-tool
     working_directory: /go/src/github.com/sasimpson/goparent
     steps:
       - checkout
-
-      # specify any bash command here prefixed with `run: `
       - run: wget https://storage.googleapis.com/appengine-sdks/featured/go_appengine_sdk_linux_amd64-1.9.68.zip
       - run: unzip -q go_appengine_sdk_linux_amd64-1.9.68.zip -d /home/circleci
       - run: echo 'export PATH=$PATH:/home/circleci/go_appengine' >> $BASH_ENV
       - run: go get -v -t -d ./...
       - run: go test -v ./...
-      - run: go test -coverprofile=/tmp/cover.out /go/src/github.com/sasimpson/goparent/...
-      - run: go tool cover -html=/tmp/cover.out -o /tmp/cover.html
+      # todo later... this doesn't work.
+      # - run: go test -coverprofile=/tmp/cover.out /go/src/github.com/sasimpson/goparent/...
+      # - run: go tool cover -html=/tmp/cover.out -o /tmp/cover.html
       - store_artifacts:
           path: /tmp/cover.out
       - store_artifacts:
