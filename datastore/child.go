@@ -42,7 +42,7 @@ func (s *ChildService) Save(ctx context.Context, child *goparent.Child) error {
 //Child -
 func (s *ChildService) Child(ctx context.Context, id string) (*goparent.Child, error) {
 	var child goparent.Child
-	q := datastore.NewQuery(ChildKind).Filter("ID =", id).KeysOnly()
+	q := datastore.NewQuery(ChildKind).Filter("ID =", id)
 	itx := q.Run(ctx)
 	_, err := itx.Next(&child)
 	//since ancestry was added to child, this key no longer works without the parent

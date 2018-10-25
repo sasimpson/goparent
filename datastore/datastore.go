@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
-	"google.golang.org/appengine"
+	"github.com/golang/appengine"
 )
 
 //DBEnv -
@@ -21,7 +22,12 @@ func (db *DBEnv) GetConnection() error {
 //want appengine code burried in the API.  This has been added to the interface,
 //so it is abstracted out to the datastore bits.
 func (db *DBEnv) GetContext(r *http.Request) context.Context {
-	return appengine.NewContext(r)
+
+	ctx := r.Context()
+	ctx = appengine.WithContext(ctx, r)
+	// ctx := appengine.NewContext(r)
+	// log.Printf("%#v", ctx)
+	return ctx
 }
 
 //Error is a custom error handler for the datastore code so the source of
@@ -43,4 +49,15 @@ func NewError(origin string, err error) error {
 		Origin:  origin,
 		Message: err.Error(),
 	}
+}
+
+//RoundToDay helps round up or down to the nearest day.  pass true to round up, false to round down
+func RoundToDay(t time.Time, up bool) time.Time {
+	roundedTime := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	//if we round up, add a day, then subtract a second to get the very end of the day.
+	if up == true {
+		roundedTime = roundedTime.AddDate(0, 0, 1)
+		return roundedTime.Add(-time.Second)
+	}
+	return roundedTime
 }

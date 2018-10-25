@@ -70,7 +70,7 @@ func (s *WasteService) Stats(ctx context.Context, child *goparent.Child) (*gopar
 	familyKey := datastore.NewKey(ctx, FamilyKind, child.FamilyID, 0, nil)
 	childKey := datastore.NewKey(ctx, ChildKind, child.ID, 0, familyKey)
 
-	q := datastore.NewQuery(WasteKind).Filter("ChildID=", childKey).Filter("Timestamp >=", start)
+	q := datastore.NewQuery(WasteKind).Filter("ChildID=", childKey).Filter("TimeStamp >=", start).Order("TimeStamp")
 	itx := q.Run(ctx)
 	for {
 		var waste goparent.Waste
@@ -100,5 +100,47 @@ func (s *WasteService) Stats(ctx context.Context, child *goparent.Child) (*gopar
 
 //GraphData -
 func (s *WasteService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.WasteChartData, error) {
-	panic("not implemented")
+	var wastes []goparent.Waste
+	var wasteCounts = make(map[time.Time][]goparent.Waste)
+	end := time.Now()
+	start := end.AddDate(0, 0, -7)
+	q := datastore.NewQuery(WasteKind).Filter("ChildID =", child.ID).Filter("TimeStamp >", start).Filter("TimeStamp <=", end).Order("TimeStamp")
+	//get each item from the query organize them by day.
+	itx := q.Run(ctx)
+	for {
+		var waste goparent.Waste
+		_, err := itx.Next(&waste)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		roundedDate := RoundToDay(waste.TimeStamp, false)
+		wasteCounts[roundedDate] = append(wasteCounts[roundedDate], waste)
+		wastes = append(wastes, waste)
+	}
+
+	chartData := &goparent.WasteChartData{
+		Start:   start,
+		End:     end,
+		Dataset: make([]goparent.WasteChartDataset, 1),
+	}
+
+	//now organize each day by the total of each type. setup dataset
+	for day, wastes := range wasteCounts {
+		var counts = make(map[int]int)
+		for _, t := range wastes {
+			counts[t.Type]++
+		}
+		for wasteType, count := range counts {
+			chartData.Dataset = append(chartData.Dataset, goparent.WasteChartDataset{
+				Date:  day,
+				Type:  wasteType,
+				Count: count,
+			})
+		}
+	}
+
+	return chartData, nil
 }

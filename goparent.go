@@ -3,10 +3,9 @@ package goparent
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
-
-	"gopkg.in/gorethink/gorethink.v3"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -29,16 +28,6 @@ type Authentication struct {
 	SigningKey []byte
 }
 
-//DBEnv - Environment for DB settings
-type DBEnv struct {
-	Host     string
-	Port     int
-	Database string
-	Username string
-	Password string
-	Session  gorethink.QueryExecutor
-}
-
 //Datastore -
 type Datastore interface {
 	GetConnection() error
@@ -56,6 +45,10 @@ type User struct {
 	Username      string `json:"username" gorethink:"username"`
 	Password      string `json:"-" gorethink:"password"`
 	CurrentFamily string `json:"currentFamily" gorethink:"currentFamily"`
+}
+
+func (user User) String() string {
+	return fmt.Sprintf("[%s] %s <%s>", user.ID, user.Name, user.Email)
 }
 
 //UserClaims - structure for inserting claims into a jwt auth token
@@ -125,6 +118,10 @@ type Child struct {
 	Birthday    time.Time `json:"birthday" gorethink:"birthday"`
 	CreatedAt   time.Time `json:"created_at" gorethink:"created_at"`
 	LastUpdated time.Time `json:"last_updated" gorethink:"last_updated"`
+}
+
+func (child Child) String() string {
+	return fmt.Sprintf("[%s] %s", child.ID, child.Name)
 }
 
 //ChildService -

@@ -119,8 +119,7 @@ func (sh *Handler) AuthRequired(h http.Handler) http.Handler {
 				return
 			}
 			ctx := context.WithValue(r.Context(), userContextKey, user)
-			r = r.WithContext(ctx)
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		http.Error(w, "failed", http.StatusInternalServerError)
