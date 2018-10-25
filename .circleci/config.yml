@@ -1,4 +1,3 @@
-
 version: 2
 jobs:
   test:
@@ -23,7 +22,13 @@ jobs:
       - run: unzip -q go_appengine_sdk_linux_amd64-1.9.68.zip -d /home/circleci
       - run: echo 'export PATH=$PATH:/home/circleci/go_appengine' >> $BASH_ENV
       - run: go get -v -t -d ./...
-      - run: go test -v ./...
+      - run: go test -v -coverprofile=/tmp/cover.out ./...
+      - run: go tool cover -html=/tmp/cover.out -o /tmp/cover.html
+      - store_artifacts:
+        path: /tmp/cover.out
+      - store_artifacts:
+        path: /tmp/cover.html
+        
 workflows:
   version: 2
   test: 
