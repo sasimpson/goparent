@@ -61,7 +61,7 @@ func main() {
 	flag.StringVar(&child, "child", "", "child you would like to make up data for")
 	flag.StringVar(&startDate, "start", "", "date to start filling data")
 	flag.StringVar(&endDate, "end", "", "date to end filling data")
-	flag.StringVar(&date, "date", time.Now().Format("2006-01-02"), "single day for test data")
+	flag.StringVar(&date, "date", "", "single day for test data")
 	flag.BoolVar(&genFlag, "generate", false, "generate test data")
 	flag.Parse()
 
@@ -91,7 +91,17 @@ func main() {
 	//generate in pacific timezone.  maybe make this configurable?
 
 	if genFlag {
-		err := generateRandomData(time.Now())
+		var err error
+		if date != "" {
+			genDate, err := time.Parse("2006-01-02", date)
+			if err != nil {
+				panic(err)
+			}
+			err = generateRandomData(genDate)
+		} else {
+			err = generateRandomData(time.Now())
+		}
+
 		if err != nil {
 			panic(err)
 		}
@@ -100,6 +110,7 @@ func main() {
 }
 
 func generateRandomData(genDate time.Time) error {
+	log.Println("generating for ", genDate)
 	var children []*goparent.Child
 	var err error
 	if child == "" {
@@ -124,7 +135,7 @@ func generateRandomData(genDate time.Time) error {
 	return nil
 }
 
-func generateRandomDiaper(child *goparent.Child, date time.Time) error {
+func generateRandomDiaper(child *goparent.Child, genDate time.Time) error {
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	numberOfEntries := r.Intn(7) + 7
@@ -139,9 +150,9 @@ func generateRandomDiaper(child *goparent.Child, date time.Time) error {
 		panic(err)
 	}
 
-	date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+	genDate = time.Date(genDate.Year(), genDate.Month(), genDate.Day(), 0, 0, 0, 0, loc)
 	for x := 0; x < numberOfEntries; x++ {
-		randomTime := time.Unix(date.Unix()+r.Int63n(86400), 0)
+		randomTime := time.Unix(genDate.Unix()+r.Int63n(86400), 0)
 		diaper := goparent.Waste{
 			TimeStamp: randomTime,
 			ChildID:   child.ID,

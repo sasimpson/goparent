@@ -45,7 +45,7 @@ func (s *WasteService) Waste(ctx context.Context, family *goparent.Family, days 
 	var wastes []*goparent.Waste
 	familyKey := datastore.NewKey(ctx, FamilyKind, family.ID, 0, nil)
 
-	q := datastore.NewQuery(WasteKind).Ancestor(familyKey)
+	q := datastore.NewQuery(WasteKind).Ancestor(familyKey).Order("-TimeStamp")
 	itx := q.Run(ctx)
 	for {
 		var waste goparent.Waste
@@ -70,7 +70,7 @@ func (s *WasteService) Stats(ctx context.Context, child *goparent.Child) (*gopar
 	familyKey := datastore.NewKey(ctx, FamilyKind, child.FamilyID, 0, nil)
 	childKey := datastore.NewKey(ctx, ChildKind, child.ID, 0, familyKey)
 
-	q := datastore.NewQuery(WasteKind).Filter("ChildID=", childKey).Filter("TimeStamp >=", start).Order("TimeStamp")
+	q := datastore.NewQuery(WasteKind).Filter("ChildID=", childKey).Filter("TimeStamp >=", start).Order("-TimeStamp")
 	itx := q.Run(ctx)
 	for {
 		var waste goparent.Waste
@@ -104,7 +104,7 @@ func (s *WasteService) GraphData(ctx context.Context, child *goparent.Child) (*g
 	var wasteCounts = make(map[time.Time][]goparent.Waste)
 	end := time.Now()
 	start := end.AddDate(0, 0, -7)
-	q := datastore.NewQuery(WasteKind).Filter("ChildID =", child.ID).Filter("TimeStamp >", start).Filter("TimeStamp <=", end).Order("TimeStamp")
+	q := datastore.NewQuery(WasteKind).Filter("ChildID =", child.ID).Filter("TimeStamp >", start).Filter("TimeStamp <=", end).Order("-TimeStamp")
 	//get each item from the query organize them by day.
 	itx := q.Run(ctx)
 	for {
