@@ -25,9 +25,9 @@ jobs:
       - run: go test -v -coverprofile=/tmp/cover.out ./...
       - run: go tool cover -html=/tmp/cover.out -o /tmp/cover.html
       - store_artifacts:
-        path: /tmp/cover.out
+          path: /tmp/cover.out
       - store_artifacts:
-        path: /tmp/cover.html
+          path: /tmp/cover.html
         
 workflows:
   version: 2
