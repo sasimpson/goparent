@@ -133,14 +133,16 @@ type ChildService interface {
 
 //Feeding - main data structure for storing feeding data
 type Feeding struct {
-	ID        string    `json:"id" gorethink:"id,omitempty"`
-	Type      string    `json:"feedingType" gorethink:"feedingType"`
-	Amount    float32   `json:"feedingAmount" gorethink:"feedingAmount"`
-	Side      string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
-	UserID    string    `json:"userid" gorethink:"userID"`
-	FamilyID  string    `json:"familyid" gorethink:"familyID"`
-	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
-	ChildID   string    `json:"childID" gorethink:"childID"`
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	Type        string    `json:"feedingType" gorethink:"feedingType"`
+	Amount      float32   `json:"feedingAmount" gorethink:"feedingAmount"`
+	Side        string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
+	UserID      string    `json:"userid" gorethink:"userID"`
+	FamilyID    string    `json:"familyid" gorethink:"familyID"`
+	TimeStamp   time.Time `json:"timestamp" gorethink:"timestamp"`
+	ChildID     string    `json:"childID" gorethink:"childID"`
+	CreatedAt   time.Time `json:"createdAt" gorethink:"createdAt"`
+	LastUpdated time.Time `json:"lastUpdated" gorethink:"lastUpdated"`
 }
 
 //FeedingSummary - represents feeding summary data
