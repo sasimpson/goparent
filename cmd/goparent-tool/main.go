@@ -211,8 +211,8 @@ func generateRandomFeeding(ctx context.Context, env *goparent.Env, dbenv *rethin
 			}
 			feeding2 := feeding
 			feeding2.Side = "left"
-			feedingService.Save(feeding)
-			feedingService.Save(feeding2)
+			feedingService.Save(ctx, feeding)
+			feedingService.Save(ctx, feeding2)
 			feedings = append(feedings, feeding)
 			feedings = append(feedings, feeding2)
 		} else {
@@ -224,7 +224,7 @@ func generateRandomFeeding(ctx context.Context, env *goparent.Env, dbenv *rethin
 				FamilyID:  family.ID,
 				ChildID:   child.ID,
 			}
-			feedingService.Save(feeding)
+			feedingService.Save(ctx, feeding)
 			feedings = append(feedings, feeding)
 		}
 	}
