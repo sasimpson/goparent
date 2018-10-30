@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -32,6 +31,8 @@ var (
 	userData  *goparent.User
 	loc       time.Location
 )
+
+const dateParseString = "2006-01-02"
 
 type sampleError struct {
 	Message string
@@ -65,6 +66,8 @@ func main() {
 	flag.BoolVar(&genFlag, "generate", false, "generate test data")
 	flag.Parse()
 
+	fmt.Println(startDate)
+
 	//make sure service is up:
 	health := healthCheck()
 	if health != nil {
@@ -84,33 +87,64 @@ func main() {
 		}
 	}
 
-	log.Println("user logged in and verfied:")
-	log.Println(userData)
-	log.Printf("token: %s\n", token)
+	fmt.Println("user logged in and verfied:")
+	fmt.Println(userData)
+	fmt.Printf("token: %s\n", token)
 
 	//generate in pacific timezone.  maybe make this configurable?
 
 	if genFlag {
-		var err error
-		if date != "" {
-			genDate, err := time.Parse("2006-01-02", date)
+		switch {
+		case date != "":
+			// if we got a date flag, we should generate for just that date.
+			genDate, err := time.Parse(dateParseString, date)
 			if err != nil {
 				panic(err)
 			}
+			fmt.Printf("generating for single date %s\n", genDate)
 			err = generateRandomData(genDate)
-		} else {
-			err = generateRandomData(time.Now())
+			break
+		case startDate != "" && endDate == "":
+			//if we have a start date but no end, just generate from start till now.
+			start, err := time.Parse(dateParseString, startDate)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("generating from %s\n", start)
+			end := time.Now()
+			for i := start; i.Before(end); i = i.AddDate(0, 0, 1) {
+				err = generateRandomData(i)
+				if err != nil {
+					panic(err)
+				}
+			}
+			break
+		case startDate != "" && endDate != "":
+			//we've got both a start and an end, generate between them.
+			start, err := time.Parse(dateParseString, startDate)
+			if err != nil {
+				panic(err)
+			}
+			end, err := time.Parse(dateParseString, endDate)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("generating from %s to %s\n", start, end)
+			for i := start; i.Before(end); i = i.AddDate(0, 0, 1) {
+				err = generateRandomData(i)
+				if err != nil {
+					panic(err)
+				}
+			}
+			break
+		default:
+			panic("no date switch")
 		}
-
-		if err != nil {
-			panic(err)
-		}
-
 	}
 }
 
 func generateRandomData(genDate time.Time) error {
-	log.Println("generating for ", genDate)
+	fmt.Println("generating for ", genDate)
 	var children []*goparent.Child
 	var err error
 	if child == "" {
@@ -126,9 +160,9 @@ func generateRandomData(genDate time.Time) error {
 		children = append(children, c)
 	}
 
-	log.Println("children seleted for generation: ")
+	fmt.Println("children seleted for generation: ")
 	for _, childGen := range children {
-		log.Println(*childGen)
+		fmt.Println(*childGen)
 		generateRandomDiaper(childGen, genDate)
 	}
 
@@ -139,7 +173,7 @@ func generateRandomDiaper(child *goparent.Child, genDate time.Time) error {
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	numberOfEntries := r.Intn(7) + 7
-	log.Printf("\t\t\tNumber of Diaper Entries: %d", numberOfEntries)
+	fmt.Printf("\t\t\tNumber of Diaper Entries: %d\n", numberOfEntries)
 	loc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
 		panic(err)
@@ -169,7 +203,6 @@ func generateRandomDiaper(child *goparent.Child, genDate time.Time) error {
 		var wasteResponse api.WasteRequest
 		err = makeRequest(http.MethodPost, "waste", bytes.NewReader(js), false, &wasteResponse)
 		if err != nil {
-			log.Fatal(err)
 			return newError("generateRandomDiaper()", err)
 		}
 	}
