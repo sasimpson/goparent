@@ -45,7 +45,10 @@ func (s *WasteService) Waste(ctx context.Context, family *goparent.Family, days 
 	var wastes []*goparent.Waste
 	familyKey := datastore.NewKey(ctx, FamilyKind, family.ID, 0, nil)
 
-	q := datastore.NewQuery(WasteKind).Ancestor(familyKey).Order("-TimeStamp")
+	daysBack := int(0 - days)
+	start := time.Now().AddDate(0, 0, daysBack)
+
+	q := datastore.NewQuery(WasteKind).Ancestor(familyKey).Filter("TimeStamp > ", start).Order("-TimeStamp")
 	itx := q.Run(ctx)
 	for {
 		var waste goparent.Waste
