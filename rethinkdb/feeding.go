@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -22,7 +23,7 @@ type feedingReductionData struct {
 }
 
 //Save - save the structure to the datastore
-func (fs *FeedingService) Save(feeding *goparent.Feeding) error {
+func (fs *FeedingService) Save(ctx context.Context, feeding *goparent.Feeding) error {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return err
@@ -40,7 +41,7 @@ func (fs *FeedingService) Save(feeding *goparent.Feeding) error {
 }
 
 //Feeding - get all records for a user from the datastore
-func (fs *FeedingService) Feeding(family *goparent.Family, days uint64) ([]*goparent.Feeding, error) {
+func (fs *FeedingService) Feeding(ctx context.Context, family *goparent.Family, days uint64) ([]*goparent.Feeding, error) {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -70,7 +71,7 @@ func (fs *FeedingService) Feeding(family *goparent.Family, days uint64) ([]*gopa
 }
 
 //Stats - get feeding stats for one child for the last 24 hours.
-func (fs *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary, error) {
+func (fs *FeedingService) Stats(ctx context.Context, child *goparent.Child) (*goparent.FeedingSummary, error) {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -120,7 +121,7 @@ func (fs *FeedingService) Stats(child *goparent.Child) (*goparent.FeedingSummary
 }
 
 //GraphData -
-func (fs *FeedingService) GraphData(child *goparent.Child) (*goparent.FeedingChartData, error) {
+func (fs *FeedingService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.FeedingChartData, error) {
 	err := fs.DB.GetConnection()
 	if err != nil {
 		return nil, err

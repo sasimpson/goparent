@@ -64,7 +64,7 @@ func (s *WasteService) Waste(ctx context.Context, family *goparent.Family, days 
 	return wastes, nil
 }
 
-//Stats -
+//Stats returns the stats for a particular child
 func (s *WasteService) Stats(ctx context.Context, child *goparent.Child) (*goparent.WasteSummary, error) {
 	var wastes []goparent.Waste
 	end := time.Now()
@@ -101,7 +101,7 @@ func (s *WasteService) Stats(ctx context.Context, child *goparent.Child) (*gopar
 	return &summary, nil
 }
 
-//GraphData -
+//GraphData returns the data necessary for graphing information about the child
 func (s *WasteService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.WasteChartData, error) {
 	var wastes []goparent.Waste
 	var wasteCounts = make(map[time.Time][]goparent.Waste)

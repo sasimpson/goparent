@@ -78,7 +78,7 @@ func (h *Handler) childSummary() http.Handler {
 			return
 		}
 
-		feedingSummary, err := h.FeedingService.Stats(child)
+		feedingSummary, err := h.FeedingService.Stats(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

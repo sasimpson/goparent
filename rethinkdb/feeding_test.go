@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -64,10 +65,11 @@ func TestGetFeedings(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FeedingService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			feedingResult, err := fs.Feeding(tC.family, 7)
+			feedingResult, err := fs.Feeding(ctx, tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {
@@ -153,10 +155,11 @@ func TestFeedingSave(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FeedingService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := fs.Save(&tC.data)
+			err := fs.Save(ctx, &tC.data)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {

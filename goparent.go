@@ -168,10 +168,10 @@ type FeedingChartDataset struct {
 
 //FeedingService -
 type FeedingService interface {
-	Save(*Feeding) error
-	Feeding(*Family, uint64) ([]*Feeding, error)
-	Stats(*Child) (*FeedingSummary, error)
-	GraphData(*Child) (*FeedingChartData, error)
+	Save(context.Context, *Feeding) error
+	Feeding(context.Context, *Family, uint64) ([]*Feeding, error)
+	Stats(context.Context, *Child) (*FeedingSummary, error)
+	GraphData(context.Context, *Child) (*FeedingChartData, error)
 }
 
 //Sleep - tracks the baby's sleep start and end.

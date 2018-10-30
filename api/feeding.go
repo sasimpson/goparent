@@ -47,7 +47,7 @@ func (h *Handler) feedingGetHandler() http.Handler {
 			return
 		}
 
-		feedingData, err := h.FeedingService.Feeding(family, pagination.Days)
+		feedingData, err := h.FeedingService.Feeding(ctx, family, pagination.Days)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -111,7 +111,7 @@ func (h *Handler) feedingNewHandler() http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		feedingRequest.FeedingData.UserID = user.ID
 		feedingRequest.FeedingData.FamilyID = family.ID
-		err = h.FeedingService.Save(&feedingRequest.FeedingData)
+		err = h.FeedingService.Save(ctx, &feedingRequest.FeedingData)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -161,7 +161,7 @@ func (h *Handler) feedingGraphDataHandler() http.Handler {
 			return
 		}
 
-		feedingGraphData, err := h.FeedingService.GraphData(child)
+		feedingGraphData, err := h.FeedingService.GraphData(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
