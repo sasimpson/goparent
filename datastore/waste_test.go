@@ -68,7 +68,36 @@ func TestDatastoreWaste(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEqual(t, waste.CreatedAt, waste.LastUpdated)
 
+	//test out of date range
 	allWaste, err := wasteService.Waste(ctx, family, 7)
+	assert.Nil(t, err)
+	assert.Empty(t, allWaste)
+	assert.Len(t, allWaste, 0)
+
+	//add a new one in range
+	wasteTS := time.Now()
+	waste = &goparent.Waste{
+		ChildID:   child.ID,
+		FamilyID:  family.ID,
+		UserID:    user.ID,
+		Type:      1,
+		TimeStamp: wasteTS,
+	}
+	assert.Empty(t, waste.ID)
+	assert.Empty(t, waste.CreatedAt)
+	assert.Empty(t, waste.LastUpdated)
+
+	wasteService = datastore.WasteService{}
+	err = wasteService.Save(ctx, waste)
+	assert.Nil(t, err)
+	assert.Equal(t, wasteTS, waste.TimeStamp)
+	assert.NotEmpty(t, waste.ID)
+	assert.NotEmpty(t, waste.CreatedAt)
+	assert.NotEmpty(t, waste.LastUpdated)
+	assert.Equal(t, waste.CreatedAt, waste.LastUpdated)
+
+	//test in date range
+	allWaste, err = wasteService.Waste(ctx, family, 7)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, allWaste)
 	assert.Len(t, allWaste, 1)
