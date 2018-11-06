@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -21,7 +22,7 @@ var ErrExistingStart = errors.New("already have a start record")
 var ErrNoExistingSession = errors.New("no existing sleep session to end")
 
 //Status - return the current status for a sleep session
-func (ss *SleepService) Status(family *goparent.Family, child *goparent.Child) (bool, error) {
+func (ss *SleepService) Status(ctx context.Context, family *goparent.Family, child *goparent.Child) (bool, error) {
 	err := ss.DB.GetConnection()
 	if err != nil {
 		return false, err
@@ -54,8 +55,8 @@ func (ss *SleepService) Status(family *goparent.Family, child *goparent.Child) (
 }
 
 //Start - record start of sleep
-func (ss *SleepService) Start(sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
-	ok, err := ss.Status(family, child)
+func (ss *SleepService) Start(ctx context.Context, sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
+	ok, err := ss.Status(ctx, family, child)
 	if err != nil {
 		return err
 	}
@@ -68,8 +69,8 @@ func (ss *SleepService) Start(sleep *goparent.Sleep, family *goparent.Family, ch
 }
 
 //End - record end of sleep
-func (ss *SleepService) End(sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
-	ok, err := ss.Status(family, child)
+func (ss *SleepService) End(ctx context.Context, sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
+	ok, err := ss.Status(ctx, family, child)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (ss *SleepService) End(sleep *goparent.Sleep, family *goparent.Family, chil
 }
 
 //Save - creates/saves the record.  saves if there is an id filled in.
-func (ss *SleepService) Save(sleep *goparent.Sleep) error {
+func (ss *SleepService) Save(ctx context.Context, sleep *goparent.Sleep) error {
 	err := ss.DB.GetConnection()
 	if err != nil {
 		return err
@@ -100,7 +101,7 @@ func (ss *SleepService) Save(sleep *goparent.Sleep) error {
 }
 
 //Sleep - get all sleeps for a user (parent)
-func (ss *SleepService) Sleep(family *goparent.Family, days uint64) ([]*goparent.Sleep, error) {
+func (ss *SleepService) Sleep(ctx context.Context, family *goparent.Family, days uint64) ([]*goparent.Sleep, error) {
 	err := ss.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -128,7 +129,7 @@ func (ss *SleepService) Sleep(family *goparent.Family, days uint64) ([]*goparent
 }
 
 //Stats - get sleep stats for one child for the last 24 hours.
-func (ss *SleepService) Stats(child *goparent.Child) (*goparent.SleepSummary, error) {
+func (ss *SleepService) Stats(ctx context.Context, child *goparent.Child) (*goparent.SleepSummary, error) {
 	err := ss.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -168,7 +169,7 @@ func (ss *SleepService) Stats(child *goparent.Child) (*goparent.SleepSummary, er
 }
 
 //GraphData -
-func (ss *SleepService) GraphData(child *goparent.Child) (*goparent.SleepChartData, error) {
+func (ss *SleepService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.SleepChartData, error) {
 	// err := ss.DB.GetConnection()
 	// if err != nil {
 	// 	return nil, err

@@ -85,7 +85,7 @@ func (h *Handler) childSummary() http.Handler {
 		}
 		summary.Stats.Feeding = *feedingSummary
 
-		sleeps, err := h.SleepService.Stats(child)
+		sleeps, err := h.SleepService.Stats(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -171,7 +171,7 @@ func generateRandomSleep(ctx context.Context, env *goparent.Env, dbenv *rethinkd
 			Start:    time.Unix(startDate.Unix()+randomInterval, 0),
 			End:      time.Unix(startDate.Unix()+randomInterval+(5400+r.Int63n(1800)), 0),
 		}
-		sleepService.Save(sleep)
+		sleepService.Save(ctx, sleep)
 		sleeps = append(sleeps, sleep)
 	}
 }

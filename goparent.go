@@ -211,13 +211,13 @@ type SleepChartDataset struct {
 
 //SleepService -
 type SleepService interface {
-	Save(*Sleep) error
-	Sleep(*Family, uint64) ([]*Sleep, error)
-	Stats(*Child) (*SleepSummary, error)
-	Status(*Family, *Child) (bool, error)
-	Start(*Sleep, *Family, *Child) error
-	End(*Sleep, *Family, *Child) error
-	GraphData(*Child) (*SleepChartData, error)
+	Save(context.Context, *Sleep) error
+	Sleep(context.Context, *Family, uint64) ([]*Sleep, error)
+	Stats(context.Context, *Child) (*SleepSummary, error)
+	Status(context.Context, *Family, *Child) (bool, error)
+	Start(context.Context, *Sleep, *Family, *Child) error
+	End(context.Context, *Sleep, *Family, *Child) error
+	GraphData(context.Context, *Child) (*SleepChartData, error)
 }
 
 //Waste - structure for holding waste data such as diapers

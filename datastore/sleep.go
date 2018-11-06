@@ -1,43 +1,40 @@
 package datastore
 
-import "github.com/sasimpson/goparent"
+import (
+	"context"
+
+	"github.com/sasimpson/goparent"
+)
 
 //SleepService -
 type SleepService struct {
 	Env *goparent.Env
 }
 
-//Save -
-func (s *SleepService) Save(*goparent.Sleep) error {
+func (s *SleepService) Save(context.Context, *goparent.Sleep) error {
 	panic("not implemented")
 }
 
-//Sleep -
-func (s *SleepService) Sleep(*goparent.Family, uint64) ([]*goparent.Sleep, error) {
+func (s *SleepService) Sleep(context.Context, *goparent.Family, uint64) ([]*goparent.Sleep, error) {
 	panic("not implemented")
 }
 
-//Stats -
-func (s *SleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
+func (s *SleepService) Stats(context.Context, *goparent.Child) (*goparent.SleepSummary, error) {
 	panic("not implemented")
 }
 
-//Status -
-func (s *SleepService) Status(*goparent.Family, *goparent.Child) (bool, error) {
+func (s *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
 	panic("not implemented")
 }
 
-//Start -
-func (s *SleepService) Start(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+func (s *SleepService) Start(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
-//End -
-func (s *SleepService) End(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+func (s *SleepService) End(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
-//GraphData -
-func (s *SleepService) GraphData(*goparent.Child) (*goparent.SleepChartData, error) {
+func (s *SleepService) GraphData(context.Context, *goparent.Child) (*goparent.SleepChartData, error) {
 	panic("not implemented")
 }

@@ -48,7 +48,7 @@ func (h *Handler) sleepGetHandler() http.Handler {
 			return
 		}
 
-		sleepData, err := h.SleepService.Sleep(family, 7)
+		sleepData, err := h.SleepService.Sleep(ctx, family, 7)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -113,7 +113,7 @@ func (h *Handler) sleepNewHandler() http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		sleepRequest.SleepData.UserID = user.ID
 		sleepRequest.SleepData.FamilyID = family.ID
-		err = h.SleepService.Save(&sleepRequest.SleepData)
+		err = h.SleepService.Save(ctx, &sleepRequest.SleepData)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -250,7 +250,7 @@ func (h *Handler) sleepGraphData() http.Handler {
 			return
 		}
 
-		sleepGraphData, err := h.SleepService.GraphData(child)
+		sleepGraphData, err := h.SleepService.GraphData(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

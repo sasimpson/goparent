@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -66,11 +67,11 @@ func TestGetSleep(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-
 			fs := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			sleepResult, err := fs.Sleep(tC.family, 7)
+			sleepResult, err := fs.Sleep(ctx, tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {
@@ -150,11 +151,12 @@ func TestSleepSave(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			fs := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := fs.Save(&tC.data)
+			err := fs.Save(ctx, &tC.data)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err.Error())
 			} else {
@@ -242,13 +244,14 @@ func TestStatus(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			ss := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			status, err := ss.Status(tC.family, tC.child)
-			sleepStart := ss.Start(tC.sleep, tC.family, tC.child)
-			sleepEnd := ss.End(tC.sleep, tC.family, tC.child)
+			status, err := ss.Status(ctx, tC.family, tC.child)
+			sleepStart := ss.Start(ctx, tC.sleep, tC.family, tC.child)
+			sleepEnd := ss.End(ctx, tC.sleep, tC.family, tC.child)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 				assert.Error(t, sleepStart)
