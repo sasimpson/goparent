@@ -67,7 +67,45 @@ func (s *FeedingService) Feeding(ctx context.Context, family *goparent.Family, d
 
 //Stats -
 func (s *FeedingService) Stats(ctx context.Context, child *goparent.Child) (*goparent.FeedingSummary, error) {
-	panic("not implemented")
+	var feedings []goparent.Feeding
+	end := time.Now()
+	start := end.AddDate(0, 0, -1)
+
+	familyKey := datastore.NewKey(ctx, FamilyKind, child.FamilyID, 0, nil)
+	childKey := datastore.NewKey(ctx, ChildKind, child.ID, 0, familyKey)
+
+	q := datastore.NewQuery(FeedingKind).Filter("ChildID = ", childKey).Filter("TimeStamp >=", start).Order("-TimeStamp")
+	itx := q.Run(ctx)
+	for {
+		var feeding goparent.Feeding
+		_, err := itx.Next(&feeding)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		feedings = append(feedings, feeding)
+	}
+
+	summary := &goparent.FeedingSummary{
+		Data:  feedings,
+		Total: make(map[string]float32),
+		Mean:  make(map[string]float32),
+		Range: make(map[string]int),
+	}
+
+	for _, x := range feedings {
+		if _, ok := summary.Total[x.Type]; !ok {
+			summary.Total[x.Type] = 0.0
+		}
+		summary.Total[x.Type] += x.Amount
+		summary.Range[x.Type]++
+	}
+	for k := range summary.Total {
+		summary.Mean[k] = summary.Total[k] / float32(summary.Range[k])
+	}
+	return summary, nil
 }
 
 //GraphData -

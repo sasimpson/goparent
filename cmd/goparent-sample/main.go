@@ -28,6 +28,7 @@ var (
 	startDate string
 	endDate   string
 	genFlag   bool
+	mode      string
 	userData  *goparent.User
 	loc       time.Location
 )
@@ -64,6 +65,7 @@ func main() {
 	flag.StringVar(&endDate, "end", "", "date to end filling data")
 	flag.StringVar(&date, "date", "", "single day for test data")
 	flag.BoolVar(&genFlag, "generate", false, "generate test data")
+	flag.StringVar(&mode, "mode", "all", "what to generate for")
 	flag.Parse()
 
 	fmt.Println(startDate)
@@ -160,11 +162,16 @@ func generateRandomData(genDate time.Time) error {
 		children = append(children, c)
 	}
 
-	fmt.Println("children seleted for generation: ")
 	for _, childGen := range children {
 		fmt.Println(*childGen)
-		generateRandomDiaper(childGen, genDate)
+		if mode == "all" || mode == "waste" {
+			generateRandomDiaper(childGen, genDate)
+		}
+		if mode == "all" || mode == "feeding" {
+			generateRandomFeeding(childGen, genDate)
+		}
 	}
+	fmt.Println("")
 
 	return nil
 }
@@ -204,6 +211,69 @@ func generateRandomDiaper(child *goparent.Child, genDate time.Time) error {
 		err = makeRequest(http.MethodPost, "waste", bytes.NewReader(js), false, &wasteResponse)
 		if err != nil {
 			return newError("generateRandomDiaper()", err)
+		}
+	}
+	return nil
+}
+
+func generateRandomFeeding(child *goparent.Child, genDate time.Time) error {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var numberOfEntries = 6 + r.Intn(4)
+	fmt.Printf("\t\t\tnumber of feeding entries: %d", numberOfEntries)
+	startDate := time.Date(genDate.Year(), genDate.Month(), genDate.Day(), 0, 0, 0, 0, time.UTC)
+	var feedings []goparent.Feeding
+
+	var feedingType string
+	switch r.Intn(2) {
+	case 0:
+		feedingType = "bottle"
+		break
+	case 1:
+		feedingType = "breast"
+		break
+	}
+
+	for x := 0; x < numberOfEntries; x++ {
+		var feeding goparent.Feeding
+		//build the feeding
+		if len(feedings) > 0 {
+			startDate = feedings[len(feedings)-1].TimeStamp
+		}
+		randomInterval := (r.Int63n(60) + 60) * 60
+		if feedingType == "breast" {
+			feeding = goparent.Feeding{
+				TimeStamp: time.Unix(startDate.Unix()+randomInterval, 0),
+				Type:      feedingType,
+				Side:      "right",
+				Amount:    float32(r.Intn(29) + 1),
+				ChildID:   child.ID,
+			}
+			feeding2 := feeding
+			feeding2.Side = "left"
+			feedings = append(feedings, feeding)
+			feedings = append(feedings, feeding2)
+		} else {
+			feeding = goparent.Feeding{
+				TimeStamp: time.Unix(startDate.Unix()+randomInterval, 0),
+				Type:      feedingType,
+				Amount:    float32(r.Intn(7) + 1),
+				ChildID:   child.ID,
+			}
+			feedings = append(feedings, feeding)
+		}
+		//save the feeding to the service
+		feedingRequest := api.FeedingRequest{
+			FeedingData: feeding,
+		}
+		js, err := json.Marshal(&feedingRequest)
+		if err != nil {
+			return newError("generateRandomFeeding()", err)
+		}
+
+		var feedingResponse api.FeedingResponse
+		err = makeRequest(http.MethodPost, "feeding", bytes.NewReader(js), false, &feedingResponse)
+		if err != nil {
+			return newError("generateRandomFeeding()", err)
 		}
 	}
 	return nil
