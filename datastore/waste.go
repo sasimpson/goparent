@@ -132,7 +132,7 @@ func (s *WasteService) GraphData(ctx context.Context, child *goparent.Child) (*g
 
 	//now organize each day by the total of each type. setup dataset
 	for day, wastes := range wasteCounts {
-		var counts = make(map[int]int)
+		counts := make(map[int]int)
 		for _, t := range wastes {
 			counts[t.Type]++
 		}

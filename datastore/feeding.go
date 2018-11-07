@@ -110,5 +110,46 @@ func (s *FeedingService) Stats(ctx context.Context, child *goparent.Child) (*gop
 
 //GraphData -
 func (s *FeedingService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.FeedingChartData, error) {
-	panic("not implemented")
+	var feedings []goparent.Feeding
+	var feedingCounts = make(map[time.Time][]goparent.Feeding)
+
+	end := time.Now()
+	start := end.AddDate(0, 0, -7)
+	q := datastore.NewQuery(FeedingKind).Filter("ChildID =", child.ID).Filter("TimeStamp >", start).Filter("TimeStamp <=", end).Order("-TimeStamp")
+	//get each item from the query organize them by day.
+	itx := q.Run(ctx)
+	for {
+		var feeding goparent.Feeding
+		_, err := itx.Next(&feeding)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		roundedDate := RoundToDay(feeding.TimeStamp, false)
+		feedingCounts[roundedDate] = append(feedingCounts[roundedDate], feeding)
+		feedings = append(feedings, feeding)
+	}
+
+	chartData := &goparent.FeedingChartData{
+		Start:   start,
+		End:     end,
+		Dataset: make([]goparent.FeedingChartDataset, 1),
+	}
+	for day, feedings := range feedingCounts {
+		counts := make(map[string]int)
+		for _, t := range feedings {
+			counts[t.Type]++
+		}
+		for feedingType, count := range counts {
+			chartData.Dataset = append(chartData.Dataset, goparent.FeedingChartDataset{
+				Date:  day,
+				Type:  feedingType,
+				Count: count,
+			})
+		}
+	}
+	return chartData, nil
 }
