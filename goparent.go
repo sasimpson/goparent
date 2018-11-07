@@ -178,12 +178,14 @@ type FeedingService interface {
 
 //Sleep - tracks the baby's sleep start and end.
 type Sleep struct {
-	ID       string    `json:"id" gorethink:"id,omitempty"`
-	Start    time.Time `json:"start" gorethink:"start"`
-	End      time.Time `json:"end" gorethink:"end"`
-	UserID   string    `json:"userid" gorethink:"userID"`
-	FamilyID string    `json:"familyid" gorethink:"familyID"`
-	ChildID  string    `json:"childID" gorethink:"childID"`
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	Start       time.Time `json:"start" gorethink:"start"`
+	End         time.Time `json:"end" gorethink:"end"`
+	UserID      string    `json:"userid" gorethink:"userID"`
+	FamilyID    string    `json:"familyid" gorethink:"familyID"`
+	ChildID     string    `json:"childID" gorethink:"childID"`
+	CreatedAt   time.Time `json:"createdAt" gorethink:"createdAt"`
+	LastUpdated time.Time `json:"lastUpdated" gorethink:"lastUpdated"`
 }
 
 //SleepSummary - structure for the sleep summary data
