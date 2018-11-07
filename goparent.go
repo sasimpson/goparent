@@ -198,9 +198,9 @@ type SleepSummary struct {
 
 //SleepChartData -
 type SleepChartData struct {
-	Start   time.Time             `json:"start"`
-	End     time.Time             `json:"end"`
-	Dataset []FeedingChartDataset `json:"dataset"`
+	Start   time.Time           `json:"start"`
+	End     time.Time           `json:"end"`
+	Dataset []SleepChartDataset `json:"dataset"`
 }
 
 //SleepChartDataset -

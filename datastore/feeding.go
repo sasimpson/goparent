@@ -111,7 +111,7 @@ func (s *FeedingService) Stats(ctx context.Context, child *goparent.Child) (*gop
 //GraphData -
 func (s *FeedingService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.FeedingChartData, error) {
 	var feedings []goparent.Feeding
-	var feedingCounts = make(map[time.Time][]goparent.Feeding)
+	feedingCounts := make(map[time.Time][]goparent.Feeding)
 
 	end := time.Now()
 	start := end.AddDate(0, 0, -7)

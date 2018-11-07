@@ -106,19 +106,65 @@ func (s *SleepService) Stats(ctx context.Context, child *goparent.Child) (*gopar
 	return summary, nil
 }
 
+//Status should return the sleep status of a child, ie if they are asleep or not
 func (s *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
 	panic("not implemented")
 }
 
+//Start will start a sleep session or error if there is a current one active.
 func (s *SleepService) Start(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
+//End will end a current sleep session or error if there isn't one
 func (s *SleepService) End(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
 //GraphData returns data that a graph can be created from
-func (s *SleepService) GraphData(context.Context, *goparent.Child) (*goparent.SleepChartData, error) {
-	panic("not implemented")
+func (s *SleepService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.SleepChartData, error) {
+	var sleeps []goparent.Sleep
+	sleepCounts := make(map[time.Time][]goparent.Sleep)
+
+	end := time.Now()
+	start := end.AddDate(0, 0, -7)
+	q := datastore.NewQuery(SleepKind).Filter("ChildID =", child.ID).Filter("TimeStamp >", start).Filter("TimeStamp <=", end).Order("-TimeStamp")
+	//get each item from the query organize them by day.
+	itx := q.Run(ctx)
+	for {
+		var sleep goparent.Sleep
+		_, err := itx.Next(&sleep)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		roundedDate := RoundToDay(sleep.Start, false)
+		sleepCounts[roundedDate] = append(sleepCounts[roundedDate], sleep)
+		sleeps = append(sleeps, sleep)
+	}
+
+	chartData := &goparent.SleepChartData{
+		Start:   start,
+		End:     end,
+		Dataset: make([]goparent.SleepChartDataset, 1),
+	}
+
+	//sleep data needs to be represented as each increment of sleep per day.
+	// for day, sleeps := range sleepCounts {
+
+	// 	for _, t := range feedings {
+	// 		counts[t.Type]++
+	// 	}
+	// 	for feedingType, count := range counts {
+	// 		chartData.Dataset = append(chartData.Dataset, goparent.FeedingChartDataset{
+	// 			Date:  day,
+	// 			Type:  feedingType,
+	// 			Count: count,
+	// 		})
+	// 	}
+	// }
+	return chartData, nil
 }
