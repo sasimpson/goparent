@@ -205,10 +205,8 @@ type SleepChartData struct {
 
 //SleepChartDataset -
 type SleepChartDataset struct {
-	Date  time.Time `json:"date"`
-	Type  string    `json:"type"`
-	Count int       `json:"count"`
-	Sum   float32   `json:"sum"`
+	Date  time.Time     `json:"date"`
+	Total time.Duration `json:"total"`
 }
 
 //SleepService -
