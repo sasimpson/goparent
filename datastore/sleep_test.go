@@ -77,6 +77,7 @@ func TestDatastoreSleep(t *testing.T) {
 	assert.NotEqual(sleep.CreatedAt, sleep.LastUpdated)
 
 	// summary, err := sleepService.Stats(ctx, child)
+	// log.Printf("%#v", summary)
 	// assert.Nil(err)
 	// assert.Len(summary.Data, 1)
 	// assert.Equal(1, summary.Range)

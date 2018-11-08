@@ -64,6 +64,21 @@ func (s *SleepService) Sleep(ctx context.Context, family *goparent.Family, days 
 	return sleeps, nil
 }
 
+//Status should return the sleep status of a child, ie if they are asleep or not
+func (s *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
+	panic("not implemented")
+}
+
+//Start will start a sleep session or error if there is a current one active.
+func (s *SleepService) Start(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
+	panic("not implemented")
+}
+
+//End will end a current sleep session or error if there isn't one
+func (s *SleepService) End(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
+	panic("not implemented")
+}
+
 //Stats returns sleep stats about a one day period for a child.
 func (s *SleepService) Stats(ctx context.Context, child *goparent.Child) (*goparent.SleepSummary, error) {
 	var sleeps []goparent.Sleep
@@ -101,24 +116,9 @@ func (s *SleepService) Stats(ctx context.Context, child *goparent.Child) (*gopar
 			summary.Range++
 		}
 	}
-	summary.Mean = float64(summary.Total / int64(summary.Range))
+	// summary.Mean = float64(summary.Total / int64(summary.Range))
 
 	return summary, nil
-}
-
-//Status should return the sleep status of a child, ie if they are asleep or not
-func (s *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
-	panic("not implemented")
-}
-
-//Start will start a sleep session or error if there is a current one active.
-func (s *SleepService) Start(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
-	panic("not implemented")
-}
-
-//End will end a current sleep session or error if there isn't one
-func (s *SleepService) End(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
-	panic("not implemented")
 }
 
 //GraphData returns data that a graph can be created from
@@ -153,18 +153,20 @@ func (s *SleepService) GraphData(ctx context.Context, child *goparent.Child) (*g
 	}
 
 	//sleep data needs to be represented as each increment of sleep per day.
-	// for day, sleeps := range sleepCounts {
 
-	// 	for _, t := range feedings {
-	// 		counts[t.Type]++
-	// 	}
-	// 	for feedingType, count := range counts {
-	// 		chartData.Dataset = append(chartData.Dataset, goparent.FeedingChartDataset{
-	// 			Date:  day,
-	// 			Type:  feedingType,
-	// 			Count: count,
-	// 		})
-	// 	}
-	// }
+	for day, sleeps := range sleepCounts {
+		var sleepTotals []time.Duration
+		for _, sleepEntry := range sleeps {
+			//if the entry hasn't stopped, don't count it, its still active
+			if sleepEntry.End.After(sleepEntry.Start) {
+				sleepTotals = append(sleepTotals, sleepEntry.End.Sub(sleepEntry.Start))
+			}
+		}
+		chartData.Dataset = append(chartData.Dataset, goparent.SleepChartDataset{
+			Date:   day,
+			Totals: sleepTotals,
+		})
+	}
+
 	return chartData, nil
 }

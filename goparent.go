@@ -205,8 +205,8 @@ type SleepChartData struct {
 
 //SleepChartDataset -
 type SleepChartDataset struct {
-	Date  time.Time     `json:"date"`
-	Total time.Duration `json:"total"`
+	Date   time.Time       `json:"date"`
+	Totals []time.Duration `json:"total"`
 }
 
 //SleepService -
