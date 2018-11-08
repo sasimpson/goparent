@@ -30,6 +30,8 @@ func (h *Handler) initSleepHandlers(r *mux.Router) {
 	s.Handle("/{id}", h.AuthRequired(h.sleepViewHandler())).Methods("GET").Name("SleepView")
 	s.Handle("/{id}", h.AuthRequired(h.sleepEditHandler())).Methods("PUT").Name("SleepEdit")
 	s.Handle("/{id}", h.AuthRequired(h.sleepDeleteHandler())).Methods("DELETE").Name("SleepDelete")
+	s.Handle("/graph/{id}", h.AuthRequired(h.sleepGraphDataHandler())).Methods("GET").Name("SleepGraphData")
+
 }
 
 func (h *Handler) sleepGetHandler() http.Handler {
@@ -219,7 +221,7 @@ func (h *Handler) sleepToggleStatus() http.Handler {
 	})
 }
 
-func (h *Handler) sleepGraphData() http.Handler {
+func (h *Handler) sleepGraphDataHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := h.Env.DB.GetContext(r)
 
