@@ -2,7 +2,6 @@ package datastore
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -48,7 +47,6 @@ func (s *SleepService) Sleep(ctx context.Context, family *goparent.Family, days 
 
 	daysBack := int(0 - days)
 	start := time.Now().AddDate(0, 0, daysBack)
-	log.Printf("filter start on %s", start)
 	q := datastore.NewQuery(SleepKind).Ancestor(familyKey).Filter("Start > ", start).Order("-Start")
 	itx := q.Run(ctx)
 	for {
