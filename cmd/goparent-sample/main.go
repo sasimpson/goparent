@@ -165,10 +165,22 @@ func generateRandomData(genDate time.Time) error {
 	for _, childGen := range children {
 		fmt.Println(*childGen)
 		if mode == "all" || mode == "waste" {
-			generateRandomDiaper(childGen, genDate)
+			err := generateRandomDiaper(childGen, genDate)
+			if err != nil {
+				return newError("generateRandomData()", err)
+			}
 		}
 		if mode == "all" || mode == "feeding" {
-			generateRandomFeeding(childGen, genDate)
+			err := generateRandomFeeding(childGen, genDate)
+			if err != nil {
+				return newError("generateRandomData()", err)
+			}
+		}
+		if mode == "all" || mode == "sleep" {
+			err := generateRandomSleeps(childGen, genDate)
+			if err != nil {
+				return newError("generateRandomData()", err)
+			}
 		}
 	}
 	fmt.Println("")
@@ -218,7 +230,7 @@ func generateRandomDiaper(child *goparent.Child, genDate time.Time) error {
 
 func generateRandomFeeding(child *goparent.Child, genDate time.Time) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	var numberOfEntries = 6 + r.Intn(4)
+	numberOfEntries := 6 + r.Intn(4)
 	fmt.Printf("\t\t\tnumber of feeding entries: %d", numberOfEntries)
 	startDate := time.Date(genDate.Year(), genDate.Month(), genDate.Day(), 0, 0, 0, 0, time.UTC)
 	var feedings []goparent.Feeding
@@ -270,10 +282,42 @@ func generateRandomFeeding(child *goparent.Child, genDate time.Time) error {
 			return newError("generateRandomFeeding()", err)
 		}
 
-		var feedingResponse api.FeedingResponse
+		var feedingResponse api.FeedingRequest
 		err = makeRequest(http.MethodPost, "feeding", bytes.NewReader(js), false, &feedingResponse)
 		if err != nil {
 			return newError("generateRandomFeeding()", err)
+		}
+	}
+	return nil
+}
+
+func generateRandomSleeps(child *goparent.Child, genDate time.Time) error {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	numberOfEntries := 8
+	fmt.Printf("\t\t\tnumber of sleep entries: %d", numberOfEntries)
+	startDate := time.Date(genDate.Year(), genDate.Month(), genDate.Day(), 0, 0, 0, 0, time.UTC)
+	var sleeps []*goparent.Sleep
+	for x := 0; x < numberOfEntries; x++ {
+		if len(sleeps) > 0 {
+			startDate = sleeps[len(sleeps)-1].End
+		}
+		randomInterval := (r.Int63n(60) + 60) * 60
+		sleep := goparent.Sleep{
+			ChildID: child.ID,
+			Start:   time.Unix(startDate.Unix()+randomInterval, 0),
+			End:     time.Unix(startDate.Unix()+randomInterval+(5400+r.Int63n(1800)), 0),
+		}
+		sleepRequest := api.SleepRequest{
+			SleepData: sleep,
+		}
+		js, err := json.Marshal(&sleepRequest)
+		if err != nil {
+			return newError("generateRandomSleeps()", err)
+		}
+		var sleepResponse api.SleepRequest
+		err = makeRequest(http.MethodPost, "sleep", bytes.NewReader(js), false, &sleepResponse)
+		if err != nil {
+			return newError("generateRandomSleeps()", err)
 		}
 	}
 	return nil
