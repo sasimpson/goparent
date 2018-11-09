@@ -155,7 +155,7 @@ func generateRandomDiaper(ctx context.Context, env *goparent.Env, dbenv *rethink
 func generateRandomSleep(ctx context.Context, env *goparent.Env, dbenv *rethinkdb.DBEnv, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
 	sleepService := rethinkdb.SleepService{Env: env, DB: dbenv}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	var numberOfEntries = 8
+	numberOfEntries := 8
 	log.Printf("\t\t\tnumber of sleep entries: %d", numberOfEntries)
 	startDate := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
 	var sleeps []*goparent.Sleep
