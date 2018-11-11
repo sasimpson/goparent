@@ -140,14 +140,17 @@ func (s *FeedingService) GraphData(ctx context.Context, child *goparent.Child) (
 	}
 	for day, feedings := range feedingCounts {
 		counts := make(map[string]int)
+		sums := make(map[string]float32)
 		for _, t := range feedings {
 			counts[t.Type]++
+			sums[t.Type] += t.Amount
 		}
 		for feedingType, count := range counts {
 			chartData.Dataset = append(chartData.Dataset, goparent.FeedingChartDataset{
 				Date:  day,
 				Type:  feedingType,
 				Count: count,
+				Sum:   sums[feedingType],
 			})
 		}
 	}

@@ -127,7 +127,7 @@ func (s *SleepService) GraphData(ctx context.Context, child *goparent.Child) (*g
 
 	end := time.Now()
 	start := end.AddDate(0, 0, -7)
-	q := datastore.NewQuery(SleepKind).Filter("ChildID =", child.ID).Filter("TimeStamp >", start).Filter("TimeStamp <=", end).Order("-TimeStamp")
+	q := datastore.NewQuery(SleepKind).Filter("ChildID =", child.ID).Filter("Start >", start).Filter("Start <=", end).Order("-Start")
 	//get each item from the query organize them by day.
 	itx := q.Run(ctx)
 	for {
@@ -148,7 +148,7 @@ func (s *SleepService) GraphData(ctx context.Context, child *goparent.Child) (*g
 	chartData := &goparent.SleepChartData{
 		Start:   start,
 		End:     end,
-		Dataset: make([]goparent.SleepChartDataset, 1),
+		Dataset: []goparent.SleepChartDataset{},
 	}
 
 	//sleep data needs to be represented as each increment of sleep per day.
