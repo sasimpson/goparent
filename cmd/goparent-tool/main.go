@@ -63,7 +63,7 @@ func main() {
 
 			for i := sd; i.Before(ed); i = i.AddDate(0, 0, 1) {
 				log.Printf("\tgenerating for %s", i)
-				err := generateRandomData(env, childID, userID, i.Format("2006-01-02"))
+				err := generateRandomData(env, dbenv, childID, userID, i.Format("2006-01-02"))
 				if err != nil {
 					panic(err)
 				}
@@ -71,7 +71,7 @@ func main() {
 			os.Exit(0)
 		}
 		//if no start date is passed, then we assume to use the the date flag.
-		err := generateRandomData(env, childID, userID, date)
+		err := generateRandomData(env, dbenv, childID, userID, date)
 		if err != nil {
 			panic(err)
 		}
@@ -80,7 +80,7 @@ func main() {
 	}
 }
 
-func generateRandomData(env *goparent.Env, childID string, userID string, dateString string) error {
+func generateRandomData(env *goparent.Env, dbenv *rethinkdb.DBEnv, childID string, userID string, dateString string) error {
 	var children []*goparent.Child
 	var child *goparent.Child
 	var user *goparent.User
@@ -89,9 +89,9 @@ func generateRandomData(env *goparent.Env, childID string, userID string, dateSt
 	if userID == "" {
 		return errors.New("must have a user id")
 	}
-	userService := rethinkdb.UserService{Env: env}
-	familyService := rethinkdb.FamilyService{Env: env}
-	childService := rethinkdb.ChildService{Env: env}
+	userService := rethinkdb.UserService{Env: env, DB: dbenv}
+	familyService := rethinkdb.FamilyService{Env: env, DB: dbenv}
+	childService := rethinkdb.ChildService{Env: env, DB: dbenv}
 	ctx := context.Background()
 
 	user, err := userService.User(ctx, userID)
@@ -125,16 +125,16 @@ func generateRandomData(env *goparent.Env, childID string, userID string, dateSt
 	}
 	for _, child := range children {
 		log.Printf("\t\tfor child: %s", child.ID)
-		generateRandomDiaper(env, child, user, family, date)
-		generateRandomSleep(env, child, user, family, date)
-		generateRandomFeeding(env, child, user, family, date)
+		generateRandomDiaper(ctx, env, dbenv, child, user, family, date)
+		generateRandomSleep(ctx, env, dbenv, child, user, family, date)
+		generateRandomFeeding(ctx, env, dbenv, child, user, family, date)
 	}
 
 	return nil
 }
 
-func generateRandomDiaper(env *goparent.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
-	wasteService := rethinkdb.WasteService{Env: env}
+func generateRandomDiaper(ctx context.Context, env *goparent.Env, dbenv *rethinkdb.DBEnv, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
+	wasteService := rethinkdb.WasteService{Env: env, DB: dbenv}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = r.Intn(7) + 7
 	log.Printf("\t\t\tnumber of diaper entries: %d", numberOfEntries)
@@ -148,14 +148,14 @@ func generateRandomDiaper(env *goparent.Env, child *goparent.Child, user *gopare
 			FamilyID:  family.ID,
 			Type:      r.Intn(3) + 1,
 		}
-		wasteService.Save(diaper)
+		wasteService.Save(ctx, diaper)
 	}
 }
 
-func generateRandomSleep(env *goparent.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
-	sleepService := rethinkdb.SleepService{Env: env}
+func generateRandomSleep(ctx context.Context, env *goparent.Env, dbenv *rethinkdb.DBEnv, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
+	sleepService := rethinkdb.SleepService{Env: env, DB: dbenv}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	var numberOfEntries = 8
+	numberOfEntries := 8
 	log.Printf("\t\t\tnumber of sleep entries: %d", numberOfEntries)
 	startDate := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
 	var sleeps []*goparent.Sleep
@@ -171,13 +171,13 @@ func generateRandomSleep(env *goparent.Env, child *goparent.Child, user *goparen
 			Start:    time.Unix(startDate.Unix()+randomInterval, 0),
 			End:      time.Unix(startDate.Unix()+randomInterval+(5400+r.Int63n(1800)), 0),
 		}
-		sleepService.Save(sleep)
+		sleepService.Save(ctx, sleep)
 		sleeps = append(sleeps, sleep)
 	}
 }
 
-func generateRandomFeeding(env *goparent.Env, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
-	feedingService := rethinkdb.FeedingService{Env: env}
+func generateRandomFeeding(ctx context.Context, env *goparent.Env, dbenv *rethinkdb.DBEnv, child *goparent.Child, user *goparent.User, family *goparent.Family, date time.Time) {
+	feedingService := rethinkdb.FeedingService{Env: env, DB: dbenv}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var numberOfEntries = 6 + r.Intn(4)
 	log.Printf("\t\t\tnumber of feeding entries: %d", numberOfEntries)
@@ -211,8 +211,8 @@ func generateRandomFeeding(env *goparent.Env, child *goparent.Child, user *gopar
 			}
 			feeding2 := feeding
 			feeding2.Side = "left"
-			feedingService.Save(feeding)
-			feedingService.Save(feeding2)
+			feedingService.Save(ctx, feeding)
+			feedingService.Save(ctx, feeding2)
 			feedings = append(feedings, feeding)
 			feedings = append(feedings, feeding2)
 		} else {
@@ -224,7 +224,7 @@ func generateRandomFeeding(env *goparent.Env, child *goparent.Child, user *gopar
 				FamilyID:  family.ID,
 				ChildID:   child.ID,
 			}
-			feedingService.Save(feeding)
+			feedingService.Save(ctx, feeding)
 			feedings = append(feedings, feeding)
 		}
 	}

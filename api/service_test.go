@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -45,9 +44,7 @@ func makeTestToken(user *goparent.User, key interface{}) string {
 	// token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	log.Printf("%#v", token)
-	log.Printf("%#v", claims)
-	log.Printf("%#v", user)
+
 	claims["Name"] = user.Name
 	claims["ID"] = user.ID
 	claims["Email"] = user.Email

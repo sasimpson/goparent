@@ -3,10 +3,9 @@ package goparent
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
-
-	"gopkg.in/gorethink/gorethink.v3"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -29,16 +28,6 @@ type Authentication struct {
 	SigningKey []byte
 }
 
-//DBEnv - Environment for DB settings
-type DBEnv struct {
-	Host     string
-	Port     int
-	Database string
-	Username string
-	Password string
-	Session  gorethink.QueryExecutor
-}
-
 //Datastore -
 type Datastore interface {
 	GetConnection() error
@@ -56,6 +45,10 @@ type User struct {
 	Username      string `json:"username" gorethink:"username"`
 	Password      string `json:"-" gorethink:"password"`
 	CurrentFamily string `json:"currentFamily" gorethink:"currentFamily"`
+}
+
+func (user User) String() string {
+	return fmt.Sprintf("[%s] %s <%s>", user.ID, user.Name, user.Email)
 }
 
 //UserClaims - structure for inserting claims into a jwt auth token
@@ -127,6 +120,10 @@ type Child struct {
 	LastUpdated time.Time `json:"last_updated" gorethink:"last_updated"`
 }
 
+func (child Child) String() string {
+	return fmt.Sprintf("[%s] %s", child.ID, child.Name)
+}
+
 //ChildService -
 type ChildService interface {
 	Save(context.Context, *Child) error
@@ -136,14 +133,16 @@ type ChildService interface {
 
 //Feeding - main data structure for storing feeding data
 type Feeding struct {
-	ID        string    `json:"id" gorethink:"id,omitempty"`
-	Type      string    `json:"feedingType" gorethink:"feedingType"`
-	Amount    float32   `json:"feedingAmount" gorethink:"feedingAmount"`
-	Side      string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
-	UserID    string    `json:"userid" gorethink:"userID"`
-	FamilyID  string    `json:"familyid" gorethink:"familyID"`
-	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
-	ChildID   string    `json:"childID" gorethink:"childID"`
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	Type        string    `json:"feedingType" gorethink:"feedingType"`
+	Amount      float32   `json:"feedingAmount" gorethink:"feedingAmount"`
+	Side        string    `json:"feedingSide" gorethink:"feedingSide,omitempty"`
+	UserID      string    `json:"userid" gorethink:"userID"`
+	FamilyID    string    `json:"familyid" gorethink:"familyID"`
+	TimeStamp   time.Time `json:"timestamp" gorethink:"timestamp"`
+	ChildID     string    `json:"childID" gorethink:"childID"`
+	CreatedAt   time.Time `json:"createdAt" gorethink:"createdAt"`
+	LastUpdated time.Time `json:"lastUpdated" gorethink:"lastUpdated"`
 }
 
 //FeedingSummary - represents feeding summary data
@@ -171,20 +170,22 @@ type FeedingChartDataset struct {
 
 //FeedingService -
 type FeedingService interface {
-	Save(*Feeding) error
-	Feeding(*Family, uint64) ([]*Feeding, error)
-	Stats(*Child) (*FeedingSummary, error)
-	GraphData(*Child) (*FeedingChartData, error)
+	Save(context.Context, *Feeding) error
+	Feeding(context.Context, *Family, uint64) ([]*Feeding, error)
+	Stats(context.Context, *Child) (*FeedingSummary, error)
+	GraphData(context.Context, *Child) (*FeedingChartData, error)
 }
 
 //Sleep - tracks the baby's sleep start and end.
 type Sleep struct {
-	ID       string    `json:"id" gorethink:"id,omitempty"`
-	Start    time.Time `json:"start" gorethink:"start"`
-	End      time.Time `json:"end" gorethink:"end"`
-	UserID   string    `json:"userid" gorethink:"userID"`
-	FamilyID string    `json:"familyid" gorethink:"familyID"`
-	ChildID  string    `json:"childID" gorethink:"childID"`
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	Start       time.Time `json:"start" gorethink:"start"`
+	End         time.Time `json:"end" gorethink:"end"`
+	UserID      string    `json:"userid" gorethink:"userID"`
+	FamilyID    string    `json:"familyid" gorethink:"familyID"`
+	ChildID     string    `json:"childID" gorethink:"childID"`
+	CreatedAt   time.Time `json:"createdAt" gorethink:"createdAt"`
+	LastUpdated time.Time `json:"lastUpdated" gorethink:"lastUpdated"`
 }
 
 //SleepSummary - structure for the sleep summary data
@@ -197,39 +198,39 @@ type SleepSummary struct {
 
 //SleepChartData -
 type SleepChartData struct {
-	Start   time.Time             `json:"start"`
-	End     time.Time             `json:"end"`
-	Dataset []FeedingChartDataset `json:"dataset"`
+	Start   time.Time           `json:"start"`
+	End     time.Time           `json:"end"`
+	Dataset []SleepChartDataset `json:"dataset"`
 }
 
 //SleepChartDataset -
 type SleepChartDataset struct {
-	Date  time.Time `json:"date"`
-	Type  string    `json:"type"`
-	Count int       `json:"count"`
-	Sum   float32   `json:"sum"`
+	Date   time.Time       `json:"date"`
+	Totals []time.Duration `json:"total"`
 }
 
 //SleepService -
 type SleepService interface {
-	Save(*Sleep) error
-	Sleep(*Family, uint64) ([]*Sleep, error)
-	Stats(*Child) (*SleepSummary, error)
-	Status(*Family, *Child) (bool, error)
-	Start(*Sleep, *Family, *Child) error
-	End(*Sleep, *Family, *Child) error
-	GraphData(*Child) (*SleepChartData, error)
+	Save(context.Context, *Sleep) error
+	Sleep(context.Context, *Family, uint64) ([]*Sleep, error)
+	Stats(context.Context, *Child) (*SleepSummary, error)
+	Status(context.Context, *Family, *Child) (bool, error)
+	Start(context.Context, *Sleep, *Family, *Child) error
+	End(context.Context, *Sleep, *Family, *Child) error
+	GraphData(context.Context, *Child) (*SleepChartData, error)
 }
 
 //Waste - structure for holding waste data such as diapers
 type Waste struct {
-	ID        string    `json:"id" gorethink:"id,omitempty"`
-	Type      int       `json:"wasteType" gorethink:"wasteType"`
-	Notes     string    `json:"notes" gorethink:"notes"`
-	UserID    string    `json:"userid" gorethink:"userID"`
-	FamilyID  string    `json:"familyid" gorethink:"familyID"`
-	ChildID   string    `json:"childid" gorethink:"childID"`
-	TimeStamp time.Time `json:"timestamp" gorethink:"timestamp"`
+	ID          string    `json:"id" gorethink:"id,omitempty"`
+	Type        int       `json:"wasteType" gorethink:"wasteType"`
+	Notes       string    `json:"notes" gorethink:"notes"`
+	UserID      string    `json:"userid" gorethink:"userID"`
+	FamilyID    string    `json:"familyid" gorethink:"familyID"`
+	ChildID     string    `json:"childid" gorethink:"childID"`
+	TimeStamp   time.Time `json:"timestamp" gorethink:"timestamp"`
+	CreatedAt   time.Time `json:"createdAt" gorethink:"createdAt"`
+	LastUpdated time.Time `json:"lastUpdated" gorethink:"lastUpdated"`
 }
 
 //WasteSummary - structure for waste summary data
@@ -252,10 +253,10 @@ type WasteType struct {
 
 //WasteService -
 type WasteService interface {
-	Save(*Waste) error
-	Waste(*Family, uint64) ([]*Waste, error)
-	Stats(*Child) (*WasteSummary, error)
-	GraphData(*Child) (*WasteChartData, error)
+	Save(context.Context, *Waste) error
+	Waste(context.Context, *Family, uint64) ([]*Waste, error)
+	Stats(context.Context, *Child) (*WasteSummary, error)
+	GraphData(context.Context, *Child) (*WasteChartData, error)
 }
 
 //wasteChartData -

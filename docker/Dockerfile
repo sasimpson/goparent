@@ -2,12 +2,9 @@ FROM golang:alpine as builder
 
 WORKDIR /go/src/github.com/sasimpson/goparent
 
-RUN apk add git curl --no-cache
-RUN curl -s https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-
 COPY . .
-RUN dep ensure
-RUN go build -o goparent-service ./cmd/goparent-service/main.go
+ENV GO111MODULE=on
+RUN go build -o goparent-service /go/src/github.com/sasimpson/goparent/cmd/goparent-service/main.go
 
 FROM alpine:latest
 

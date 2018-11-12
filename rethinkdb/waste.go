@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -20,7 +21,7 @@ type reductionData struct {
 }
 
 //Save - save waste data
-func (ws *WasteService) Save(waste *goparent.Waste) error {
+func (ws *WasteService) Save(ctx context.Context, waste *goparent.Waste) error {
 	err := ws.DB.GetConnection()
 	if err != nil {
 		return err
@@ -38,7 +39,7 @@ func (ws *WasteService) Save(waste *goparent.Waste) error {
 }
 
 //Waste - get all waste by user and child id.
-func (ws *WasteService) Waste(family *goparent.Family, days uint64) ([]*goparent.Waste, error) {
+func (ws *WasteService) Waste(ctx context.Context, family *goparent.Family, days uint64) ([]*goparent.Waste, error) {
 	err := ws.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -65,7 +66,7 @@ func (ws *WasteService) Waste(family *goparent.Family, days uint64) ([]*goparent
 }
 
 //Stats - get waste stats for one child for the last 24 hours.
-func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, error) {
+func (ws *WasteService) Stats(ctx context.Context, child *goparent.Child) (*goparent.WasteSummary, error) {
 	err := ws.DB.GetConnection()
 	if err != nil {
 		return nil, err
@@ -108,7 +109,7 @@ func (ws *WasteService) Stats(child *goparent.Child) (*goparent.WasteSummary, er
 }
 
 //GraphData -
-func (ws *WasteService) GraphData(child *goparent.Child) (*goparent.WasteChartData, error) {
+func (ws *WasteService) GraphData(ctx context.Context, child *goparent.Child) (*goparent.WasteChartData, error) {
 	err := ws.DB.GetConnection()
 	if err != nil {
 		return nil, err

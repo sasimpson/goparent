@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -64,10 +65,11 @@ func TestGetFeedings(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FeedingService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			feedingResult, err := fs.Feeding(tC.family, 7)
+			feedingResult, err := fs.Feeding(ctx, tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {
@@ -105,6 +107,8 @@ func TestFeedingSave(t *testing.T) {
 						"timestamp":     timestamp.Add(time.Hour),
 						"feedingType":   "bottle",
 						"feedingAmount": 3.5,
+						"createdAt":     timestamp.Add(time.Hour),
+						"lastUpdated":   timestamp.Add(time.Hour),
 					}, r.InsertOpts{Conflict: "replace"},
 				),
 			).Return(
@@ -114,13 +118,15 @@ func TestFeedingSave(t *testing.T) {
 					GeneratedKeys: []string{"1"},
 				}, nil),
 			data: goparent.Feeding{
-				Type:      "bottle",
-				Amount:    3.5,
-				Side:      "",
-				FamilyID:  "1",
-				UserID:    "1",
-				ChildID:   "1",
-				TimeStamp: timestamp.Add(time.Hour),
+				Type:        "bottle",
+				Amount:      3.5,
+				Side:        "",
+				FamilyID:    "1",
+				UserID:      "1",
+				ChildID:     "1",
+				TimeStamp:   timestamp.Add(time.Hour),
+				CreatedAt:   timestamp.Add(time.Hour),
+				LastUpdated: timestamp.Add(time.Hour),
 			},
 		},
 		{
@@ -136,27 +142,32 @@ func TestFeedingSave(t *testing.T) {
 						"timestamp":     timestamp.Add(time.Hour),
 						"feedingType":   "bottle",
 						"feedingAmount": 3.5,
+						"createdAt":     timestamp.Add(time.Hour),
+						"lastUpdated":   timestamp.Add(time.Hour),
 					}, r.InsertOpts{Conflict: "replace"},
 				),
 			).Return(nil, errors.New("returned error")),
 			data: goparent.Feeding{
-				Type:      "bottle",
-				Amount:    3.5,
-				Side:      "",
-				FamilyID:  "1",
-				UserID:    "1",
-				ChildID:   "1",
-				TimeStamp: timestamp.Add(time.Hour),
+				Type:        "bottle",
+				Amount:      3.5,
+				Side:        "",
+				FamilyID:    "1",
+				UserID:      "1",
+				ChildID:     "1",
+				TimeStamp:   timestamp.Add(time.Hour),
+				CreatedAt:   timestamp.Add(time.Hour),
+				LastUpdated: timestamp.Add(time.Hour),
 			},
 			returnError: errors.New("returned error"),
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FeedingService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := fs.Save(&tC.data)
+			err := fs.Save(ctx, &tC.data)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {

@@ -1,7 +1,6 @@
 package datastore_test
 
 import (
-	"log"
 	"testing"
 
 	"github.com/sasimpson/goparent"
@@ -48,8 +47,6 @@ func TestDatastoreUser(t *testing.T) {
 
 	//check that the current family is the loaded family
 	cFamily, err := us.GetFamily(ctx, &user)
-	log.Println(err)
-	log.Println(cFamily)
 	assert.Nil(t, err)
 	assert.NotNil(t, cFamily)
 	assert.Equal(t, user.CurrentFamily, cFamily.ID)

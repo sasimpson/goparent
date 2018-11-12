@@ -1,6 +1,10 @@
 package mock
 
-import "github.com/sasimpson/goparent"
+import (
+	"context"
+
+	"github.com/sasimpson/goparent"
+)
 
 //WasteService -
 type WasteService struct {
@@ -14,7 +18,7 @@ type WasteService struct {
 }
 
 //Save -
-func (m *WasteService) Save(*goparent.Waste) error {
+func (m *WasteService) Save(context.Context, *goparent.Waste) error {
 	if m.GetErr != nil {
 		return m.GetErr
 	}
@@ -22,7 +26,7 @@ func (m *WasteService) Save(*goparent.Waste) error {
 }
 
 //Waste -
-func (m *WasteService) Waste(*goparent.Family, uint64) ([]*goparent.Waste, error) {
+func (m *WasteService) Waste(context.Context, *goparent.Family, uint64) ([]*goparent.Waste, error) {
 	if m.GetErr != nil {
 		return nil, m.GetErr
 	}
@@ -33,7 +37,7 @@ func (m *WasteService) Waste(*goparent.Family, uint64) ([]*goparent.Waste, error
 }
 
 //Stats -
-func (m *WasteService) Stats(*goparent.Child) (*goparent.WasteSummary, error) {
+func (m *WasteService) Stats(context.Context, *goparent.Child) (*goparent.WasteSummary, error) {
 	if m.StatErr != nil {
 		return nil, m.StatErr
 	}
@@ -45,7 +49,7 @@ func (m *WasteService) Stats(*goparent.Child) (*goparent.WasteSummary, error) {
 }
 
 //GraphData -
-func (m *WasteService) GraphData(*goparent.Child) (*goparent.WasteChartData, error) {
+func (m *WasteService) GraphData(context.Context, *goparent.Child) (*goparent.WasteChartData, error) {
 	if m.GraphErr != nil {
 		return nil, m.GraphErr
 	}

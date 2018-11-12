@@ -78,21 +78,21 @@ func (h *Handler) childSummary() http.Handler {
 			return
 		}
 
-		feedingSummary, err := h.FeedingService.Stats(child)
+		feedingSummary, err := h.FeedingService.Stats(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		summary.Stats.Feeding = *feedingSummary
 
-		sleeps, err := h.SleepService.Stats(child)
+		sleeps, err := h.SleepService.Stats(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		summary.Stats.Sleep = *sleeps
 
-		wastes, err := h.WasteService.Stats(child)
+		wastes, err := h.WasteService.Stats(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -1,6 +1,10 @@
 package mock
 
-import "github.com/sasimpson/goparent"
+import (
+	"context"
+
+	"github.com/sasimpson/goparent"
+)
 
 //SleepService -
 type SleepService struct {
@@ -12,7 +16,7 @@ type SleepService struct {
 }
 
 //Save -
-func (m *SleepService) Save(*goparent.Sleep) error {
+func (m *SleepService) Save(context.Context, *goparent.Sleep) error {
 	if m.GetErr != nil {
 		return m.GetErr
 	}
@@ -20,7 +24,7 @@ func (m *SleepService) Save(*goparent.Sleep) error {
 }
 
 //Sleep -
-func (m *SleepService) Sleep(*goparent.Family, uint64) ([]*goparent.Sleep, error) {
+func (m *SleepService) Sleep(context.Context, *goparent.Family, uint64) ([]*goparent.Sleep, error) {
 	if m.GetErr != nil {
 		return nil, m.GetErr
 	}
@@ -31,7 +35,7 @@ func (m *SleepService) Sleep(*goparent.Family, uint64) ([]*goparent.Sleep, error
 }
 
 //Stats -
-func (m *SleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
+func (m *SleepService) Stats(context.Context, *goparent.Child) (*goparent.SleepSummary, error) {
 	if m.StatErr != nil {
 		return nil, m.StatErr
 	}
@@ -43,21 +47,21 @@ func (m *SleepService) Stats(*goparent.Child) (*goparent.SleepSummary, error) {
 }
 
 //Status -
-func (m *SleepService) Status(*goparent.Family, *goparent.Child) (bool, error) {
+func (m *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
 	panic("not implemented")
 }
 
 //Start -
-func (m *SleepService) Start(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+func (m *SleepService) Start(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
 //End -
-func (m *SleepService) End(*goparent.Sleep, *goparent.Family, *goparent.Child) error {
+func (m *SleepService) End(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 
 //GraphData -
-func (m *SleepService) GraphData(*goparent.Child) (*goparent.SleepChartData, error) {
+func (m *SleepService) GraphData(context.Context, *goparent.Child) (*goparent.SleepChartData, error) {
 	panic("not implemented")
 }

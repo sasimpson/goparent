@@ -64,7 +64,7 @@ func (s *FamilyService) Family(ctx context.Context, id string) (*goparent.Family
 func (s *FamilyService) Children(ctx context.Context, family *goparent.Family) ([]*goparent.Child, error) {
 	var children []*goparent.Child
 	familyKey := datastore.NewKey(ctx, FamilyKind, family.ID, 0, nil)
-	q := datastore.NewQuery("Child").Ancestor(familyKey)
+	q := datastore.NewQuery(ChildKind).Ancestor(familyKey)
 	itx := q.Run(ctx)
 	for {
 		var child goparent.Child

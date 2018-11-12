@@ -30,6 +30,8 @@ func (h *Handler) initSleepHandlers(r *mux.Router) {
 	s.Handle("/{id}", h.AuthRequired(h.sleepViewHandler())).Methods("GET").Name("SleepView")
 	s.Handle("/{id}", h.AuthRequired(h.sleepEditHandler())).Methods("PUT").Name("SleepEdit")
 	s.Handle("/{id}", h.AuthRequired(h.sleepDeleteHandler())).Methods("DELETE").Name("SleepDelete")
+	s.Handle("/graph/{id}", h.AuthRequired(h.sleepGraphDataHandler())).Methods("GET").Name("SleepGraphData")
+
 }
 
 func (h *Handler) sleepGetHandler() http.Handler {
@@ -48,7 +50,7 @@ func (h *Handler) sleepGetHandler() http.Handler {
 			return
 		}
 
-		sleepData, err := h.SleepService.Sleep(family, 7)
+		sleepData, err := h.SleepService.Sleep(ctx, family, 7)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -113,7 +115,7 @@ func (h *Handler) sleepNewHandler() http.Handler {
 		w.Header().Set("Content-Type", jsonContentType)
 		sleepRequest.SleepData.UserID = user.ID
 		sleepRequest.SleepData.FamilyID = family.ID
-		err = h.SleepService.Save(&sleepRequest.SleepData)
+		err = h.SleepService.Save(ctx, &sleepRequest.SleepData)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -219,7 +221,7 @@ func (h *Handler) sleepToggleStatus() http.Handler {
 	})
 }
 
-func (h *Handler) sleepGraphData() http.Handler {
+func (h *Handler) sleepGraphDataHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := h.Env.DB.GetContext(r)
 
@@ -250,7 +252,7 @@ func (h *Handler) sleepGraphData() http.Handler {
 			return
 		}
 
-		sleepGraphData, err := h.SleepService.GraphData(child)
+		sleepGraphData, err := h.SleepService.GraphData(ctx, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

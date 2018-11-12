@@ -1,6 +1,7 @@
 package rethinkdb
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -66,11 +67,11 @@ func TestGetSleep(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
-
 			fs := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			sleepResult, err := fs.Sleep(tC.family, 7)
+			sleepResult, err := fs.Sleep(ctx, tC.family, 7)
 			if tC.resultError != nil {
 				assert.Error(t, err, tC.resultError.Error())
 			} else {
@@ -102,11 +103,13 @@ func TestSleepSave(t *testing.T) {
 			query: (&r.Mock{}).On(
 				r.Table("sleep").Insert(
 					map[string]interface{}{
-						"userID":   "1",
-						"familyID": "1",
-						"childID":  "1",
-						"start":    timestamp,
-						"end":      timestamp.Add(time.Hour),
+						"userID":      "1",
+						"familyID":    "1",
+						"childID":     "1",
+						"start":       timestamp,
+						"end":         timestamp.Add(time.Hour),
+						"createdAt":   timestamp,
+						"lastUpdated": timestamp,
 					}, r.InsertOpts{Conflict: "replace"},
 				),
 			).Return(
@@ -116,11 +119,13 @@ func TestSleepSave(t *testing.T) {
 					GeneratedKeys: []string{"1"},
 				}, nil),
 			data: goparent.Sleep{
-				FamilyID: "1",
-				ChildID:  "1",
-				UserID:   "1",
-				Start:    timestamp,
-				End:      timestamp.Add(time.Hour),
+				FamilyID:    "1",
+				ChildID:     "1",
+				UserID:      "1",
+				Start:       timestamp,
+				End:         timestamp.Add(time.Hour),
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
 			},
 		},
 		{
@@ -130,31 +135,36 @@ func TestSleepSave(t *testing.T) {
 			query: (&r.Mock{}).On(
 				r.Table("sleep").Insert(
 					map[string]interface{}{
-						"userID":   "1",
-						"familyID": "1",
-						"childID":  "1",
-						"start":    timestamp,
-						"end":      timestamp.Add(time.Hour),
+						"userID":      "1",
+						"familyID":    "1",
+						"childID":     "1",
+						"start":       timestamp,
+						"end":         timestamp.Add(time.Hour),
+						"createdAt":   timestamp,
+						"lastUpdated": timestamp,
 					}, r.InsertOpts{Conflict: "replace"},
 				),
 			).Return(nil, errors.New("returned error")),
 			data: goparent.Sleep{
-				FamilyID: "1",
-				ChildID:  "1",
-				UserID:   "1",
-				Start:    timestamp,
-				End:      timestamp.Add(time.Hour),
+				FamilyID:    "1",
+				ChildID:     "1",
+				UserID:      "1",
+				Start:       timestamp,
+				End:         timestamp.Add(time.Hour),
+				CreatedAt:   timestamp,
+				LastUpdated: timestamp,
 			},
 			returnError: errors.New("returned error"),
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			fs := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			err := fs.Save(&tC.data)
+			err := fs.Save(ctx, &tC.data)
 			if tC.returnError != nil {
 				assert.Error(t, tC.returnError, err.Error())
 			} else {
@@ -242,13 +252,14 @@ func TestStatus(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			ss := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			status, err := ss.Status(tC.family, tC.child)
-			sleepStart := ss.Start(tC.sleep, tC.family, tC.child)
-			sleepEnd := ss.End(tC.sleep, tC.family, tC.child)
+			status, err := ss.Status(ctx, tC.family, tC.child)
+			sleepStart := ss.Start(ctx, tC.sleep, tC.family, tC.child)
+			sleepEnd := ss.End(ctx, tC.sleep, tC.family, tC.child)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 				assert.Error(t, sleepStart)

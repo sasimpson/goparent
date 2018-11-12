@@ -31,13 +31,20 @@ func runService(env *goparent.Env, dbenv *rethinkdb.DBEnv) {
 	}
 
 	r := api.BuildAPIRouting(&serviceHandler)
-
-	log.Printf("starting service on 8000")
-	http.Handle("/", r)
-
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "Authorization"})
+	// setup cors, this should end up in Env.Service config, which this should receive.
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Content-Type", "Authorization", "Origin"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
 
+	r.Use(simpleRequestLog)
+
+	log.Printf("starting service on 8000")
 	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(r))
+}
+
+func simpleRequestLog(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.RequestURI)
+		next.ServeHTTP(w, r)
+	})
 }
