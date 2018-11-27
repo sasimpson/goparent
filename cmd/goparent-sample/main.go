@@ -56,7 +56,7 @@ func newError(origin string, err error) error {
 
 func main() {
 	flag.StringVar(&host, "host", "localhost", "host to connect to")
-	flag.IntVar(&port, "port", 8080, "port on host to connect to")
+	flag.IntVar(&port, "port", 80, "port on host to connect to")
 	flag.StringVar(&user, "user", "", "user to make sample data for")
 	flag.StringVar(&password, "pass", "", "password for user")
 	flag.StringVar(&token, "token", "", "use included token")
@@ -231,7 +231,7 @@ func generateRandomDiaper(child *goparent.Child, genDate time.Time) error {
 func generateRandomFeeding(child *goparent.Child, genDate time.Time) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	numberOfEntries := 6 + r.Intn(4)
-	fmt.Printf("\t\t\tnumber of feeding entries: %d", numberOfEntries)
+	fmt.Printf("\t\t\tNumber of feeding entries: %d\n", numberOfEntries)
 	startDate := time.Date(genDate.Year(), genDate.Month(), genDate.Day(), 0, 0, 0, 0, time.UTC)
 	var feedings []goparent.Feeding
 
@@ -294,7 +294,7 @@ func generateRandomFeeding(child *goparent.Child, genDate time.Time) error {
 func generateRandomSleeps(child *goparent.Child, genDate time.Time) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	numberOfEntries := 8
-	fmt.Printf("\t\t\tnumber of sleep entries: %d", numberOfEntries)
+	fmt.Printf("\t\t\tNumber of sleep entries: %d\n", numberOfEntries)
 	startDate := time.Date(genDate.Year(), genDate.Month(), genDate.Day(), 0, 0, 0, 0, time.UTC)
 	var sleeps []*goparent.Sleep
 	for x := 0; x < numberOfEntries; x++ {
