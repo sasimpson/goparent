@@ -8,11 +8,13 @@ import (
 
 //SleepService -
 type SleepService struct {
-	Env     *goparent.Env
-	Sleeps  []*goparent.Sleep
-	Stat    *goparent.SleepSummary
-	GetErr  error
-	StatErr error
+	Env            *goparent.Env
+	Sleeps         []*goparent.Sleep
+	Stat           *goparent.SleepSummary
+	GetStatus      bool
+	GetErr         error
+	StatErr        error
+	GetStatusError error
 }
 
 //Save -
@@ -48,7 +50,10 @@ func (m *SleepService) Stats(context.Context, *goparent.Child) (*goparent.SleepS
 
 //Status -
 func (m *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
-	panic("not implemented")
+	if m.GetStatusError != nil {
+		return false, m.GetStatusError
+	}
+	return m.GetStatus, nil
 }
 
 //Start -

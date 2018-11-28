@@ -8,9 +8,11 @@ import (
 
 //FamilyService -
 type FamilyService struct {
-	Env    *goparent.Env
-	Kids   []*goparent.Child
-	GetErr error
+	Env          *goparent.Env
+	Kids         []*goparent.Child
+	GetFamily    *goparent.Family
+	GetErr       error
+	GetFamilyErr error
 }
 
 //Save -
@@ -20,7 +22,10 @@ func (mfs *FamilyService) Save(context.Context, *goparent.Family) error {
 
 //Family -
 func (mfs *FamilyService) Family(context.Context, string) (*goparent.Family, error) {
-	panic("not implemented")
+	if mfs.GetFamilyErr != nil {
+		return nil, mfs.GetFamilyErr
+	}
+	return mfs.GetFamily, nil
 }
 
 //Children -

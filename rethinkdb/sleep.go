@@ -2,7 +2,6 @@ package rethinkdb
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/sasimpson/goparent"
@@ -14,12 +13,6 @@ type SleepService struct {
 	Env *goparent.Env
 	DB  *DBEnv
 }
-
-//ErrExistingStart - already have a start for that sleep record
-var ErrExistingStart = errors.New("already have a start record")
-
-//ErrNoExistingSession - don't have a sleep record to end.
-var ErrNoExistingSession = errors.New("no existing sleep session to end")
 
 //Status - return the current status for a sleep session
 func (ss *SleepService) Status(ctx context.Context, family *goparent.Family, child *goparent.Child) (bool, error) {
@@ -65,7 +58,7 @@ func (ss *SleepService) Start(ctx context.Context, sleep *goparent.Sleep, family
 		sleep.Start = time.Now()
 		return nil
 	}
-	return ErrExistingStart
+	return goparent.ErrExistingStart
 }
 
 //End - record end of sleep
@@ -78,7 +71,7 @@ func (ss *SleepService) End(ctx context.Context, sleep *goparent.Sleep, family *
 		sleep.End = time.Now()
 		return nil
 	}
-	return ErrNoExistingSession
+	return goparent.ErrNoExistingSession
 
 }
 

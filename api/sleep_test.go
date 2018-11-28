@@ -571,34 +571,66 @@ func TestSleepEndHandler(t *testing.T) {
 
 func TestSleepToggleStatusHandler(t *testing.T) {
 	testCases := []struct {
-		desc         string
-		env          *goparent.Env
-		route        string
-		method       string
-		responseCode int
-		contextUser  *goparent.User
+		desc          string
+		env           *goparent.Env
+		route         string
+		method        string
+		responseCode  int
+		contextUser   *goparent.User
+		familyService goparent.FamilyService
+		childService  goparent.ChildService
+		sleepService  goparent.SleepService
 	}{
 		{
 			desc:         "sleepToggleStatusHandler unauthorized",
 			env:          &goparent.Env{DB: &mock.DBEnv{}},
-			route:        "/sleep/status",
+			route:        "/sleep/status/1",
 			method:       "GET",
 			responseCode: http.StatusUnauthorized,
 			contextUser:  nil,
 		},
 		{
-			desc:         "sleepToggleStatusHandler not impl",
+			desc:         "valid status, true",
 			env:          &goparent.Env{DB: &mock.DBEnv{}},
-			route:        "/sleep/status",
+			route:        "/sleep/status/1",
 			method:       "GET",
-			responseCode: http.StatusNotImplemented,
-			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+			responseCode: http.StatusOK,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser", CurrentFamily: "1"},
+			familyService: &mock.FamilyService{
+				GetFamily: &goparent.Family{ID: "1", Admin: "1", Members: []string{"1"}},
+			},
+			childService: &mock.ChildService{
+				Kid: &goparent.Child{ID: "1"},
+			},
+			sleepService: &mock.SleepService{
+				GetStatus: true,
+			},
+		},
+		{
+			desc:         "valid status, false",
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
+			route:        "/sleep/status/1",
+			method:       "GET",
+			responseCode: http.StatusNotFound,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser", CurrentFamily: "1"},
+			familyService: &mock.FamilyService{
+				GetFamily: &goparent.Family{ID: "1", Admin: "1", Members: []string{"1"}},
+			},
+			childService: &mock.ChildService{
+				Kid: &goparent.Child{ID: "1"},
+			},
+			sleepService: &mock.SleepService{
+				GetStatus: false,
+			},
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			mockHandler := Handler{
-				Env: tC.env,
+				Env:           tC.env,
+				FamilyService: tC.familyService,
+				ChildService:  tC.childService,
+				SleepService:  tC.sleepService,
 			}
 			req, err := http.NewRequest(tC.method, tC.route, nil)
 			if err != nil {
@@ -661,7 +693,7 @@ func TestInitSleepHandlers(t *testing.T) {
 		{
 			desc:    "sleep status",
 			name:    "SleepStatus",
-			path:    "/sleep/status",
+			path:    "/sleep/status/{childID}",
 			methods: []string{"GET"},
 		},
 		{

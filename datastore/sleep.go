@@ -64,8 +64,27 @@ func (s *SleepService) Sleep(ctx context.Context, family *goparent.Family, days 
 }
 
 //Status should return the sleep status of a child, ie if they are asleep or not
-func (s *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
-	panic("not implemented")
+func (s *SleepService) Status(ctx context.Context, family *goparent.Family, child *goparent.Child) (bool, error) {
+	var sleeps []goparent.Sleep
+	q := datastore.NewQuery(SleepKind).Filter("ChildID = ", child.ID).Filter("End = ", time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC))
+	itx := q.Run(ctx)
+	for {
+		var sleep goparent.Sleep
+		_, err := itx.Next(&sleep)
+		if err == datastore.Done {
+			break
+		}
+		if err != nil {
+			return false, err
+		}
+		sleeps = append(sleeps, sleep)
+	}
+
+	if len(sleeps) > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 //Start will start a sleep session or error if there is a current one active.

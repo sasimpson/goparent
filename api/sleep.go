@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -24,13 +25,13 @@ func (h *Handler) initSleepHandlers(r *mux.Router) {
 	s := r.PathPrefix("/sleep").Subrouter()
 	s.Handle("", h.AuthRequired(h.sleepGetHandler())).Methods("GET").Name("SleepGet")
 	s.Handle("", h.AuthRequired(h.sleepNewHandler())).Methods("POST").Name("SleepNew")
-	s.Handle("/status", h.AuthRequired(h.sleepToggleStatus())).Methods("GET").Name("SleepStatus")
+	s.Handle("/status/{childID}", h.AuthRequired(h.sleepToggleStatus())).Methods("GET").Name("SleepStatus")
 	s.Handle("/start", h.AuthRequired(h.sleepStartHandler())).Methods("POST").Name("SleepStart")
 	s.Handle("/end", h.AuthRequired(h.sleepEndHandler())).Methods("POST").Name("SleepEnd")
 	s.Handle("/{id}", h.AuthRequired(h.sleepViewHandler())).Methods("GET").Name("SleepView")
 	s.Handle("/{id}", h.AuthRequired(h.sleepEditHandler())).Methods("PUT").Name("SleepEdit")
 	s.Handle("/{id}", h.AuthRequired(h.sleepDeleteHandler())).Methods("DELETE").Name("SleepDelete")
-	s.Handle("/graph/{id}", h.AuthRequired(h.sleepGraphDataHandler())).Methods("GET").Name("SleepGraphData")
+	s.Handle("/graph/{childID}", h.AuthRequired(h.sleepGraphDataHandler())).Methods("GET").Name("SleepGraphData")
 
 }
 
@@ -199,25 +200,38 @@ func (h *Handler) sleepEndHandler() http.Handler {
 
 func (h *Handler) sleepToggleStatus() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET sleep toggle status")
-		_, err := UserFromContext(r.Context())
+		ctx := h.Env.DB.GetContext(r)
+		childID := mux.Vars(r)["childID"]
+		user, err := UserFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		// var sleep models.Sleep
-		// ok, err := sleep.Status(env, &user)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// }
-		// if ok {
-		// 	fmt.Fprintf(w, "sleep session active")
-		// 	return
-		// }
-		// http.Error(w, "not found", http.StatusNotFound)
-		// return
-		http.Error(w, "not implemented", http.StatusNotImplemented)
 
+		family, err := h.FamilyService.Family(ctx, user.CurrentFamily)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		child, err := h.ChildService.Child(ctx, childID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		ok, err := h.SleepService.Status(ctx, family, child)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if ok {
+			fmt.Fprintf(w, "sleep session active")
+			return
+		}
+		http.Error(w, "not found", http.StatusNotFound)
+		return
 	})
 }
 
@@ -232,7 +246,7 @@ func (h *Handler) sleepGraphDataHandler() http.Handler {
 			return
 		}
 
-		childID := mux.Vars(r)["id"]
+		childID := mux.Vars(r)["childID"]
 
 		family, err := h.UserService.GetFamily(ctx, user)
 		if err != nil {

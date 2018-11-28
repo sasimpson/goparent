@@ -37,6 +37,12 @@ type Datastore interface {
 //ErrExistingInvitation -
 var ErrExistingInvitation = errors.New("invitation already exists for that parent")
 
+//ErrExistingStart - already have a start for that sleep record
+var ErrExistingStart = errors.New("already have a start record")
+
+//ErrNoExistingSession - don't have a sleep record to end.
+var ErrNoExistingSession = errors.New("no existing sleep session to end")
+
 //User -
 type User struct {
 	ID            string `json:"id" gorethink:"id,omitempty"`
