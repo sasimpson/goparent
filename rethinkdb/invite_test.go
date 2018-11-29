@@ -255,7 +255,6 @@ func TestInvite(t *testing.T) {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
 				assert.Nil(t, err)
-				t.Logf("%#v", invite)
 				assert.Equal(t, tC.id, invite.ID)
 			}
 
@@ -328,7 +327,6 @@ func TestInvites(t *testing.T) {
 
 			uis := UserInviteService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			invites, err := uis.Invites(ctx, tC.user)
-			t.Logf("invites: %#v len: %#v err: %#v", invites, len(invites), err)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
