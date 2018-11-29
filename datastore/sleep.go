@@ -2,7 +2,6 @@ package datastore
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -81,7 +80,6 @@ func (s *SleepService) Status(ctx context.Context, family *goparent.Family, chil
 		sleeps = append(sleeps, sleep)
 	}
 
-	fmt.Printf("length of sleeps: %d\n", len(sleeps))
 	if len(sleeps) > 0 {
 		return &sleeps[0], true, nil
 	}
