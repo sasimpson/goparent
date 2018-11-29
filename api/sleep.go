@@ -142,34 +142,45 @@ func (h *Handler) sleepDeleteHandler() http.Handler {
 func (h *Handler) sleepStartHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep start")
-		_, err := UserFromContext(r.Context())
+		ctx := h.Env.DB.GetContext(r)
+		user, err := UserFromContext(ctx)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		// family, err := h.UserService.GetFamily(user)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
 
-		// h.SleepService.Start(sleep, family, child)
-		// err = sleep.SleepStart(env, &user)
-		// if err != nil {
-		// 	log.Println("error", err.Error())
-		// 	if err == models.ErrExistingStart {
-		// 		http.Error(w, err.Error(), http.StatusConflict)
-		// 		return
-		// 	}
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		// sleep.UserID = user.ID
-		// sleep.Save(env)
-		// fmt.Fprintf(w, "started Sleep")
-		// return
-		http.Error(w, "not implemented", http.StatusNotImplemented)
+		childID := mux.Vars(r)["childID"]
+		if childID == "" {
+			http.Error(w, "invalid Child ID", http.StatusBadRequest)
+			return
+		}
+
+		family, err := h.FamilyService.Family(ctx, user.CurrentFamily)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		child, err := h.ChildService.Child(ctx, childID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.SleepService.Start(ctx, family, child)
+		if err != nil {
+			log.Println("error", err.Error())
+			if err == goparent.ErrExistingStart {
+				http.Error(w, err.Error(), http.StatusConflict)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Fprintf(w, "started Sleep")
+		return
 	})
 }
 
@@ -201,10 +212,15 @@ func (h *Handler) sleepEndHandler() http.Handler {
 func (h *Handler) sleepToggleStatus() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := h.Env.DB.GetContext(r)
-		childID := mux.Vars(r)["childID"]
 		user, err := UserFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		childID := mux.Vars(r)["childID"]
+		if childID == "" {
+			http.Error(w, "invalid Child ID", http.StatusBadRequest)
 			return
 		}
 
@@ -220,7 +236,7 @@ func (h *Handler) sleepToggleStatus() http.Handler {
 			return
 		}
 
-		ok, err := h.SleepService.Status(ctx, family, child)
+		_, ok, err := h.SleepService.Status(ctx, family, child)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

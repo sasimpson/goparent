@@ -220,9 +220,9 @@ type SleepService interface {
 	Save(context.Context, *Sleep) error
 	Sleep(context.Context, *Family, uint64) ([]*Sleep, error)
 	Stats(context.Context, *Child) (*SleepSummary, error)
-	Status(context.Context, *Family, *Child) (bool, error)
-	Start(context.Context, *Sleep, *Family, *Child) error
-	End(context.Context, *Sleep, *Family, *Child) error
+	Status(context.Context, *Family, *Child) (*Sleep, bool, error)
+	Start(context.Context, *Family, *Child) error
+	End(context.Context, *Family, *Child) error
 	GraphData(context.Context, *Child) (*SleepChartData, error)
 }
 

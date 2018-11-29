@@ -8,13 +8,15 @@ import (
 
 //SleepService -
 type SleepService struct {
-	Env            *goparent.Env
-	Sleeps         []*goparent.Sleep
-	Stat           *goparent.SleepSummary
-	GetStatus      bool
-	GetErr         error
-	StatErr        error
-	GetStatusError error
+	Env       *goparent.Env
+	Sleeps    []*goparent.Sleep
+	Stat      *goparent.SleepSummary
+	GetStatus bool
+	GetSleep  *goparent.Sleep
+	GetErr    error
+	StatErr   error
+	StatusErr error
+	StartErr  error
 }
 
 //Save -
@@ -49,20 +51,23 @@ func (m *SleepService) Stats(context.Context, *goparent.Child) (*goparent.SleepS
 }
 
 //Status -
-func (m *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (bool, error) {
-	if m.GetStatusError != nil {
-		return false, m.GetStatusError
+func (m *SleepService) Status(context.Context, *goparent.Family, *goparent.Child) (*goparent.Sleep, bool, error) {
+	if m.StatusErr != nil {
+		return nil, false, m.StatusErr
 	}
-	return m.GetStatus, nil
+	return m.GetSleep, m.GetStatus, nil
 }
 
 //Start -
-func (m *SleepService) Start(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
-	panic("not implemented")
+func (m *SleepService) Start(context.Context, *goparent.Family, *goparent.Child) error {
+	if m.StartErr != nil {
+		return m.StartErr
+	}
+	return nil
 }
 
 //End -
-func (m *SleepService) End(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
+func (m *SleepService) End(context.Context, *goparent.Family, *goparent.Child) error {
 	panic("not implemented")
 }
 

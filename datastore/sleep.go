@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -64,7 +65,7 @@ func (s *SleepService) Sleep(ctx context.Context, family *goparent.Family, days 
 }
 
 //Status should return the sleep status of a child, ie if they are asleep or not
-func (s *SleepService) Status(ctx context.Context, family *goparent.Family, child *goparent.Child) (bool, error) {
+func (s *SleepService) Status(ctx context.Context, family *goparent.Family, child *goparent.Child) (*goparent.Sleep, bool, error) {
 	var sleeps []goparent.Sleep
 	q := datastore.NewQuery(SleepKind).Filter("ChildID = ", child.ID).Filter("End = ", time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC))
 	itx := q.Run(ctx)
@@ -75,21 +76,44 @@ func (s *SleepService) Status(ctx context.Context, family *goparent.Family, chil
 			break
 		}
 		if err != nil {
-			return false, err
+			return nil, false, err
 		}
 		sleeps = append(sleeps, sleep)
 	}
 
+	fmt.Printf("length of sleeps: %d\n", len(sleeps))
 	if len(sleeps) > 0 {
-		return true, nil
+		return &sleeps[0], true, nil
 	}
 
-	return false, nil
+	return nil, false, nil
 }
 
 //Start will start a sleep session or error if there is a current one active.
-func (s *SleepService) Start(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
-	panic("not implemented")
+func (s *SleepService) Start(ctx context.Context, family *goparent.Family, child *goparent.Child) error {
+	_, status, err := s.Status(ctx, family, child)
+	if err != nil {
+		return err
+	}
+	fmt.Println("sleep start status:", status)
+	// status returned false, therefore we should create an open ended sleep entry.
+	if !status {
+		sleep := goparent.Sleep{
+			Start:    time.Now(),
+			End:      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+			FamilyID: family.ID,
+			ChildID:  child.ID,
+		}
+
+		err := s.Save(ctx, &sleep)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return goparent.ErrExistingStart
 }
 
 //End will end a current sleep session or error if there isn't one

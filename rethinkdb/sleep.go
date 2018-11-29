@@ -48,27 +48,29 @@ func (ss *SleepService) Status(ctx context.Context, family *goparent.Family, chi
 }
 
 //Start - record start of sleep
-func (ss *SleepService) Start(ctx context.Context, sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
+func (ss *SleepService) Start(ctx context.Context, family *goparent.Family, child *goparent.Child) error {
 	ok, err := ss.Status(ctx, family, child)
 	if err != nil {
 		return err
 	}
 
 	if !ok {
-		sleep.Start = time.Now()
+		//this is broken until someone fixes it
+		// sleep.Start = time.Now()
 		return nil
 	}
 	return goparent.ErrExistingStart
 }
 
 //End - record end of sleep
-func (ss *SleepService) End(ctx context.Context, sleep *goparent.Sleep, family *goparent.Family, child *goparent.Child) error {
+func (ss *SleepService) End(ctx context.Context, family *goparent.Family, child *goparent.Child) error {
 	ok, err := ss.Status(ctx, family, child)
 	if err != nil {
 		return err
 	}
 	if ok {
-		sleep.End = time.Now()
+		//this is broken until someone fixes it
+		// sleep.End = time.Now()
 		return nil
 	}
 	return goparent.ErrNoExistingSession

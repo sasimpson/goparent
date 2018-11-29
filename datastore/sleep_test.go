@@ -1,8 +1,6 @@
 package datastore_test
 
 import (
-	"log"
-	"reflect"
 	"testing"
 	"time"
 
@@ -33,7 +31,6 @@ func TestDatastoreSleep(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error: %#v", err)
 	}
-	log.Printf("%s", reflect.TypeOf(err))
 	assert.Nil(err)
 	assert.NotNil(user.CurrentFamily)
 
@@ -82,4 +79,23 @@ func TestDatastoreSleep(t *testing.T) {
 	// assert.Len(summary.Data, 1)
 	// assert.Equal(1, summary.Range)
 	// assert.Equal(300, summary.Total)
+
+	/*
+		sleep, status, err := sleepService.Status(ctx, family, child)
+		assert.Nil(err)
+		assert.Nil(sleep)
+		assert.False(status)
+
+		err = sleepService.Start(ctx, family, child)
+		assert.Nil(err)
+
+		sleep, status, err = sleepService.Status(ctx, family, child)
+		assert.Nil(err)
+		assert.NotNil(sleep)
+		assert.True(status)
+
+		err = sleepService.Start(ctx, family, child)
+		assert.NotNil(err)
+		assert.EqualError(err, goparent.ErrExistingStart.Error())
+	*/
 }

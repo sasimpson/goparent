@@ -467,12 +467,16 @@ func TestSleepDeleteHandler(t *testing.T) {
 
 func TestSleepStartHandler(t *testing.T) {
 	testCases := []struct {
-		desc         string
-		env          *goparent.Env
-		route        string
-		method       string
-		responseCode int
-		contextUser  *goparent.User
+		desc          string
+		env           *goparent.Env
+		route         string
+		method        string
+		childID       string
+		familyService goparent.FamilyService
+		childService  goparent.ChildService
+		sleepService  goparent.SleepService
+		responseCode  int
+		contextUser   *goparent.User
 	}{
 		{
 			desc:         "sleepStartHandler unauthorized",
@@ -483,23 +487,63 @@ func TestSleepStartHandler(t *testing.T) {
 			contextUser:  nil,
 		},
 		{
-			desc:         "sleepStartHandler not impl",
+			desc:         "sleepStartHandler no childID",
 			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/start",
 			method:       "POST",
-			responseCode: http.StatusNotImplemented,
+			responseCode: http.StatusBadRequest,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+		{
+			desc:    "sleepStartHandler start new sleep",
+			env:     &goparent.Env{DB: &mock.DBEnv{}},
+			route:   "/sleep/start/1",
+			childID: "1",
+			familyService: &mock.FamilyService{
+				GetFamily: &goparent.Family{ID: "1", Admin: "1", Members: []string{"1"}},
+			},
+			childService: &mock.ChildService{
+				Kid: &goparent.Child{ID: "1"},
+			},
+			sleepService: &mock.SleepService{
+				GetStatus: false,
+				GetSleep:  nil,
+			},
+			method:       "POST",
+			responseCode: http.StatusOK,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
+		},
+		{
+			desc:    "sleepStartHandler fail to start new sleep",
+			env:     &goparent.Env{DB: &mock.DBEnv{}},
+			route:   "/sleep/start/1",
+			childID: "1",
+			familyService: &mock.FamilyService{
+				GetFamily: &goparent.Family{ID: "1", Admin: "1", Members: []string{"1"}},
+			},
+			childService: &mock.ChildService{
+				Kid: &goparent.Child{ID: "1"},
+			},
+			sleepService: &mock.SleepService{
+				StartErr:  goparent.ErrExistingStart,
+				GetStatus: true,
+				GetSleep:  &goparent.Sleep{ID: "1", Start: time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC), End: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)},
+			},
+			method:       "POST",
+			responseCode: http.StatusConflict,
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser"},
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			mockHandler := Handler{
-				Env: tC.env,
+				Env:           tC.env,
+				FamilyService: tC.familyService,
+				ChildService:  tC.childService,
+				SleepService:  tC.sleepService,
 			}
-			req, err := http.NewRequest(tC.method, tC.route, nil)
-			if err != nil {
-				t.Fatal(err)
-			}
+			req, _ := http.NewRequest(tC.method, tC.route, nil)
+			req = mux.SetURLVars(req, map[string]string{"childID": tC.childID})
 
 			handler := mockHandler.sleepStartHandler()
 			rr := httptest.NewRecorder()
@@ -576,6 +620,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 		route         string
 		method        string
 		responseCode  int
+		childID       string
 		contextUser   *goparent.User
 		familyService goparent.FamilyService
 		childService  goparent.ChildService
@@ -590,10 +635,19 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 			contextUser:  nil,
 		},
 		{
+			desc:         "sleepToggleStatusHandler no childID",
+			env:          &goparent.Env{DB: &mock.DBEnv{}},
+			route:        "/sleep/status/",
+			method:       "GET",
+			responseCode: http.StatusBadRequest,
+			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser", CurrentFamily: "1"},
+		},
+		{
 			desc:         "valid status, true",
 			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/status/1",
 			method:       "GET",
+			childID:      "1",
 			responseCode: http.StatusOK,
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser", CurrentFamily: "1"},
 			familyService: &mock.FamilyService{
@@ -604,6 +658,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 			},
 			sleepService: &mock.SleepService{
 				GetStatus: true,
+				GetSleep:  nil,
 			},
 		},
 		{
@@ -611,6 +666,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 			env:          &goparent.Env{DB: &mock.DBEnv{}},
 			route:        "/sleep/status/1",
 			method:       "GET",
+			childID:      "1",
 			responseCode: http.StatusNotFound,
 			contextUser:  &goparent.User{ID: "1", Name: "test user", Email: "testuser@test.com", Username: "testuser", CurrentFamily: "1"},
 			familyService: &mock.FamilyService{
@@ -621,6 +677,7 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 			},
 			sleepService: &mock.SleepService{
 				GetStatus: false,
+				GetSleep:  nil,
 			},
 		},
 	}
@@ -632,10 +689,8 @@ func TestSleepToggleStatusHandler(t *testing.T) {
 				ChildService:  tC.childService,
 				SleepService:  tC.sleepService,
 			}
-			req, err := http.NewRequest(tC.method, tC.route, nil)
-			if err != nil {
-				t.Fatal(err)
-			}
+			req, _ := http.NewRequest(tC.method, tC.route, nil)
+			req = mux.SetURLVars(req, map[string]string{"childID": tC.childID})
 
 			handler := mockHandler.sleepToggleStatus()
 			rr := httptest.NewRecorder()
