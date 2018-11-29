@@ -1,8 +1,6 @@
 package datastore_test
 
 import (
-	"log"
-	"reflect"
 	"testing"
 	"time"
 
@@ -33,7 +31,6 @@ func TestDatastoreFeeding(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error: %#v", err)
 	}
-	log.Printf("%s", reflect.TypeOf(err))
 	assert.Nil(err)
 	assert.NotNil(user.CurrentFamily)
 

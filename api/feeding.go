@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -113,7 +112,6 @@ func (h *Handler) feedingNewHandler() http.Handler {
 		feedingRequest.FeedingData.FamilyID = family.ID
 		err = h.FeedingService.Save(ctx, &feedingRequest.FeedingData)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 		}
 		json.NewEncoder(w).Encode(feedingRequest)

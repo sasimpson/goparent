@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -199,7 +198,6 @@ func (h *Handler) userAcceptInviteHandler() http.Handler {
 		ctx := h.Env.DB.GetContext(r)
 		user, err := UserFromContext(ctx)
 		if err != nil {
-			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -207,7 +205,6 @@ func (h *Handler) userAcceptInviteHandler() http.Handler {
 		id := mux.Vars(r)["id"]
 		err = h.UserInvitationService.Accept(ctx, user, id)
 		if err != nil {
-			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

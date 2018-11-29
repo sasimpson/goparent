@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -153,7 +152,6 @@ func (h *Handler) childNewHandler() http.Handler {
 		var childRequest ChildRequest
 		err = decoder.Decode(&childRequest)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -164,7 +162,6 @@ func (h *Handler) childNewHandler() http.Handler {
 		childRequest.ChildData.FamilyID = family.ID
 		err = h.ChildService.Save(ctx, &childRequest.ChildData)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}

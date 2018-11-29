@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"encoding/json"
@@ -118,7 +117,6 @@ func (h *Handler) sleepNewHandler() http.Handler {
 		sleepRequest.SleepData.FamilyID = family.ID
 		err = h.SleepService.Save(ctx, &sleepRequest.SleepData)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
@@ -141,11 +139,9 @@ func (h *Handler) sleepDeleteHandler() http.Handler {
 
 func (h *Handler) sleepStartHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET sleep start")
 		ctx := h.Env.DB.GetContext(r)
 		user, err := UserFromContext(ctx)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -170,7 +166,6 @@ func (h *Handler) sleepStartHandler() http.Handler {
 
 		err = h.SleepService.Start(ctx, family, child)
 		if err != nil {
-			log.Println("error", err.Error())
 			if err == goparent.ErrExistingStart {
 				http.Error(w, err.Error(), http.StatusConflict)
 				return
@@ -186,11 +181,9 @@ func (h *Handler) sleepStartHandler() http.Handler {
 
 func (h *Handler) sleepEndHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET sleep end")
 		ctx := h.Env.DB.GetContext(r)
 		user, err := UserFromContext(ctx)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -274,7 +267,6 @@ func (h *Handler) sleepGraphDataHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := h.Env.DB.GetContext(r)
 
-		log.Println("GET sleep graph data")
 		user, err := UserFromContext(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
