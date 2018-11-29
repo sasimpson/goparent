@@ -7,8 +7,8 @@ jobs:
     working_directory: /go/src/github.com/sasimpson/goparent
     steps:
       - checkout
-      - run: wget https://storage.googleapis.com/appengine-sdks/featured/go_appengine_sdk_linux_amd64-1.9.68.zip
-      - run: unzip -q go_appengine_sdk_linux_amd64-1.9.68.zip -d /home/circleci
+      - run: wget https://storage.googleapis.com/appengine-sdks/featured/go_appengine_sdk_linux_amd64-1.9.70.zip
+      - run: unzip -q go_appengine_sdk_linux_amd64-1.9.70.zip -d /home/circleci
       - run: echo 'export PATH=$PATH:/home/circleci/go_appengine' >> $BASH_ENV
       - run: go get -v -t -d ./...
       - run: go test -v ./...
