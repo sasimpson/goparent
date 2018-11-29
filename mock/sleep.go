@@ -17,6 +17,7 @@ type SleepService struct {
 	StatErr   error
 	StatusErr error
 	StartErr  error
+	EndErr    error
 }
 
 //Save -
@@ -68,7 +69,10 @@ func (m *SleepService) Start(context.Context, *goparent.Family, *goparent.Child)
 
 //End -
 func (m *SleepService) End(context.Context, *goparent.Family, *goparent.Child) error {
-	panic("not implemented")
+	if m.EndErr != nil {
+		return m.EndErr
+	}
+	return nil
 }
 
 //GraphData -

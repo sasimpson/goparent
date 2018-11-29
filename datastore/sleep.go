@@ -91,34 +91,46 @@ func (s *SleepService) Status(ctx context.Context, family *goparent.Family, chil
 
 //Start will start a sleep session or error if there is a current one active.
 func (s *SleepService) Start(ctx context.Context, family *goparent.Family, child *goparent.Child) error {
-	_, status, err := s.Status(ctx, family, child)
+	sleep, _, err := s.Status(ctx, family, child)
 	if err != nil {
 		return err
 	}
-	fmt.Println("sleep start status:", status)
 	// status returned false, therefore we should create an open ended sleep entry.
-	if !status {
-		sleep := goparent.Sleep{
-			Start:    time.Now(),
-			End:      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
-			FamilyID: family.ID,
-			ChildID:  child.ID,
-		}
-
-		err := s.Save(ctx, &sleep)
-		if err != nil {
-			return err
-		}
-
-		return nil
+	if sleep != nil {
+		return goparent.ErrExistingStart
+	}
+	sleep = &goparent.Sleep{
+		Start:    time.Now(),
+		End:      time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+		FamilyID: family.ID,
+		ChildID:  child.ID,
 	}
 
-	return goparent.ErrExistingStart
+	err = s.Save(ctx, sleep)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 //End will end a current sleep session or error if there isn't one
-func (s *SleepService) End(context.Context, *goparent.Sleep, *goparent.Family, *goparent.Child) error {
-	panic("not implemented")
+func (s *SleepService) End(ctx context.Context, family *goparent.Family, child *goparent.Child) error {
+	sleep, _, err := s.Status(ctx, family, child)
+	if err != nil {
+		return err
+	}
+	if sleep == nil {
+		return goparent.ErrNoExistingSession
+	}
+
+	sleep.End = time.Now()
+	err = s.Save(ctx, sleep)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //Stats returns sleep stats about a one day period for a child.

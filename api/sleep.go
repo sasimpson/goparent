@@ -25,12 +25,12 @@ func (h *Handler) initSleepHandlers(r *mux.Router) {
 	s := r.PathPrefix("/sleep").Subrouter()
 	s.Handle("", h.AuthRequired(h.sleepGetHandler())).Methods("GET").Name("SleepGet")
 	s.Handle("", h.AuthRequired(h.sleepNewHandler())).Methods("POST").Name("SleepNew")
-	s.Handle("/status/{childID}", h.AuthRequired(h.sleepToggleStatus())).Methods("GET").Name("SleepStatus")
-	s.Handle("/start", h.AuthRequired(h.sleepStartHandler())).Methods("POST").Name("SleepStart")
-	s.Handle("/end", h.AuthRequired(h.sleepEndHandler())).Methods("POST").Name("SleepEnd")
 	s.Handle("/{id}", h.AuthRequired(h.sleepViewHandler())).Methods("GET").Name("SleepView")
 	s.Handle("/{id}", h.AuthRequired(h.sleepEditHandler())).Methods("PUT").Name("SleepEdit")
 	s.Handle("/{id}", h.AuthRequired(h.sleepDeleteHandler())).Methods("DELETE").Name("SleepDelete")
+	s.Handle("/status/{childID}", h.AuthRequired(h.sleepToggleStatus())).Methods("GET").Name("SleepStatus")
+	s.Handle("/start/{childID}", h.AuthRequired(h.sleepStartHandler())).Methods("POST").Name("SleepStart")
+	s.Handle("/end/{childID}", h.AuthRequired(h.sleepEndHandler())).Methods("POST").Name("SleepEnd")
 	s.Handle("/graph/{childID}", h.AuthRequired(h.sleepGraphDataHandler())).Methods("GET").Name("SleepGraphData")
 
 }
@@ -187,25 +187,44 @@ func (h *Handler) sleepStartHandler() http.Handler {
 func (h *Handler) sleepEndHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET sleep end")
-		_, err := UserFromContext(r.Context())
+		ctx := h.Env.DB.GetContext(r)
+		user, err := UserFromContext(ctx)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		// var sleep models.Sleep
-		// err = sleep.SleepEnd(env, &user)
-		// if err != nil {
-		// 	if err == models.ErrNoExistingSession {
-		// 		http.Error(w, err.Error(), http.StatusNotFound)
-		// 		return
-		// 	}
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		// sleep.UserID = user.ID
-		// sleep.Save(env)
-		// fmt.Fprintf(w, "ended Sleep")
-		http.Error(w, "not implemented", http.StatusNotImplemented)
+
+		childID := mux.Vars(r)["childID"]
+		if childID == "" {
+			http.Error(w, "invalid Child ID", http.StatusBadRequest)
+			return
+		}
+
+		family, err := h.FamilyService.Family(ctx, user.CurrentFamily)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		child, err := h.ChildService.Child(ctx, childID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.SleepService.End(ctx, family, child)
+		if err != nil {
+			if err == goparent.ErrNoExistingSession {
+				http.Error(w, err.Error(), http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		fmt.Fprintf(w, "ended Sleep")
+		return
 	})
 }
 

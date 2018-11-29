@@ -80,22 +80,39 @@ func TestDatastoreSleep(t *testing.T) {
 	// assert.Equal(1, summary.Range)
 	// assert.Equal(300, summary.Total)
 
-	/*
-		sleep, status, err := sleepService.Status(ctx, family, child)
-		assert.Nil(err)
-		assert.Nil(sleep)
-		assert.False(status)
+	//status should be false right here because we haven't started a sleep
+	sleep, status, err := sleepService.Status(ctx, family, child)
+	assert.Nil(err)
+	assert.Nil(sleep)
+	assert.False(status)
 
-		err = sleepService.Start(ctx, family, child)
-		assert.Nil(err)
+	//started sleep should now exist
+	err = sleepService.Start(ctx, family, child)
+	assert.Nil(err)
 
-		sleep, status, err = sleepService.Status(ctx, family, child)
-		assert.Nil(err)
-		assert.NotNil(sleep)
-		assert.True(status)
+	//verify with status check
+	sleep, status, err = sleepService.Status(ctx, family, child)
+	assert.Nil(err)
+	assert.NotNil(sleep)
+	assert.True(status)
 
-		err = sleepService.Start(ctx, family, child)
-		assert.NotNil(err)
-		assert.EqualError(err, goparent.ErrExistingStart.Error())
-	*/
+	//starting a new sleep should return an error since there is already one started
+	err = sleepService.Start(ctx, family, child)
+	assert.NotNil(err)
+	assert.EqualError(err, goparent.ErrExistingStart.Error())
+
+	//end should end the last sleep
+	err = sleepService.End(ctx, family, child)
+	assert.Nil(err)
+
+	//status should be back to false
+	sleep, status, err = sleepService.Status(ctx, family, child)
+	assert.Nil(sleep)
+	assert.Nil(err)
+	assert.False(status)
+
+	//now the error should say we cannot end something that doesn't exist.
+	err = sleepService.End(ctx, family, child)
+	assert.EqualError(err, goparent.ErrNoExistingSession.Error())
+
 }

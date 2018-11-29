@@ -257,9 +257,9 @@ func TestStatus(t *testing.T) {
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 
 			ss := SleepService{Env: tC.env, DB: &DBEnv{Session: mock}}
-			status, err := ss.Status(ctx, tC.family, tC.child)
-			sleepStart := ss.Start(ctx, tC.sleep, tC.family, tC.child)
-			sleepEnd := ss.End(ctx, tC.sleep, tC.family, tC.child)
+			_, status, err := ss.Status(ctx, tC.family, tC.child)
+			sleepStart := ss.Start(ctx, tC.family, tC.child)
+			sleepEnd := ss.End(ctx, tC.family, tC.child)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 				assert.Error(t, sleepStart)

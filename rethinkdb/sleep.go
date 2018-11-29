@@ -15,10 +15,10 @@ type SleepService struct {
 }
 
 //Status - return the current status for a sleep session
-func (ss *SleepService) Status(ctx context.Context, family *goparent.Family, child *goparent.Child) (bool, error) {
+func (ss *SleepService) Status(ctx context.Context, family *goparent.Family, child *goparent.Child) (*goparent.Sleep, bool, error) {
 	err := ss.DB.GetConnection()
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 
 	//check to see if we already have an open sleep session
@@ -29,9 +29,9 @@ func (ss *SleepService) Status(ctx context.Context, family *goparent.Family, chi
 	}).Run(ss.DB.Session)
 	if err != nil {
 		if err == gorethink.ErrEmptyResult {
-			return false, nil
+			return nil, false, nil
 		}
-		return false, err
+		return nil, false, err
 	}
 	defer res.Close()
 	var sleep goparent.Sleep
@@ -39,17 +39,17 @@ func (ss *SleepService) Status(ctx context.Context, family *goparent.Family, chi
 	if err != nil {
 		//if we don't, then set the sleep start as now and return
 		if err == gorethink.ErrEmptyResult {
-			return false, nil
+			return nil, false, nil
 		}
-		return false, err
+		return nil, false, err
 	}
 
-	return true, nil
+	return &sleep, true, nil
 }
 
 //Start - record start of sleep
 func (ss *SleepService) Start(ctx context.Context, family *goparent.Family, child *goparent.Child) error {
-	ok, err := ss.Status(ctx, family, child)
+	_, ok, err := ss.Status(ctx, family, child)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (ss *SleepService) Start(ctx context.Context, family *goparent.Family, chil
 
 //End - record end of sleep
 func (ss *SleepService) End(ctx context.Context, family *goparent.Family, child *goparent.Child) error {
-	ok, err := ss.Status(ctx, family, child)
+	_, ok, err := ss.Status(ctx, family, child)
 	if err != nil {
 		return err
 	}
