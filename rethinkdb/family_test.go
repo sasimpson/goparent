@@ -311,7 +311,6 @@ func TestAddMember(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			t.Logf("%#v", tC.returnError)
 			ctx := context.Background()
 			mock := r.NewMock()
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
@@ -385,7 +384,6 @@ func TestGetAdminFamily(t *testing.T) {
 			mock.ExpectedQueries = append(mock.ExpectedQueries, tC.query)
 			fs := FamilyService{Env: tC.env, DB: &DBEnv{Session: mock}}
 			family, err := fs.GetAdminFamily(ctx, tC.user)
-			t.Logf("%#v %#v", family, err)
 			if tC.returnError != nil {
 				assert.EqualError(t, tC.returnError, err.Error())
 			} else {
