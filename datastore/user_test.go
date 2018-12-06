@@ -2,6 +2,7 @@ package datastore_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/datastore"
@@ -72,7 +73,7 @@ func TestDatastoreUser(t *testing.T) {
 	assert.Nil(t, err)
 
 	//get token
-	token, err := us.GetToken(loggedInUser)
+	token, err := us.GetToken(loggedInUser, time.Minute*5)
 	assert.NotNil(t, token)
 	assert.Nil(t, err)
 

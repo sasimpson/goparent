@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"time"
 
 	"github.com/sasimpson/goparent"
 )
@@ -47,7 +48,7 @@ func (m *UserService) Save(ctx context.Context, user *goparent.User) error {
 }
 
 //GetToken -
-func (m *UserService) GetToken(*goparent.User) (string, error) {
+func (m *UserService) GetToken(*goparent.User, time.Duration) (string, error) {
 	if m.TokenErr != nil {
 		return "", m.TokenErr
 	}

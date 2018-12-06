@@ -50,6 +50,7 @@ func (h *Handler) initUsersHandlers(r *mux.Router) {
 	u.Handle("/", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserGetData")
 	u.Handle("/{id}", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserView")
 	u.Handle("/login", h.loginHandler()).Methods("POST").Name("UserLogin")
+	u.Handle("/refresh", h.AuthRequired(h.userRefreshTokenHandler())).Methods("POST").Name("UserRefreshToken")
 	u.Handle("/invite", h.AuthRequired(h.userListInviteHandler())).Methods("GET").Name("UserGetSentInvites")
 	u.Handle("/invite", h.AuthRequired(h.userNewInviteHandler())).Methods("POST").Name("UserNewInvite")
 	u.Handle("/invite/{id}", h.AuthRequired(h.userDeleteInviteHandler())).Methods("DELETE").Name("UserDeleteInvite")
@@ -68,9 +69,34 @@ func (h *Handler) loginHandler() http.Handler {
 			return
 		}
 
-		token, err := h.UserService.GetToken(user)
+		token, err := h.UserService.GetToken(user, time.Minute*5)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var userResp UserAuthResponse
+		userResp.UserData = user
+		userResp.Token = token
+		w.Header().Set("Content-Type", jsonContentType)
+		w.Header().Set("x-auth-token", token)
+		json.NewEncoder(w).Encode(userResp)
+	})
+}
+
+func (h *Handler) userRefreshTokenHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.Env.DB.GetContext(r)
+		user, err := UserFromContext(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		token, err := h.UserService.GetToken(user, time.Hour*24*14)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		var userResp UserAuthResponse

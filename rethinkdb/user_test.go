@@ -3,6 +3,7 @@ package rethinkdb
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/sasimpson/goparent"
 	"github.com/sasimpson/goparent/mock"
@@ -216,7 +217,7 @@ func TestTokens(t *testing.T) {
 	}
 	testEnv.Auth.SigningKey = []byte("testkey")
 	us := UserService{Env: &testEnv}
-	token, err := us.GetToken(&u)
+	token, err := us.GetToken(&u, time.Minute*5)
 	assert.Nil(t, err)
 	if assert.NotNil(t, token) {
 		assert.NotEqual(t, "", token)

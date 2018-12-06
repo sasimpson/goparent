@@ -72,7 +72,7 @@ type UserService interface {
 	User(context.Context, string) (*User, error)
 	UserByLogin(context.Context, string, string) (*User, error)
 	Save(context.Context, *User) error
-	GetToken(*User) (string, error)
+	GetToken(*User, time.Duration) (string, error)
 	ValidateToken(context.Context, string) (*User, bool, error)
 	GetFamily(context.Context, *User) (*Family, error)
 	GetAllFamily(context.Context, *User) ([]*Family, error)

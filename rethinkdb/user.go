@@ -138,7 +138,7 @@ func (us *UserService) Save(ctx context.Context, user *goparent.User) error {
 }
 
 //GetToken - gets the user token
-func (us *UserService) GetToken(user *goparent.User) (string, error) {
+func (us *UserService) GetToken(user *goparent.User, duration time.Duration) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
@@ -146,7 +146,7 @@ func (us *UserService) GetToken(user *goparent.User) (string, error) {
 	claims["ID"] = user.ID
 	claims["Email"] = user.Email
 	claims["Username"] = user.Username
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	claims["exp"] = time.Now().Add(duration).Unix()
 
 	tokenString, err := token.SignedString(us.Env.Auth.SigningKey)
 	if err != nil {

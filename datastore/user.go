@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/sasimpson/goparent"
 	"google.golang.org/appengine/datastore"
 )
@@ -116,7 +116,7 @@ func (s *UserService) Save(ctx context.Context, user *goparent.User) error {
 }
 
 //GetToken - gets the user token
-func (s *UserService) GetToken(user *goparent.User) (string, error) {
+func (s *UserService) GetToken(user *goparent.User, duration time.Duration) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
@@ -124,7 +124,7 @@ func (s *UserService) GetToken(user *goparent.User) (string, error) {
 	claims["ID"] = user.ID
 	claims["Email"] = user.Email
 	claims["Username"] = user.Username
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	claims["exp"] = time.Now().Add(duration).Unix()
 	tokenString, err := token.SignedString(s.Env.Auth.SigningKey)
 	if err != nil {
 		return "", NewError("datastore.UserService.GetToken", err)
