@@ -55,6 +55,22 @@ func (h *Handler) initUsersHandlers(r *mux.Router) {
 	u.Handle("/invite", h.AuthRequired(h.userNewInviteHandler())).Methods("POST").Name("UserNewInvite")
 	u.Handle("/invite/{id}", h.AuthRequired(h.userDeleteInviteHandler())).Methods("DELETE").Name("UserDeleteInvite")
 	u.Handle("/invite/accept/{id}", h.AuthRequired(h.userAcceptInviteHandler())).Methods("POST").Name("UserAcceptInvite")
+	u.Handle("/resetpassword", h.userResetPasswordHandler()).Methods("POST").Name("UserResetPassword")
+}
+
+func (h *Handler) userResetPasswordHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		email := r.FormValue("email")
+		ctx := h.Env.DB.GetContext(r)
+
+		err := h.UserService.ResetPassword(ctx, email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
+	})
 }
 
 func (h *Handler) loginHandler() http.Handler {

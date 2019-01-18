@@ -192,3 +192,8 @@ func md5Email(email string) string {
 	h.Write([]byte(email))
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+func (s *UserService) ResetPassword(ctx context.Context, email string) error {
+
+	return nil
+}

@@ -76,6 +76,7 @@ type UserService interface {
 	ValidateToken(context.Context, string) (*User, bool, error)
 	GetFamily(context.Context, *User) (*Family, error)
 	GetAllFamily(context.Context, *User) ([]*Family, error)
+	ResetPassword(context.Context, string) error
 }
 
 //UserInvitation - structure for storing invitations
