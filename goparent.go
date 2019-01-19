@@ -82,7 +82,7 @@ type UserService interface {
 	ValidateToken(context.Context, string) (*User, bool, error)
 	GetFamily(context.Context, *User) (*Family, error)
 	GetAllFamily(context.Context, *User) ([]*Family, error)
-	ResetPassword(context.Context, string) error
+	ResetPassword(context.Context, string, string) error
 	RequestResetPassword(context.Context, string, string) error
 }
 

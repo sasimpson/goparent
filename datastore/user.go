@@ -14,6 +14,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/sasimpson/goparent"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/mail"
 )
 
 //UserService -
@@ -33,6 +34,8 @@ type UserClaims struct {
 
 //UserKind - constant string for all user entities in datastore
 const UserKind = "User"
+
+//ResetKind - constant for all user password reset entities
 const ResetKind = "PasswordReset"
 
 var (
@@ -42,6 +45,8 @@ var (
 	ErrInvalidLogin = errors.New("no result for that username password combo")
 	//ErrInvalidEmail is when a user submits an invalid email for password reset
 	ErrInvalidEmail = errors.New("no result for that email")
+	//ErrInvalidResetCode is when a user submits a code for resetting password that is invalid
+	ErrInvalidResetCode = errors.New("invalid code for reset")
 )
 
 //User - get a user by the key/id
@@ -203,14 +208,11 @@ func (s *UserService) RequestResetPassword(ctx context.Context, email string, ip
 	if err != nil {
 		return ErrInvalidEmail
 	}
-	if err != nil {
-		return err
-	}
 
-	log.Println("password reset requested for user", user.Email)
+	// log.Println("password reset requested for user", user.Email)
 
-	userKey := datastore.NewKey(ctx, UserKind, user.ID, 0, nil)
-	resetKey := datastore.NewIncompleteKey(ctx, ResetKind, userKey)
+	// userKey := datastore.NewKey(ctx, UserKind, user.ID, 0, nil)
+	resetKey := datastore.NewIncompleteKey(ctx, ResetKind, nil)
 
 	resetRequest := &goparent.UserReset{
 		Timestamp:   time.Now(),
@@ -222,15 +224,63 @@ func (s *UserService) RequestResetPassword(ctx context.Context, email string, ip
 	if err != nil {
 		return err
 	}
+	//this key needs to be emailed to the user.  should eventually make this a jwt reset.
+	// log.Printf("key: %#v", key)
+	code := encodeInt(key.IntID())
+	// log.Println("password reset key is", key.IntID(), code)
 
-	log.Printf("key: %#v", key)
+	resetMessage := mail.Message{
+		Sender:  "noreply@goparent-181120.appspotmail.com",
+		To:      []string{user.Email},
+		Subject: "GoParent password reset",
+		Body:    fmt.Sprintf("your password reset code is: %s", code),
+	}
 
-	log.Println("password reset key is", key.IntID(), encodeInt(key.IntID()))
+	err = mail.Send(ctx, &resetMessage)
+	if err != nil {
+		log.Printf("error sending mail: %#v", err)
+	}
+
 	return nil
 }
 
 //ResetPassword will reset the password for the user assuming they meet the requirements
-func ResetPassword(ctx context.Context, code string) error {
+func (s *UserService) ResetPassword(ctx context.Context, code string, password string) error {
+	//get code and verify it exists in the datastore
+	resetID := decodeBase64(code)
+	log.Printf("code: %s", code)
+	log.Printf("id: %d", resetID)
+	resetKey := datastore.NewKey(ctx, ResetKind, "", resetID, nil)
+	var resetRequest goparent.UserReset
+	err := datastore.Get(ctx, resetKey, &resetRequest)
+	if err == datastore.ErrNoSuchEntity {
+		return ErrInvalidResetCode
+	}
+	if err != nil {
+		return NewError("datastore.ResetPassword a", err)
+	}
+
+	//now lookup the user and reset the password to the new one.
+	q := datastore.NewQuery(UserKind).Filter("Email =", resetRequest.Email)
+	t := q.Run(ctx)
+	var user goparent.User
+	_, err = t.Next(&user)
+	if err != nil {
+		return NewError("datastore.ResetPassword b", err)
+	}
+
+	userKey := datastore.NewKey(ctx, UserKind, md5Email(user.Email), 0, nil)
+	user.Password = password
+	_, err = datastore.Put(ctx, userKey, &user)
+	if err != nil {
+		return NewError("datastore.ResetPassword c", err)
+	}
+
+	err = datastore.Delete(ctx, resetKey)
+	if err != nil {
+		return NewError("datastore.ResetPassword d", err)
+	}
+
 	return nil
 }
 
