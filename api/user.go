@@ -63,7 +63,7 @@ func (h *Handler) userResetPasswordHandler() http.Handler {
 		email := r.FormValue("email")
 		ctx := h.Env.DB.GetContext(r)
 
-		err := h.UserService.ResetPassword(ctx, email)
+		err := h.UserService.RequestResetPassword(ctx, email, r.RemoteAddr)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
