@@ -48,13 +48,44 @@ func (h *Handler) initUsersHandlers(r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
 	u.Handle("/", h.userNewHandler()).Methods("POST").Name("UserNew")
 	u.Handle("/", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserGetData")
-	u.Handle("/{id}", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserView")
 	u.Handle("/login", h.loginHandler()).Methods("POST").Name("UserLogin")
 	u.Handle("/refresh", h.AuthRequired(h.userRefreshTokenHandler())).Methods("POST").Name("UserRefreshToken")
 	u.Handle("/invite", h.AuthRequired(h.userListInviteHandler())).Methods("GET").Name("UserGetSentInvites")
 	u.Handle("/invite", h.AuthRequired(h.userNewInviteHandler())).Methods("POST").Name("UserNewInvite")
 	u.Handle("/invite/{id}", h.AuthRequired(h.userDeleteInviteHandler())).Methods("DELETE").Name("UserDeleteInvite")
 	u.Handle("/invite/accept/{id}", h.AuthRequired(h.userAcceptInviteHandler())).Methods("POST").Name("UserAcceptInvite")
+	u.Handle("/resetpassword", h.userRequestResetPasswordHandler()).Methods("POST").Name("UserRequestResetPassword")
+	u.Handle("/resetpassword/{code}", h.userResetPasswordHandler()).Methods("POST").Name("UserResetPassword")
+}
+
+func (h *Handler) userResetPasswordHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		password := r.FormValue("password")
+		ctx := h.Env.DB.GetContext(r)
+		err := h.UserService.ResetPassword(ctx, vars["code"], password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
+	})
+}
+
+func (h *Handler) userRequestResetPasswordHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		email := r.FormValue("email")
+		ctx := h.Env.DB.GetContext(r)
+
+		err := h.UserService.RequestResetPassword(ctx, email, r.RemoteAddr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
+	})
 }
 
 func (h *Handler) loginHandler() http.Handler {

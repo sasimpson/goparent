@@ -75,3 +75,13 @@ func (m *UserService) GetFamily(context.Context, *goparent.User) (*goparent.Fami
 func (m *UserService) GetAllFamily(context.Context, *goparent.User) ([]*goparent.Family, error) {
 	panic("not implemented")
 }
+
+//RequestResetPassword -
+func (m *UserService) RequestResetPassword(context.Context, string, string) error {
+	panic("not implemented")
+}
+
+//ResetPassword -
+func (m *UserService) ResetPassword(context.Context, string, string) error {
+	panic("not implemented")
+}

@@ -3,14 +3,18 @@ package datastore
 import (
 	"context"
 	"crypto/md5"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/sasimpson/goparent"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/mail"
 )
 
 //UserService -
@@ -31,11 +35,18 @@ type UserClaims struct {
 //UserKind - constant string for all user entities in datastore
 const UserKind = "User"
 
+//ResetKind - constant for all user password reset entities
+const ResetKind = "PasswordReset"
+
 var (
 	//ErrNoUserFound is when there is no user returned by the datastore
 	ErrNoUserFound = errors.New("no result for that id")
 	//ErrInvalidLogin is when the password/user combo do not match
 	ErrInvalidLogin = errors.New("no result for that username password combo")
+	//ErrInvalidEmail is when a user submits an invalid email for password reset
+	ErrInvalidEmail = errors.New("no result for that email")
+	//ErrInvalidResetCode is when a user submits a code for resetting password that is invalid
+	ErrInvalidResetCode = errors.New("invalid code for reset")
 )
 
 //User - get a user by the key/id
@@ -187,8 +198,103 @@ func (s *UserService) GetAllFamily(ctx context.Context, user *goparent.User) ([]
 	return families, nil
 }
 
+//RequestResetPassword will setup a password reset token for the email submitted.  that token will then be used
+// to actually change the password
+func (s *UserService) RequestResetPassword(ctx context.Context, email string, ip string) error {
+	q := datastore.NewQuery(UserKind).Filter("Email =", email)
+	t := q.Run(ctx)
+	var user goparent.User
+	_, err := t.Next(&user)
+	if err != nil {
+		return ErrInvalidEmail
+	}
+
+	// log.Println("password reset requested for user", user.Email)
+
+	// userKey := datastore.NewKey(ctx, UserKind, user.ID, 0, nil)
+	resetKey := datastore.NewIncompleteKey(ctx, ResetKind, nil)
+
+	resetRequest := &goparent.UserReset{
+		Timestamp:   time.Now(),
+		RequestAddr: ip,
+		Email:       email,
+	}
+
+	key, err := datastore.Put(ctx, resetKey, resetRequest)
+	if err != nil {
+		return err
+	}
+	//this key needs to be emailed to the user.  should eventually make this a jwt reset.
+	code := encodeInt(key.IntID())
+	log.Println("password reset key is", key.IntID(), code)
+
+	resetMessage := mail.Message{
+		Sender:  "noreply@goparent-181120.appspotmail.com",
+		To:      []string{user.Email},
+		Subject: "GoParent password reset",
+		Body:    fmt.Sprintf("your password reset code is: %s", code),
+	}
+
+	err = mail.Send(ctx, &resetMessage)
+	if err != nil {
+		log.Printf("error sending mail: %#v", err)
+	}
+
+	return nil
+}
+
+//ResetPassword will reset the password for the user assuming they meet the requirements
+func (s *UserService) ResetPassword(ctx context.Context, code string, password string) error {
+	//get code and verify it exists in the datastore
+	resetID := decodeBase64(code)
+	resetKey := datastore.NewKey(ctx, ResetKind, "", resetID, nil)
+	var resetRequest goparent.UserReset
+	err := datastore.Get(ctx, resetKey, &resetRequest)
+	if err == datastore.ErrNoSuchEntity {
+		return ErrInvalidResetCode
+	}
+	if err != nil {
+		return NewError("datastore.ResetPassword a", err)
+	}
+
+	//now lookup the user and reset the password to the new one.
+	q := datastore.NewQuery(UserKind).Filter("Email =", resetRequest.Email)
+	t := q.Run(ctx)
+	var user goparent.User
+	_, err = t.Next(&user)
+	if err != nil {
+		return NewError("datastore.ResetPassword b", err)
+	}
+
+	userKey := datastore.NewKey(ctx, UserKind, md5Email(user.Email), 0, nil)
+	user.Password = password
+	_, err = datastore.Put(ctx, userKey, &user)
+	if err != nil {
+		return NewError("datastore.ResetPassword c", err)
+	}
+
+	err = datastore.Delete(ctx, resetKey)
+	if err != nil {
+		return NewError("datastore.ResetPassword d", err)
+	}
+
+	return nil
+}
+
+//util functions
 func md5Email(email string) string {
 	h := md5.New()
 	h.Write([]byte(email))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func encodeInt(i int64) string {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(i))
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func decodeBase64(encoded string) int64 {
+	decoded, _ := base64.StdEncoding.DecodeString(encoded)
+	return int64(binary.LittleEndian.Uint64(decoded))
 }

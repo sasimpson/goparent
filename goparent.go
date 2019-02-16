@@ -67,6 +67,12 @@ type UserClaims struct {
 	jwt.StandardClaims
 }
 
+type UserReset struct {
+	Timestamp   time.Time `json:"timestamp"`
+	RequestAddr string    `json:"request_addr"`
+	Email       string    `json:"email"`
+}
+
 //UserService -
 type UserService interface {
 	User(context.Context, string) (*User, error)
@@ -76,6 +82,8 @@ type UserService interface {
 	ValidateToken(context.Context, string) (*User, bool, error)
 	GetFamily(context.Context, *User) (*Family, error)
 	GetAllFamily(context.Context, *User) ([]*Family, error)
+	ResetPassword(context.Context, string, string) error
+	RequestResetPassword(context.Context, string, string) error
 }
 
 //UserInvitation - structure for storing invitations

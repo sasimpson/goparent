@@ -221,3 +221,13 @@ func (us *UserService) GetAllFamily(ctx context.Context, user *goparent.User) ([
 	}
 	return family, nil
 }
+
+//RequestResetPassword - needs implementation
+func (us *UserService) RequestResetPassword(context.Context, string, string) error {
+	return nil
+}
+
+//ResetPassword - needs implementation
+func (us *UserService) ResetPassword(context.Context, string, string) error {
+	return nil
+}
