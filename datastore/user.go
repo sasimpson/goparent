@@ -225,7 +225,7 @@ func (s *UserService) RequestResetPassword(ctx context.Context, email string, ip
 		return err
 	}
 	//this key needs to be emailed to the user.  should eventually make this a jwt reset.
-
+	code := encodeInt(key.IntID())
 	log.Println("password reset key is", key.IntID(), code)
 
 	resetMessage := mail.Message{
@@ -247,8 +247,6 @@ func (s *UserService) RequestResetPassword(ctx context.Context, email string, ip
 func (s *UserService) ResetPassword(ctx context.Context, code string, password string) error {
 	//get code and verify it exists in the datastore
 	resetID := decodeBase64(code)
-	log.Printf("code: %s", code)
-	log.Printf("id: %d", resetID)
 	resetKey := datastore.NewKey(ctx, ResetKind, "", resetID, nil)
 	var resetRequest goparent.UserReset
 	err := datastore.Get(ctx, resetKey, &resetRequest)
