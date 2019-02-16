@@ -48,7 +48,6 @@ func (h *Handler) initUsersHandlers(r *mux.Router) {
 	u := r.PathPrefix("/user").Subrouter()
 	u.Handle("/", h.userNewHandler()).Methods("POST").Name("UserNew")
 	u.Handle("/", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserGetData")
-	// u.Handle("/{id}", h.AuthRequired(h.userGetHandler())).Methods("GET").Name("UserView")
 	u.Handle("/login", h.loginHandler()).Methods("POST").Name("UserLogin")
 	u.Handle("/refresh", h.AuthRequired(h.userRefreshTokenHandler())).Methods("POST").Name("UserRefreshToken")
 	u.Handle("/invite", h.AuthRequired(h.userListInviteHandler())).Methods("GET").Name("UserGetSentInvites")
@@ -64,7 +63,6 @@ func (h *Handler) userResetPasswordHandler() http.Handler {
 		vars := mux.Vars(r)
 		password := r.FormValue("password")
 		ctx := h.Env.DB.GetContext(r)
-
 		err := h.UserService.ResetPassword(ctx, vars["code"], password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

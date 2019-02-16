@@ -225,9 +225,8 @@ func (s *UserService) RequestResetPassword(ctx context.Context, email string, ip
 		return err
 	}
 	//this key needs to be emailed to the user.  should eventually make this a jwt reset.
-	// log.Printf("key: %#v", key)
-	code := encodeInt(key.IntID())
-	// log.Println("password reset key is", key.IntID(), code)
+
+	log.Println("password reset key is", key.IntID(), code)
 
 	resetMessage := mail.Message{
 		Sender:  "noreply@goparent-181120.appspotmail.com",
